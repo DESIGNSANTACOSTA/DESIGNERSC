@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611261955";</script>
+<script>var VERSAO="202611261640";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -96,6 +96,17 @@ textarea{min-height:90px;resize:vertical}
 .fichaA .cx .dd{border-top:1px solid #e3201b;font-size:10.5px;line-height:14px;padding:4px 6px}
 .fichaA .cx .lc{font-size:10px;line-height:12.5px;padding:3px 4px 5px;border-top:1px solid #e3201b}
 .fichaA svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ed{outline:none;border-radius:2px;cursor:text;-webkit-user-select:text;user-select:text}
+span.ed:empty,div.ed:empty{display:inline-block;min-width:40px;min-height:1em}
+.editavel .ed{background:#fff7c2aa}
+.ed:focus{background:#fff3a0;box-shadow:0 0 0 2px #e3b000}
+@media print{.ed,.editavel .ed{background:none!important;box-shadow:none!important}}
+.mlista{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:340px;overflow:auto}
+.mlista .it{display:flex;align-items:center;gap:8px;background:#faf8f5;border-radius:10px;padding:6px 8px;font-size:14px}
+.mlista .it.on{background:#eef6ee}
+.mlista .it img{width:40px;height:48px;object-fit:contain;flex:none}
+.mlista .it span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mlista .it button{min-height:40px;min-width:40px;padding:4px 10px;font-size:14px}
 /* mapa */
 .mapa{text-transform:uppercase}
 .mapa .tit{position:absolute;left:22px;top:16px;font-family:Jost,sans-serif;font-size:13px;line-height:1.3}
@@ -225,7 +236,7 @@ dialog::backdrop{background:#0006}
         <label>Cor (Pantone)<select id="f-fr-cor" class="selpant"></select></label>
         <label id="l-fr-dist">Distância da gola (cm)<input type="number" step="0.5" id="f-fr-dist"></label>
         <label>Tipo<select id="f-fr-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
-        <label>Ajuste no desenho (cm, + desce)<input type="number" step="0.5" id="f-fr-aj" placeholder="0"></label>
+        <label>Largura da estampa (cm)<input type="number" step="0.5" min="1" id="f-fr-larg"></label>
       </div>
       <h4 class="sub">Barra</h4>
       <div class="linha">
@@ -245,7 +256,7 @@ dialog::backdrop{background:#0006}
         <label>Cor (Pantone)<select id="f-co-cor" class="selpant"></select></label>
         <label>Distância da gola (cm)<input type="number" step="0.5" id="f-co-dist"></label>
         <label>Tipo<select id="f-co-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
-        <label>Ajuste no desenho (cm, + desce)<input type="number" step="0.5" id="f-co-aj" placeholder="0"></label>
+        <label>Largura da estampa (cm)<input type="number" step="0.5" min="1" id="f-co-larg"></label>
       </div>
       <div id="extras-costas"></div>
       <button type="button" class="btn claro" data-extra="costas">+ Mais uma estampa nas costas</button>
@@ -258,8 +269,8 @@ dialog::backdrop{background:#0006}
         <label>Tipo<select id="f-carimbo-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
       </div>
     </div>
-    <div class="bloco">
-      <h3>Dados da ficha</h3>
+    <details class="bloco">
+      <summary><h3 style="display:inline">Dados da ficha</h3> <span class="aviso">(também dá para escrever direto na ficha)</span></summary>
       <div class="linha">
         <label>Referência<input type="text" id="f-ref" placeholder="TZL2709"></label>
         <label>Nº do pedido<input type="text" id="f-pedido"></label>
@@ -278,7 +289,7 @@ dialog::backdrop{background:#0006}
       <div class="scroll" id="f-grade"></div>
       <label style="margin-top:12px">Informações de costura (azul) — uma por linha
         <textarea id="f-costura"></textarea></label>
-    </div>
+    </details>
     <div class="bloco botoes naoimprime">
       <button class="btn" id="b-volta-pedido" hidden data-ir="pedido">← Voltar ao pedido</button>
       <button class="btn" id="b-salvar">Salvar peça</button>
@@ -295,7 +306,10 @@ dialog::backdrop{background:#0006}
   <div class="botoes naoimprime" style="margin-bottom:12px">
     <button class="btn" id="b-pdf-ficha">Salvar PDF / imprimir</button>
     <button class="btn claro" data-ir="peca">Voltar para a peça</button>
+    <button class="btn claro" id="b-nota">+ Nota de costura</button>
+    <button class="btn claro" id="b-marca">Mostrar o que dá para mudar</button>
   </div>
+  <p class="aviso naoimprime" style="margin:0 0 10px">Toque em qualquer texto da ficha para escrever. Mudar o TAMANHO muda a largura da estampa; mudar os cm da localização muda a distância da gola.</p>
   <div class="folha-wrap"><div class="folha-espaco"><div class="folha" id="ficha"></div></div></div>
 </section>
 <!-- ================= MAPA ================= -->
@@ -308,9 +322,13 @@ dialog::backdrop{background:#0006}
     <label style="margin-top:10px">Texto do mapa (opcional)<textarea id="m-texto" placeholder="Texto da coleção, que aparece num quadro do mapa"></textarea></label>
     <div class="botoes" style="margin-top:10px">
       <button class="btn" id="b-pdf-mapa">Salvar PDF / imprimir</button>
+      <button class="btn claro" id="b-todas-mapa">Pôr todas as peças</button>
       <button class="btn perigo" id="b-limpa-mapa">Esvaziar mapa</button>
     </div>
-    <p class="aviso">As peças se arrumam sozinhas em grade, sem uma ficar em cima da outra.</p>
+    <h4 class="sub">Peças do mapa</h4>
+    <p class="aviso" style="margin:0">Toque em “+ Pôr” para colocar a peça no mapa. Use as setas para mudar a ordem e × para tirar.</p>
+    <div class="mlista" id="m-lista"></div>
+    <p class="aviso">As peças se arrumam sozinhas em grade, na ordem da lista, sem uma ficar em cima da outra.</p>
   </div>
   <div class="folha-wrap"><div class="folha-espaco"><div class="folha mapa" id="mapa"></div></div></div>
 </section>
@@ -487,18 +505,18 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
   [p.fr&&p.fr.est,p.co&&p.co.est,p.carimbo,p.barra,...(p.extras||[]).map(x=>x.est)].forEach(garantirTexto);
   const A=ART[p.artigo],out=[];if(!(lado==='frente'?A.fr:A.co))return out;
   const larg=A.largMax||Math.min(28,.6*2*((A.fr||A.co).lado?(A.fr.lado-A.fr.cx):230)/A.esc);
-  const por=(chave,cor,cx,top,ancora,papel,caber)=>{const E=EST[chave];if(!E)return;let wc=E.w,hc=E.h;
-    if(caber&&(chave.startsWith('txt:')||E.up)&&wc>larg){hc*=larg/wc;wc=larg}
+  const por=(chave,cor,cx,top,ancora,papel,caber,lu)=>{const E=EST[chave];if(!E)return;let wc=E.w,hc=E.h;lu=+String(lu||'').replace(',','.');
+    if(lu>0){hc*=lu/wc;wc=lu}else if(caber&&(chave.startsWith('txt:')||E.up)&&wc>larg){hc*=larg/wc;wc=larg}
     const w=wc*A.esc,h=hc*A.esc;let X=cx-w/2,Y=top;
     if(ancora==='centro')Y=top-h/2;if(ancora==='barra'){X=cx-w;Y=top-h}out.push({chave,cor,x:X,y:Y,w,h,papel,cm:[wc,hc]})};
-  if(lado==='frente'){const f=p.fr,aj=((+f.aj||0)+(A.ajY||0))*A.esc;
-    if(f.est){if(f.pos==='mini')por(f.est,f.cor,A.fr.cx+10*A.esc,A.fr.ombro+(+f.dist||A.mini[0])*A.esc+aj,'centro','frente');
-      else por(f.est,f.cor,A.fr.cx,A.fr.gola+(+f.dist||0)*A.esc+aj,'topo','frente',1)}
+  if(lado==='frente'){const f=p.fr,aj=(A.ajY||0)*A.esc;
+    if(f.est){if(f.pos==='mini')por(f.est,f.cor,A.fr.cx+10*A.esc,A.fr.ombro+(+f.dist||A.mini[0])*A.esc+aj,'centro','frente',0,f.larg);
+      else por(f.est,f.cor,A.fr.cx,A.fr.gola+(+f.dist||0)*A.esc+aj,'topo','frente',1,f.larg)}
     const bar=p.barra===undefined?(p.sereia===false?'':'sereia'):p.barra;
     if(bar)por(bar,p.barraCor||p.sereiaCor||'BRANCO',A.fr.lado-3.5*A.esc,A.fr.barra-3.5*A.esc,'barra','barra');
-  }else{const f=p.co;if(f.est)por(f.est,f.cor,A.co.cx,A.co.gola+((+f.dist||0)+(+f.aj||0))*A.esc,'topo','costas',1)}
+  }else{const f=p.co;if(f.est)por(f.est,f.cor,A.co.cx,A.co.gola+(+f.dist||0)*A.esc,'topo','costas',1,f.larg)}
   (p.extras||[]).forEach((x,i)=>{if(x.lado!==lado||!x.est)return;const pt=(A.lugares[lado]||{})[x.onde]||Object.values(A.lugares[lado])[0];if(!pt)return;
-    por(x.est,x.cor,pt[0],pt[1],'centro','extra'+i)});
+    por(x.est,x.cor,pt[0],pt[1],'centro','extra'+i,0,x.larg)});
   return out;
 }
 function desenhar(p,lado,k=1){
@@ -542,7 +560,8 @@ function preencher(){
   $('#f-artigo').value=P.artigo;garantirOpcao($('#f-ting'),P.ting);$('#f-ting').value=P.ting;
   for(const k of['fr','co']){const se=$(`#f-${k}-est`);garantirOpcao(se,P[k].est);
     $(`#f-${k}-txt`).value=P[k].est&&P[k].est.startsWith('txt:')?P[k].est.slice(4).toUpperCase():'';
-    se.value=P[k].est;$(`#f-${k}-pos`).value=P[k].pos;garantirOpcao($(`#f-${k}-cor`),P[k].cor);$(`#f-${k}-cor`).value=P[k].cor;$(`#f-${k}-dist`).value=P[k].dist;$(`#f-${k}-tipo`).value=P[k].tipo||'ESTAMPA';$(`#f-${k}-aj`).value=P[k].aj||''}
+    se.value=P[k].est;$(`#f-${k}-pos`).value=P[k].pos;garantirOpcao($(`#f-${k}-cor`),P[k].cor);$(`#f-${k}-cor`).value=P[k].cor;$(`#f-${k}-dist`).value=P[k].dist;$(`#f-${k}-tipo`).value=P[k].tipo||'ESTAMPA';$(`#f-${k}-larg`).value=P[k].larg||''}
+  for(const[k,l]of[['fr','frente'],['co','costas']]){const e=posicoes(P,l).find(e=>e.papel===l);$(`#f-${k}-larg`).placeholder=e?String(Math.round(e.cm[0]*10)/10).replace('.',','):''}
   $('#l-fr-dist').firstChild.textContent=P.fr.pos==='mini'?'Distância do ombro, tam. M (cm)':'Distância da gola (cm)';
   garantirOpcao($('#f-barra'),P.barra);$('#f-barra').value=P.barra;garantirOpcao($('#f-barra-cor'),P.barraCor);$('#f-barra-cor').value=P.barraCor;$('#f-barra-tipo').value=P.barraTipo||'ESTAMPA';
   garantirOpcao($('#f-carimbo'),P.carimbo);$('#f-carimbo').value=P.carimbo||'';garantirOpcao($('#f-carimbo-cor'),P.carimboCor);$('#f-carimbo-cor').value=P.carimboCor;$('#f-carimbo-tipo').value=P.carimboTipo||'ESTAMPA';
@@ -563,7 +582,8 @@ function ler_form(e){
   const artigoAntes=P.artigo;
   P.artigo=$('#f-artigo').value;P.ting=$('#f-ting').value;
   for(const k of['fr','co']){P[k].est=$(`#f-${k}-est`).value;if(id===`f-${k}-txt`){const t=$(`#f-${k}-txt`).value.trim();P[k].est=t?'txt:'+t.toLowerCase():''}
-    P[k].pos=$(`#f-${k}-pos`).value;P[k].cor=$(`#f-${k}-cor`).value;P[k].dist=$(`#f-${k}-dist`).value;P[k].tipo=$(`#f-${k}-tipo`).value;P[k].aj=$(`#f-${k}-aj`).value}
+    P[k].pos=$(`#f-${k}-pos`).value;P[k].cor=$(`#f-${k}-cor`).value;P[k].dist=$(`#f-${k}-dist`).value;P[k].tipo=$(`#f-${k}-tipo`).value;
+    const d=$(`#f-${k}-dist`).value,lg=$(`#f-${k}-larg`).value;P.ov=P.ov||{};if(String(P[k].dist)!==d)delete P.ov[k+'.loc'];if(String(P[k].larg||'')!==lg)delete P.ov[k+'.tam'];P[k].dist=d;P[k].larg=lg}
   const A=ART[P.artigo];
   if(id==='f-fr-pos'||id==='f-artigo')P.fr.dist=P.fr.pos==='mini'?A.mini[0]:A.frontal;
   if(id==='f-co-pos'||id==='f-artigo')P.co.dist=P.co.pos==='nuca'?A.nuca:A.costas;
@@ -589,9 +609,11 @@ function pretoURL(chave){garantirTexto(chave);if(cacheURL[chave])return cacheURL
   return cacheURL[chave]=tingir(im,'#111111',Math.round(im.width*s),Math.round(im.height*s)).toDataURL()} // na ficha a arte vai em preto, como nas fichas da Santacosta
 function fichaHTML(p){
   const A=ART[p.artigo],n=k=>+p.grade[k]||0, num=v=>String(v).replace('.',',');
+  const ed=(c,v)=>`<span class="ed" contenteditable="true" data-c="${c}">${esc(v==null?'':String(v))}</span>`;
+  const O=(id,c,v)=>{const o=(p.ov||{})[id+'.'+c];return o!=null?o:v};
   const ab=(x,y,w,h,cls,html,st='')=>`<div class="ab ${cls}" style="left:${x}px;top:${y}px;${w!=null?`width:${w}px;`:''}${h!=null?`height:${h}px;`:''}${st}">${html}</div>`;
   const tg=GRADE.map(g=>[...LOJAS,'PROJETO'].reduce((a,l)=>a+n(l+'|'+g),0)),inf=['1','2','4','6','8','10','12','14'];
-  const tab=(tit,cols,val)=>`<table><tr><th style="width:15%">${tit}</th>${cols.map(c=>`<th>${c}</th>`).join('')}<th>TOTAL</th></tr>${LOJAS.map(l=>`<tr><th>${l}</th>${cols.map(c=>`<td>${val?esc(p.grade[l+'|'+c]||''):''}</td>`).join('')}<td>${val?(cols.reduce((a,c)=>a+n(l+'|'+c),0)||''):''}</td></tr>`).join('')}
+  const tab=(tit,cols,val)=>`<table><tr><th style="width:15%">${tit}</th>${cols.map(c=>`<th>${c}</th>`).join('')}<th>TOTAL</th></tr>${LOJAS.map(l=>`<tr><th>${l}</th>${cols.map(c=>`${val?`<td class="ed" contenteditable="true" inputmode="numeric" data-c="g:${l}|${c}">${esc(p.grade[l+'|'+c]||'')}</td>`:'<td></td>'}`).join('')}<td>${val?(cols.reduce((a,c)=>a+n(l+'|'+c),0)||''):''}</td></tr>`).join('')}
     <tr class="gt"><th>GRADE TOTAL</th>${cols.map((c,i)=>`<td>${val?(tg[i]||''):''}</td>`).join('')}<td>${val?(tg.reduce((a,b)=>a+b,0)||''):''}</td></tr></table>`;
   const jpg=c=>{const b=document.createElement('canvas');b.width=c.width;b.height=c.height;const x=b.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,b.width,b.height);x.drawImage(c,0,0);return b.toDataURL('image/jpeg',.92)};
   const MF={x:165,y:262,w:250},MC={x:800,y:262,w:236};
@@ -604,18 +626,18 @@ function fichaHTML(p){
   // cabeçalho
   h+=ab(14,12,1092,168,'bx','');
   h+=ab(14,12,73,68,'cinza',`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;font-size:10px;gap:3px"><img src="arquivos/estampas/sereia.png" style="height:36px" alt="">SANTACOSTA</div>`,'border-right:1px solid #111;border-bottom:1px solid #111');
-  h+=ab(14,80,73,32,'cinza lbl',`<span style="margin:auto">${esc(p.colecao)}</span>`,'border-right:1px solid #111;border-bottom:1px solid #111;font-size:11px');
-  h+=ab(87,12,199,68,'',`<div style="font-size:10px;padding:2px 4px">REF.</div><div style="font-size:34px;line-height:1;padding-left:12px">${esc(p.ref)}</div>`,'border-right:1px solid #111;border-bottom:1px solid #111');
-  h+=ab(87,80,199,32,'',`<div style="font-size:10px;padding:2px 4px;position:absolute">Nº PEDIDO</div><div style="font-size:26px;line-height:32px;text-align:right;padding-right:22px">${esc(p.pedido)}</div>`,'border-right:1px solid #111;border-bottom:1px solid #111');
-  h+=ab(14,112,272,22,'lbl',`<b style="font-size:11px;margin-right:6px">PREVISÃO DE ENTREGA:</b><span style="font-size:13px">${esc(p.previsao||'')}</span>`,'border-bottom:1px solid #111;border-right:1px solid #111;padding-left:4px');
+  h+=ab(14,80,73,32,'cinza lbl',`<span style="margin:auto">${ed('colecao',p.colecao)}</span>`,'border-right:1px solid #111;border-bottom:1px solid #111;font-size:11px');
+  h+=ab(87,12,199,68,'',`<div style="font-size:10px;padding:2px 4px">REF.</div><div style="font-size:34px;line-height:1;padding-left:12px">${ed('ref',p.ref)}</div>`,'border-right:1px solid #111;border-bottom:1px solid #111');
+  h+=ab(87,80,199,32,'',`<div style="font-size:10px;padding:2px 4px;position:absolute">Nº PEDIDO</div><div style="font-size:26px;line-height:32px;text-align:right;padding-right:22px">${ed('pedido',p.pedido)}</div>`,'border-right:1px solid #111;border-bottom:1px solid #111');
+  h+=ab(14,112,272,22,'lbl',`<b style="font-size:11px;margin-right:6px">PREVISÃO DE ENTREGA:</b><span style="font-size:13px">${ed('previsao',p.previsao||'')}</span>`,'border-bottom:1px solid #111;border-right:1px solid #111;padding-left:4px');
   h+=ab(14,134,62,18,'cinza',`<span style="font-size:10px;line-height:16px;padding-left:3px">LEGENDA:</span>`,'border:1px solid #111;border-top:0');
   h+=ab(80,135,206,40,'',`<div style="color:#2e3192;font-size:9px;white-space:nowrap">ESCRITA AZUL: INFORMAÇÃO DE COSTURA</div><div style="color:#e3201b;font-size:9px;margin-top:3px;white-space:nowrap">ESCRITA VERMELHA: INFO DE ESTAMPAS</div>`);
-  h+=ab(286,12,348,34,'lbl',`<b>NOME:</b>${esc(p.nome)}`,'border-right:1px solid #111;border-bottom:1px solid #111');
-  h+=ab(286,46,348,34,'lbl',`<b>MODELO:</b>${esc(p.modelo||A.nome)}`,'border-right:1px solid #111;border-bottom:1px solid #111');
-  h+=ab(634,12,472,34,'lbl',`<b>TINGIMENTO:</b>${esc((p.tingTexto||p.ting).toUpperCase())}`,'border-bottom:1px solid #111');
+  h+=ab(286,12,348,34,'lbl',`<b>NOME:</b>${ed('nome',p.nome)}`,'border-right:1px solid #111;border-bottom:1px solid #111');
+  h+=ab(286,46,348,34,'lbl',`<b>MODELO:</b>${ed('modelo',p.modelo||A.nome)}`,'border-right:1px solid #111;border-bottom:1px solid #111');
+  h+=ab(634,12,472,34,'lbl',`<b>TINGIMENTO:</b>${ed('tingTexto',(p.tingTexto||p.ting).toUpperCase())}`,'border-bottom:1px solid #111');
   const obsCurta=(p.obs||'').length<=55&&!(p.obs||'').includes('\n');
-  h+=ab(634,46,472,34,'lbl',`<b>OBS:</b>${obsCurta?esc(p.obs):'<span style="font-size:12px">VER OBSERVAÇÕES NA FICHA ↓</span>'}`,'border-bottom:1px solid #111');
-  if(!obsCurta)h+=ab(20,690,380,null,'',`<div style="font-weight:700;font-size:11px;margin-bottom:2px">OBSERVAÇÕES DO PEDIDO</div><div style="white-space:pre-line">${esc(p.obs)}</div>`,'border:1.2px solid #111;border-radius:4px;padding:5px 7px;font-size:11px;line-height:1.3;background:#fffbe8;max-height:86px;overflow:hidden');
+  h+=ab(634,46,472,34,'lbl',`<b>OBS:</b>${obsCurta?ed('obs',p.obs):'<span style="font-size:12px">VER OBSERVAÇÕES NA FICHA ↓</span>'}`,'border-bottom:1px solid #111');
+  if(!obsCurta)h+=ab(20,690,380,null,'',`<div style="font-weight:700;font-size:11px;margin-bottom:2px">OBSERVAÇÕES DO PEDIDO</div><div class="ed" contenteditable="true" data-c="obs" style="white-space:pre-line">${esc(p.obs)}</div>`,'border:1.2px solid #111;border-radius:4px;padding:5px 7px;font-size:11px;line-height:1.3;background:#fffbe8;max-height:86px;overflow:hidden');
   h+=ab(286,80,387,100,'',tab('ADULTO',GRADE,true));
   h+=ab(679,80,427,100,'',tab('INFANTIL',inf,false));
   // corpo
@@ -631,14 +653,14 @@ function fichaHTML(p){
   (p.costura||'').split('\n').filter(t=>t.trim()).forEach((t,i)=>{
     const an=(A.ancoras||[])[i],alvo=an?pf(an[0],an[1]):null,hN=linhasDe(t,19)*14;
     const top=Math.max(fundo,alvo?alvo[1]-hN/2:fundo);fundo=top+hN+10;
-    h+=ab(18,top,140,null,'az2',esc(t));
+    h+=ab(18,top,140,null,'az2',`<div class="ed" contenteditable="true" data-c="cost:${i}">${esc(t)}</div>`);
     if(alvo)ponto([161,top+hN/2],alvo,'#2e3192');
   });
   // estampas (vermelho): um quadro por estampa, com tipo, tamanho e localização
-  const caixa=(x,top,w,it,ih=58)=>{
-    const hh=(it.titulo?30:0)+ih+3*14+14+(it.loc?linhasDe(it.loc,22)*12.5+6:0);
+  const caixa=(x,top,w,it,ih=58)=>{const lt=O(it.id,'loc',it.loc||'');
+    const hh=(it.titulo?30:0)+ih+3*14+14+(lt?linhasDe(lt,22)*12.5+6:12);
     const html=ab(x,top,w,null,'cx',`${it.titulo?`<div class="vm" style="padding:3px 2px 0">${esc(it.titulo)}</div>`:''}<div class="im" style="height:${ih}px"><img src="${pretoURL(it.chave)}" alt=""></div>
-      <div class="dd"><div>COR: ${esc(String(it.cor).toUpperCase())}</div><div>TIPO: ${esc(it.tipo||'ESTAMPA')}</div><div>TAMANHO: ${esc(it.tam||(it.cm?fmtCm(it.cm):tamTxt(it.chave)))}</div></div>${it.loc?`<div class="vm lc">${esc(it.loc)}</div>`:''}`);
+      <div class="dd"><div>COR: ${ed(`b:${it.id}.cor`,O(it.id,'cor',String(it.cor).toUpperCase()))}</div><div>TIPO: ${ed(`b:${it.id}.tipo`,it.tipo||'ESTAMPA')}</div><div>TAMANHO: ${ed(`b:${it.id}.tam`,O(it.id,'tam',it.tam||(it.cm?fmtCm(it.cm):tamTxt(it.chave))))}</div></div><div class="vm lc ed" contenteditable="true" data-c="b:${it.id}.loc">${esc(O(it.id,'loc',it.loc||''))}</div>`);
     return {html,hh};
   };
   const coluna=(x,w,itens,lado,limite=772)=>{let fim=205,ih=58;const total=k=>itens.reduce((a,it)=>a+caixa(x,0,w,it,k).hh+10,0);
@@ -650,17 +672,17 @@ function fichaHTML(p){
       if(it.alvo)ponto([lado==='frente'?x:x+w,tops[i]+(it.titulo?30:0)+30],it.alvo,'#e3201b')})};
   const meio=e=>[e.x+e.w/2,e.y+e.h/2];
   const itF=posicoes(p,'frente').filter(e=>!e.papel.startsWith('extra')).map(e=>e.papel==='frente'
-    ?{chave:e.chave,cor:e.cor,tipo:p.fr.tipo,cm:e.cm,loc:textoFrente(p),alvo:pf(...meio(e))}
-    :{chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.barraTipo||p.sereiaTipo,loc:'3,5cm DA COSTURA LATERAL\n3,5cm DA COSTURA DA BARRA\nESTAMPADA DO ESQUERDO DE QUEM VESTE',alvo:pf(...meio(e))});
+    ?{id:'fr',chave:e.chave,cor:e.cor,tipo:p.fr.tipo,cm:e.cm,loc:textoFrente(p),alvo:pf(...meio(e))}
+    :{id:'barra',chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.barraTipo||p.sereiaTipo,loc:'3,5cm DA COSTURA LATERAL\n3,5cm DA COSTURA DA BARRA\nESTAMPADA DO ESQUERDO DE QUEM VESTE',alvo:pf(...meio(e))});
   const extra=(lado,ordem,pp)=>posicoes(p,lado).filter(e=>e.papel.startsWith('extra')).map(e=>{const x=p.extras[+e.papel.slice(5)];
-     return x.ordem===ordem?{chave:e.chave,cor:e.cor,cm:e.cm,tipo:x.tipo,tam:x.tam,loc:(x.loc||'').toUpperCase(),alvo:pp(...meio(e))}:null}).filter(Boolean);
+     return x.ordem===ordem?{id:'x'+e.papel.slice(5),chave:e.chave,cor:e.cor,cm:e.cm,tipo:x.tipo,tam:x.tam,loc:(x.loc||'').toUpperCase(),alvo:pp(...meio(e))}:null}).filter(Boolean);
   itF.splice(0,0,...extra('frente','antes',pf));itF.push(...extra('frente','depois',pf));
   coluna(428,150,itF,'frente');
-  const itC=posicoes(p,'costas').filter(e=>!e.papel.startsWith('extra')).map(e=>({chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.co.tipo,loc:`${num(p.co.dist)}cm DA COSTURA DA GOLA`,alvo:pc(...meio(e))}));
-  if(p.carimbo)itC.push({chave:p.carimbo,cor:p.carimboCor,tipo:p.carimboTipo,titulo:'CARIMBO INTERNO',loc:'2cm DA COSTURA DA GOLA'});
+  const itC=posicoes(p,'costas').filter(e=>!e.papel.startsWith('extra')).map(e=>({id:'co',chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.co.tipo,loc:`${num(p.co.dist)}cm DA COSTURA DA GOLA`,alvo:pc(...meio(e))}));
+  if(p.carimbo)itC.push({id:'car',chave:p.carimbo,cor:p.carimboCor,tipo:p.carimboTipo,titulo:'CARIMBO INTERNO',loc:'2cm DA COSTURA DA GOLA'});
   itC.splice(0,0,...extra('costas','antes',pc));itC.push(...extra('costas','depois',pc));
   coluna(612,170,itC,'costas');
-  return `<div class="fichaA" style="position:absolute;inset:0">${h}<svg viewBox="0 0 1123 794">${linhas.join('')}</svg></div>`;
+  return `<div class="fichaA" data-pid="${p.id}" style="position:absolute;inset:0">${h}<svg viewBox="0 0 1123 794">${linhas.join('')}</svg></div>`;
 }
 
 // ---------- mapa ----------
@@ -686,7 +708,7 @@ function ir(t){
   $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
   $$('.tela').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));
   if(t==='ficha')$('#ficha').innerHTML=fichaHTML(P);
-  if(t==='mapa'){$('#m-nome').value=mapa.nome;$('#m-texto').value=mapa.texto;$('#m-lado').value=mapa.lado;$('#mapa').innerHTML=mapaHTML()}
+  if(t==='mapa'){$('#m-nome').value=mapa.nome;$('#m-texto').value=mapa.texto;$('#m-lado').value=mapa.lado;$('#mapa').innerHTML=mapaHTML();listarMapa()}
   if(t==='salvas')listar();
   if(t==='lote')mostrarLote();
   if(t==='pedido'&&pedido&&pedido.ids)mostrarPedido();
@@ -712,7 +734,59 @@ $('#b-png').onclick=()=>{
 function imprimir(tela){$('#t-'+tela).classList.add('imprimir');setTimeout(()=>{window.print();$('#t-'+tela).classList.remove('imprimir')},50)}
 $('#b-pdf-ficha').onclick=()=>imprimir('ficha');$('#b-pdf-mapa').onclick=()=>imprimir('mapa');
 $('#t-mapa').addEventListener('input',e=>{mapa.nome=$('#m-nome').value;mapa.texto=$('#m-texto').value;mapa.lado=$('#m-lado').value;gravar('mapa',mapa);clearTimeout(ir.t);ir.t=setTimeout(()=>{$('#mapa').innerHTML=mapaHTML();encaixar()},400)});
-$('#b-limpa-mapa').onclick=()=>{if(!mapa.itens.length)return;mapa.itens=[];gravar('mapa',mapa);$('#mapa').innerHTML=mapaHTML();toast('Mapa vazio')};
+$('#b-limpa-mapa').onclick=()=>{if(!mapa.itens.length)return;mapa.itens=[];gravar('mapa',mapa);atualizarMapa();toast('Mapa vazio')};
+$('#b-todas-mapa').onclick=()=>{pecas.forEach(p=>{if(!mapa.itens.includes(p.id))mapa.itens.push(p.id)});gravar('mapa',mapa);atualizarMapa()};
+const miniaturas={};
+function listarMapa(){const no=mapa.itens.map(id=>pecas.find(p=>p.id===id)).filter(Boolean),fora=pecas.filter(p=>!mapa.itens.includes(p.id));
+  const mi=p=>{const k=p.id+JSON.stringify(p).length;return miniaturas[k]||(miniaturas[k]=desenhar(p,'frente',.12).toDataURL())};
+  const nome=p=>esc([p.ref,ART[p.artigo].nome,p.ting].filter(Boolean).join(' · '));
+  $('#m-lista').innerHTML=(no.map((p,i)=>`<div class="it on"><img src="${mi(p)}" alt=""><span>${i+1}. ${nome(p)}</span><button class="btn claro" data-mv="${p.id}|-1" aria-label="Antes">↑</button><button class="btn claro" data-mv="${p.id}|1" aria-label="Depois">↓</button><button class="btn perigo" data-mout="${p.id}" aria-label="Tirar">×</button></div>`).join('')
+   +fora.map(p=>`<div class="it"><img src="${mi(p)}" alt=""><span>${nome(p)}</span><button class="btn" data-min="${p.id}">+ Pôr</button></div>`).join(''))||'<div class="aviso">Nenhuma peça salva ainda.</div>'}
+function atualizarMapa(){$('#mapa').innerHTML=mapaHTML();listarMapa();encaixar()}
+$('#m-lista').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.min)mapa.itens.push(b.dataset.min);
+  if(b.dataset.mout)mapa.itens=mapa.itens.filter(i=>i!==b.dataset.mout);
+  if(b.dataset.mv){const[id,d]=b.dataset.mv.split('|'),i=mapa.itens.indexOf(id),j=i+(+d);if(j<0||j>=mapa.itens.length)return;[mapa.itens[i],mapa.itens[j]]=[mapa.itens[j],mapa.itens[i]]}
+  gravar('mapa',mapa);atualizarMapa()});
+
+// ---------- escrever direto na ficha ----------
+function pecaDe(el){const r=el.closest('[data-pid]');if(!r)return null;const id=r.dataset.pid;return id===P.id?P:pecas.find(p=>p.id===id)}
+function gravarEd(el){
+  const q=pecaDe(el);if(!q)return false;const c=el.dataset.c;q.ov=q.ov||{};
+  const multi=c==='obs'||c.endsWith('.loc');let v=el.innerText.replace(/\u00a0/g,' ').split('\n').map(t=>t.trim()).filter((t,i,a)=>multi?true:t).join(multi?'\n':' ').trim().toUpperCase();
+  const num=t=>{const m=String(t).match(/\d+(?:[.,]\d+)?/);return m?m[0].replace(',','.'):null};
+  if(c.startsWith('g:')){const k=c.slice(2);v=v.replace(/\D/g,'');if(v)q.grade[k]=v;else delete q.grade[k];return true}
+  if(c.startsWith('cost:')){const l=(q.costura||'').split('\n').filter(t=>t.trim()),i=+c.slice(5);if(v)l[i]=v;else l.splice(i,1);q.costura=l.join('\n');return true}
+  if(c.startsWith('b:')){const[id,f]=c.slice(2).split('.');const alvo=id==='fr'?q.fr:id==='co'?q.co:id[0]==='x'?(q.extras||[])[+id.slice(1)]:null;const k=id+'.'+f;
+    if(f==='tipo'){if(alvo)alvo.tipo=v;else if(id==='barra')q.barraTipo=v;else q.carimboTipo=v;return true}
+    if(f==='cor'){const n=(cores.pant.find(x=>semAcento(x.n)===semAcento(v))||{}).n;
+      if(n){if(alvo)alvo.cor=n;else if(id==='barra')q.barraCor=n;else q.carimboCor=n;delete q.ov[k]}else q.ov[k]=v;return true}
+    if(f==='tam'){const w=num(v);if(alvo&&w){alvo.larg=w;if(alvo.tam)alvo.tam='';delete q.ov[k]}else if(v)q.ov[k]=v;else delete q.ov[k];return true}
+    if(f==='loc'){if(id[0]==='x'){alvo.loc=v;return true}
+      if(alvo&&num(v)!=null){alvo.dist=num(v);const gen=id==='fr'?textoFrente(q):`${String(alvo.dist).replace('.',',')}CM DA COSTURA DA GOLA`;
+        if(semAcento(gen).replace(/\s/g,'')===semAcento(v).replace(/\s/g,'')){delete q.ov[k];return true}}
+      if(v)q.ov[k]=v;else delete q.ov[k];return true}}
+  if(c==='modelo'&&v===ART[q.artigo].nome)v='';
+  if(c==='tingTexto'&&v===String(q.ting).toUpperCase())v='';
+  q[c]=v;return true;
+}
+function redesenharFichas(){
+  const a=document.activeElement,c=a&&a.dataset&&a.dataset.c,r=a&&a.closest&&a.closest('[data-pid]'),pid=r&&r.dataset.pid;
+  if($('#t-ficha').classList.contains('on'))$('#ficha').innerHTML=fichaHTML(P);
+  if($('#t-lote').classList.contains('on'))mostrarLote();
+  encaixar();
+  if(c&&pid){const el=document.querySelector(`[data-pid="${pid}"] [data-c="${CSS.escape(c)}"]`);if(el){el.focus();const s=getSelection(),rg=document.createRange();rg.selectNodeContents(el);rg.collapse(false);s.removeAllRanges();s.addRange(rg)}}
+}
+document.addEventListener('focusin',e=>{const el=e.target;if(el.matches&&el.matches('.fichaA .ed'))el._antes=el.innerText});
+document.addEventListener('focusout',e=>{const el=e.target;if(!(el.matches&&el.matches('.fichaA .ed'))||el.innerText===el._antes)return;
+  const q=pecaDe(el);if(!q||!gravarEd(el))return;
+  if(q===P)guardarP();else{gravar('pecas',pecas)}
+  setTimeout(()=>{redesenharFichas();if(q===P){desenharExtras();preencher();pintarEditor()}},0)});
+document.addEventListener('keydown',e=>{const el=e.target;if(e.key==='Enter'&&el.matches&&el.matches('.fichaA .ed')){const c=el.dataset.c;if(!(c==='obs'||c.endsWith('.loc'))){e.preventDefault();el.blur()}}});
+document.addEventListener('paste',e=>{const el=e.target.closest&&e.target.closest('.fichaA .ed');if(!el)return;e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text'))});
+$('#b-nota').onclick=()=>{const l=(P.costura||'').split('\n').filter(t=>t.trim());l.push('NOVA NOTA');P.costura=l.join('\n');guardarP();preencher();$('#ficha').innerHTML=fichaHTML(P);encaixar();
+  const el=$(`#ficha [data-c="cost:${l.length-1}"]`);if(el){el.focus();const s=getSelection(),rg=document.createRange();rg.selectNodeContents(el);s.removeAllRanges();s.addRange(rg)}};
+$('#b-marca').onclick=e=>{const on=$('#t-ficha').classList.toggle('editavel');$('#t-lote').classList.toggle('editavel',on);e.target.textContent=on?'Esconder marcação':'Mostrar o que dá para mudar'};
 
 function listar(){
   $('#lista-salvas').innerHTML=pecas.length?`<div class="lista">${pecas.map(p=>`<div class="cartao"><img src="${desenhar(p,'frente').toDataURL('image/png')}" alt=""><b>${esc(p.ref||'Sem referência')}</b><span>${esc(ART[p.artigo].nome)} · ${esc(p.ting)}</span><span>${esc(p.nome)}</span>
@@ -803,7 +877,7 @@ function desenharExtras(){
       <label>Quadro na ficha<select data-x="${i}" data-k="ordem">${op([['antes','Em cima das outras'],['depois','Embaixo das outras']],x.ordem)}</select></label>
      </div>
      <label style="margin-top:10px">Localização (texto vermelho da ficha)<input type="text" data-x="${i}" data-k="loc" value="${esc(x.loc||'')}" placeholder="EX.: 5CM ABAIXO DA COSTURA DO OMBRO, CENTRALIZADA NA MANGA"></label>
-     <label style="margin-top:10px">Tamanho (se for diferente do arquivo)<input type="text" data-x="${i}" data-k="tam" value="${esc(x.tam||'')}" placeholder="${esc(tamTxt(x.est))}"></label>
+     <label style="margin-top:10px">Largura da estampa (cm)<input type="number" step="0.5" min="1" data-x="${i}" data-k="larg" value="${esc(x.larg||'')}" placeholder="${esc(String(Math.round(((EST[x.est]||{}).w||0)*10)/10).replace('.',','))}"></label>
      </div>`})()).join('')}
   ligarBuscas();
 }
@@ -815,8 +889,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-extra]');i
 document.addEventListener('click',e=>{const b=e.target.closest('[data-rx]');if(!b)return;P.extras.splice(+b.dataset.rx,1);guardarP();desenharExtras();pintarEditor()});
 function mudouExtra(e){const t=e.target;if(t.dataset.x==null||!t.closest('#t-peca'))return false;if(t.value&&t.value.startsWith('__'))return true;const x=P.extras[+t.dataset.x];
   if(t.dataset.k==='txt'){if(e.type!=='change')return true;const v=t.value.trim();x.est=v?'txt:'+v.toLowerCase():'';}
-  else x[t.dataset.k]=['loc','tam'].includes(t.dataset.k)?t.value.toUpperCase():t.value;
-  guardarP();if(e.type==='change'&&['est','txt'].includes(t.dataset.k))desenharExtras();if(e.type==='change')pintarEditor();return true}
+  else{x[t.dataset.k]=['loc','tam'].includes(t.dataset.k)?t.value.toUpperCase():t.value;if(t.dataset.k==='larg')x.tam=''}
+  guardarP();if(e.type==='change'&&['est','txt'].includes(t.dataset.k))desenharExtras();if(e.type==='change'||t.dataset.k==='larg')pintarEditor();return true}
 
 // ---------- ler planilha (.xlsx sem biblioteca de fora) ----------
 async function lerXLSX(buf){
@@ -1079,7 +1153,7 @@ function migrar(q){if(!q)return q;const up=v=>v?String(v).toUpperCase():v;
   if(q.ting&&!cores.ting.some(c=>c.n===q.ting)){const c=acharCor('ting',q.ting);q.ting=c?c.n:up(q.ting)}return q}
 P=migrar(P);pecas.forEach(migrar);
 montarForm();desenharExtras();preencher();
-preparar().then(()=>{pintarEditor();ir(location.hash.slice(1)||'peca')});
+preparar().then(()=>{preencher();pintarEditor();ir(location.hash.slice(1)||'peca')});
 }
 </script>
 </body>
