@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611262100";</script>
+<script>var VERSAO="202611262110";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -370,13 +370,13 @@ dialog::backdrop{background:#0006}
   <div class="bloco" style="margin-bottom:12px">
     <label>Procurar estampa<input type="search" id="e-busca" placeholder="NOME, LOCAL, REFERÊNCIA, CLIENTE…"></label>
     <div class="botoes" style="margin-top:10px"><button class="btn" id="e-subir">+ Subir estampa</button><button class="btn claro" id="e-escrever">+ Escrever com o alfabeto</button></div>
-    <p class="aviso" style="margin-bottom:0">Toque numa estampa para preencher os dados. O que você puser em tamanho, cor e tipo vira o padrão: quando escolher a estampa numa peça, ela já vem assim.</p>
+    <p class="aviso" style="margin-bottom:0">Toque numa estampa para preencher os dados. A largura real vai para o TAMANHO da ficha; cor e tipo viram o padrão quando escolher a estampa numa peça. Estampa nova (escrita com o alfabeto ou arquivo subido) já entra aqui sozinha: o site abre esta ficha para você completar.</p>
   </div>
   <div class="lista" id="e-lista"></div>
 </section>
 <!-- ================= CORES ================= -->
 <section class="tela" id="t-cores">
-  <div class="padrao naoimprime"><b>Padrão de nomes.</b> Tingimento: FAMÍLIA + NOME + PANTONE / CÓDIGO (ex.: AZ PACÍFICO 1405P / 11407). Estampa (Pantone): NOME + CÓDIGO com U (ex.: AZUL 631U). O site monta o nome sozinho pelos campos.</div>
+  <div class="padrao naoimprime"><b>Padrão de nomes.</b> Tingimento: COR + CÓDIGO DA LAVANDERIA / CÓDIGO DA ESTAMPARIA RUDIMAR (ex.: AZ CÉU 1449P / 11068). Quando tiver os dois códigos, os dois aparecem na ficha; se só tiver um, vai só ele. Estampa (Pantone): NOME + CÓDIGO com U (ex.: AZUL 631U). O site monta o nome sozinho pelos campos.</div>
   <div class="bloco" style="margin-bottom:12px"><label>Pesquisar cor<input type="search" id="c-busca" placeholder="NOME OU CÓDIGO"></label></div>
   <div class="bloco" style="margin-bottom:12px">
     <h3>Cores de tingimento</h3>
@@ -400,8 +400,8 @@ dialog::backdrop{background:#0006}
       <label>Nome<input type="text" id="dc-nome" list="cartela" placeholder="EX.: PACÍFICO"></label>
     </div>
     <div class="linha" style="margin-top:10px">
-      <label id="dc-pan-l">Pantone<input type="text" id="dc-pan" placeholder="EX.: 1405P"></label>
-      <label id="dc-cod-l">Código<input type="text" id="dc-cod" placeholder="EX.: 11407"></label>
+      <label id="dc-pan-l">Código da lavanderia (tom)<input type="text" id="dc-pan" placeholder="EX.: 1449P"></label>
+      <label id="dc-cod-l">Código<input type="text" id="dc-cod" placeholder="EX.: 11068"></label>
     </div>
     <label style="margin-top:10px">Observações (fornecedor, base, lavagem…)<input type="text" id="dc-obs"></label>
     <p class="aviso" style="margin:6px 0 0">Nome que vai ficar: <b id="dc-final"></b></p>
@@ -471,7 +471,7 @@ dialog::backdrop{background:#0006}
       <label>Tipo<select id="de-tipo"><option value="">—</option><option>ESTAMPA</option><option>BORDADO</option></select></label>
     </div>
     <div class="linha" style="margin-top:10px">
-      <label>Largura padrão (cm)<input type="number" step="0.1" min="0.5" id="de-larg"></label>
+      <label>Largura real (cm) — vai para a ficha<input type="number" step="0.1" min="0.5" id="de-larg"></label>
       <label>Cor padrão<select id="de-cor"></select></label>
     </div>
     <div class="linha" style="margin-top:10px">
@@ -628,7 +628,7 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
   const larg=A.largMax||Math.min(28,.6*2*((A.fr||A.co).lado?(A.fr.lado-A.fr.cx):230)/A.esc);
   const por=(chave,cor,cx,top,ancora,papel,caber,lu,vz)=>{const E=EST[chave];if(!E)return;let wc=E.w,hc=E.h;lu=+String(lu||'').replace(',','.')||+E.larg0||0;
     const lim=caber>1?caber:larg;if(caber&&(chave.startsWith('txt:')||E.up)&&wc>lim){hc*=lim/wc;wc=lim}
-    const cm=[wc,hc]; // medida real (vai para a ficha); a largura da tela da peça é só para o desenho
+    const IL=+String((INFO[chave]||{}).larg||'').replace(',','.');const cm=IL>0?[IL,hc*IL/wc]:[wc,hc]; // medida real (vai para a ficha); a largura da tela da peça é só para o desenho
     if(lu>0){hc*=lu/wc;wc=lu}
     const vis=+((INFO[chave]||{}).vis||E.vis||1)*(+vz||1);const w=wc*A.esc*vis,h=hc*A.esc*vis;let X=cx-w/2,Y=top;
     if(ancora==='centro')Y=top-h/2;if(ancora==='barra'){X=cx-w;Y=top-h}out.push({chave,cor,x:X,y:Y,w,h,papel,cm,wd:wc})};
@@ -708,7 +708,7 @@ function ler_form(e){
   P.artigo=$('#f-artigo').value;P.ting=$('#f-ting').value;
   for(const k of['fr','co']){P[k].est=$(`#f-${k}-est`).value;if(id===`f-${k}-txt`){const t=$(`#f-${k}-txt`).value.trim();P[k].est=t?'txt:'+t.toLowerCase():''}
     P[k].pos=$(`#f-${k}-pos`).value;P[k].cor=$(`#f-${k}-cor`).value;
-    if(id===`f-${k}-est`||id===`f-${k}-txt`){const I=INFO[P[k].est];if(I){if(I.larg)$(`#f-${k}-larg`).value=I.larg;if(I.cor){garantirOpcao($(`#f-${k}-cor`),I.cor);$(`#f-${k}-cor`).value=P[k].cor=I.cor}if(I.tipo)$(`#f-${k}-tipo`).value=I.tipo}}P[k].dist=$(`#f-${k}-dist`).value;P[k].tipo=$(`#f-${k}-tipo`).value;
+    if(id===`f-${k}-est`||id===`f-${k}-txt`){const I=INFO[P[k].est];if(I){if(I.cor){garantirOpcao($(`#f-${k}-cor`),I.cor);$(`#f-${k}-cor`).value=P[k].cor=I.cor}if(I.tipo)$(`#f-${k}-tipo`).value=I.tipo}}P[k].dist=$(`#f-${k}-dist`).value;P[k].tipo=$(`#f-${k}-tipo`).value;
     const d=$(`#f-${k}-dist`).value,lg=$(`#f-${k}-larg`).value;P.ov=P.ov||{};if(String(P[k].dist)!==d)delete P.ov[k+'.loc'];P[k].dist=d;P[k].larg=lg}
   const A=ART[P.artigo];
   if(id==='f-fr-pos'||id==='f-artigo')P.fr.dist=P.fr.pos==='mini'?A.mini[0]:A.frontal;
@@ -720,7 +720,7 @@ function ler_form(e){
   $$('#f-grade input').forEach(i=>{const v=i.value.replace(/\D/g,'');if(v)P.grade[i.dataset.g]=v;else delete P.grade[i.dataset.g]});
   guardarP();
 }
-$('#t-peca').addEventListener('change',e=>{if(e.target.closest('.grade'))return;if(mudouExtra(e))return;ler_form(e);preencher();if(e.target.id==='f-artigo'){(P.extras||[]).forEach(x=>{const L=ART[P.artigo].lugares[x.lado]||{};if(!L[x.onde])x.onde=Object.keys(L)[0]});desenharExtras()}pintarEditor()});
+$('#t-peca').addEventListener('change',e=>{if(e.target.closest('.grade'))return;if(mudouExtra(e)){if(e.target.dataset.k==='txt')novaEstampaTalvez(P.extras[+e.target.dataset.x].est);return}ler_form(e);{const m=(e.target.id||'').match(/^f-(fr|co)-txt$/);if(m)setTimeout(()=>novaEstampaTalvez(P[m[1]].est),50)}preencher();if(e.target.id==='f-artigo'){(P.extras||[]).forEach(x=>{const L=ART[P.artigo].lugares[x.lado]||{};if(!L[x.onde])x.onde=Object.keys(L)[0]});desenharExtras()}pintarEditor()});
 $('#t-peca').addEventListener('input',e=>{if(e.target.dataset.x!=null){mudouExtra(e);return}if(e.target.matches('#f-grade input')){ler_form(e);somar()}else if(e.target.matches('input[type=text],textarea')&&!/-txt$/.test(e.target.id))ler_form(e)});
 
 // ---------- textos da ficha ----------
@@ -957,7 +957,7 @@ $('#b-fx').onclick=()=>{$('#fx-est').innerHTML=listaEst().filter(([k])=>!k.start
 $('#fx-lado').onchange=fxLugares;
 $('#dlg-fx').addEventListener('close',()=>{if($('#dlg-fx').returnValue!=='ok')return;const t=$('#fx-txt').value.trim();
   P.extras=P.extras||[];P.extras.push({lado:$('#fx-lado').value,onde:$('#fx-onde').value,est:t?'txt:'+t.toLowerCase():$('#fx-est').value,cor:$('#fx-cor').value,tipo:$('#fx-tipo').value,ordem:'depois',loc:$('#fx-loc').value.toUpperCase(),tam:''});
-  guardarP();desenharExtras();pintarEditor();$('#ficha').innerHTML=fichaHTML(P);encaixar();toast('Estampa colocada na ficha')});
+  guardarP();novaEstampaTalvez(P.extras[P.extras.length-1].est);desenharExtras();pintarEditor();$('#ficha').innerHTML=fichaHTML(P);encaixar();toast('Estampa colocada na ficha')});
 
 function listar(){const q=semAcento($('#s-busca').value||'').trim();
   const ps=pecas.filter(p=>!q||semAcento([p.ref,p.nome,p.pedido,p.colecao,p.ting,ART[p.artigo].nome,p.obs].join(' ')).includes(q));
@@ -972,6 +972,7 @@ $('#lista-salvas').addEventListener('click',e=>{const b=e.target.closest('button
 });
 
 // ---------- estampas guardadas ----------
+function novaEstampaTalvez(k){if(k&&k.startsWith('txt:')&&!PRONTOS.includes(k.slice(4))&&!INFO[k]){INFO[k]={};gravar('estinfo',INFO);abrirEst(k)}}
 function usosEst(k){const r=[];for(const p of pecas){const ch=[p.fr&&p.fr.est,p.co&&p.co.est,p.barra,p.carimbo,...(p.extras||[]).map(x=>x.est)];if(ch.includes(k))r.push(p.ref||p.nome||'SEM REF.')}return [...new Set(r)]}
 function todasEst(){return [...new Set([...PRONTOS.map(t=>'txt:'+t),...Object.keys(INFO).filter(k=>k.startsWith('txt:')),...Object.keys(EST).filter(k=>!k.startsWith('txt:'))])].filter(k=>!(INFO[k]&&INFO[k].apagado))}
 function listarEst(){const q=semAcento($('#e-busca').value||'').trim();
@@ -1064,7 +1065,7 @@ function abrirCor(tipo,i,sel,nomeSugerido){
   editando={tipo,i,sel};const c=i!=null?cores[tipo][i]:{n:nomeSugerido||'',h:'#888888'};
   $('#dc-tit').textContent=(i!=null?'Editar cor':'Nova cor')+(tipo==='ting'?' de tingimento':' de estampa (Pantone)');
   const pc=partesCor(tipo,c);$('#dc-fam').value=pc.fam||'';$('#dc-nome').value=pc.nome||'';$('#dc-pan').value=pc.pan||'';$('#dc-cod').value=pc.cod||'';$('#dc-obs').value=c.obs||'';
-  $('#dc-fam-l').hidden=$('#dc-pan-l').hidden=tipo!=='ting';$('#dc-cod-l').firstChild.textContent=tipo==='ting'?'Código interno':'Código Pantone';$('#dc-final').textContent=comporCor(tipo)||c.n;
+  $('#dc-fam-l').hidden=$('#dc-pan-l').hidden=tipo!=='ting';$('#dc-cod-l').firstChild.textContent=tipo==='ting'?'Código da estamparia Rudimar':'Código Pantone';$('#dc-final').textContent=comporCor(tipo)||c.n;
   $('#dc-del').style.display=i!=null?'':'none';
   $('#dc-dica').textContent=tipo==='pant'?'O código Pantone sai com U no final (ex.: 2945 → 2945U).':'';
   $('#cartela').innerHTML=tipo==='ting'?CARTELA.map(n=>`<option value="${esc(n.toUpperCase())}">`).join(''):'';
@@ -1113,7 +1114,7 @@ $('#dlg-up').addEventListener('close',()=>{const {sel,car}=subindo||{};subindo=n
   const u={k,nome,w,h,src,car:car?1:0};UPS.push(u);try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS.pop();toast('Arquivo grande demais para guardar neste aparelho');return}
   EST[k]={nome:u.nome,w,h,car:u.car,up:1};IMG['e-'+k]=upImg;
   if(sel){garantirOpcao(sel,k);sel.querySelector(`option[value="${k}"]`).textContent=u.nome;sel.value=k;sel.dispatchEvent(new Event('change',{bubbles:true}))}
-  atualizarTudo();if($('#t-estampas').classList.contains('on')){listarEst();abrirEst(k)}else toast('Arquivo guardado')});
+  atualizarTudo();if($('#t-estampas').classList.contains('on'))listarEst();abrirEst(k)});
 
 // ---------- mais estampas (dentro da frente e das costas) ----------
 function desenharExtras(){
