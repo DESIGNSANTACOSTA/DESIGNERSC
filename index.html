@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611262110";</script>
+<script>var VERSAO="202611262130";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -226,7 +226,7 @@ dialog::backdrop{background:#0006}
 <!-- ================= FICHAS DO PEDIDO ================= -->
 <section class="tela" id="t-lote">
   <div class="botoes naoimprime" style="margin-bottom:12px">
-    <button class="btn" id="b-pdf-lote">Salvar PDF / imprimir todas</button>
+    <button class="btn" id="b-png-lote">Salvar todas em PNG</button>
     <button class="btn claro" id="b-lote-mapa">Pôr todas no mapa</button>
     <button class="btn claro" data-ir="pedido">Voltar para o pedido</button>
   </div>
@@ -326,7 +326,7 @@ dialog::backdrop{background:#0006}
 <!-- ================= FICHA ================= -->
 <section class="tela" id="t-ficha">
   <div class="botoes naoimprime" style="margin-bottom:12px">
-    <button class="btn" id="b-pdf-ficha">Salvar PDF / imprimir</button>
+    <button class="btn" id="b-png-ficha">Salvar ficha em PNG</button>
     <button class="btn claro" id="b-nota">+ Nota de costura</button>
     <button class="btn claro" id="b-fx">+ Estampa</button>
   </div>
@@ -838,6 +838,45 @@ function mapaHTML(){
    mapa.pos[f.dataset.k]={x:f.offsetLeft,y:f.offsetTop,w:f.offsetWidth,h:f.offsetHeight};arr=null;gravar('mapa',mapa)};
  $('#mapa').addEventListener('pointerup',fim);$('#mapa').addEventListener('pointercancel',fim);}
 
+// ---------- ficha em PNG (desenha a ficha num canvas, funciona no iPad) ----------
+function fichaPNG(raiz,K=3){
+  const R0=raiz.getBoundingClientRect(),s=R0.width/1123,c=document.createElement('canvas');c.width=1123*K;c.height=794*K;
+  const x=c.getContext('2d');x.scale(K,K);x.fillStyle='#fff';x.fillRect(0,0,1123,794);
+  const box=r=>[(r.left-R0.left)/s,(r.top-R0.top)/s,r.width/s,r.height/s];
+  const cor=v=>v&&v!=='transparent'&&!/rgba\(.*,\s*0\)$/.test(v);
+  const els=[raiz,...raiz.querySelectorAll('*')];
+  for(const el of els){if(el.closest('.pt,.naoimprime')||el.closest('svg'))continue;const cs=getComputedStyle(el);if(cs.display==='none'||cs.visibility==='hidden')continue;
+    const[l,t,w,h]=box(el.getBoundingClientRect());if(!w||!h)continue;const rad=parseFloat(cs.borderTopLeftRadius)||0;
+    const caminho=()=>{x.beginPath();if(rad&&x.roundRect)x.roundRect(l,t,w,h,rad);else x.rect(l,t,w,h)};
+    if(cor(cs.backgroundColor)&&!el.matches('.ed:focus')){x.fillStyle=cs.backgroundColor;caminho();x.fill()}
+    const bw=['Top','Right','Bottom','Left'].map(d=>parseFloat(cs['border'+d+'Width'])||0),bc=['Top','Right','Bottom','Left'].map(d=>cs['border'+d+'Color']);
+    if(bw.every(v=>v===bw[0])&&bw[0]&&bc.every(v=>v===bc[0])&&cs.borderTopStyle!=='none'){x.strokeStyle=bc[0];x.lineWidth=bw[0];x.beginPath();if(rad&&x.roundRect)x.roundRect(l+bw[0]/2,t+bw[0]/2,w-bw[0],h-bw[0],rad);else x.rect(l+bw[0]/2,t+bw[0]/2,w-bw[0],h-bw[0]);x.stroke()}
+    else bw.forEach((b,i)=>{if(!b||cs['border'+['Top','Right','Bottom','Left'][i]+'Style']==='none')return;x.strokeStyle=bc[i];x.lineWidth=b;x.beginPath();
+      if(i===0){x.moveTo(l,t+b/2);x.lineTo(l+w,t+b/2)}if(i===2){x.moveTo(l,t+h-b/2);x.lineTo(l+w,t+h-b/2)}if(i===3){x.moveTo(l+b/2,t);x.lineTo(l+b/2,t+h)}if(i===1){x.moveTo(l+w-b/2,t);x.lineTo(l+w-b/2,t+h)}x.stroke()});
+    if(el.tagName==='IMG'&&el.complete&&el.naturalWidth){try{x.drawImage(el,l,t,w,h)}catch(e){}}
+  }
+  // textos
+  const tw=document.createTreeWalker(raiz,NodeFilter.SHOW_TEXT);let n;
+  while(n=tw.nextNode()){const pe=n.parentElement;if(!n.data.trim()||!pe||pe.closest('.pt,.naoimprime,svg'))continue;const cs=getComputedStyle(pe);
+    x.font=`${cs.fontStyle} ${cs.fontWeight} ${parseFloat(cs.fontSize)}px ${cs.fontFamily}`;x.fillStyle=cs.color;x.textBaseline='middle';
+    const up=cs.textTransform==='uppercase';const rg=document.createRange();let run='',rx=0,ry=null,rh=0;
+    const solta=()=>{if(run.trim())x.fillText(up?run.toUpperCase():run,rx,ry+rh/2);run=''};
+    for(let i=0;i<n.data.length;i++){rg.setStart(n,i);rg.setEnd(n,i+1);const rs=rg.getClientRects();if(!rs.length)continue;const[l,t,w,h]=box(rs[0]);
+      if(ry===null||Math.abs(t-ry)>2){solta();rx=l;ry=t;rh=h}run+=n.data[i]}
+    solta()}
+  // linhas e pontos
+  raiz.querySelectorAll('svg line').forEach(L=>{x.strokeStyle=L.getAttribute('stroke');x.lineWidth=+L.getAttribute('stroke-width')||1;x.beginPath();x.moveTo(+L.getAttribute('x1'),+L.getAttribute('y1'));x.lineTo(+L.getAttribute('x2'),+L.getAttribute('y2'));x.stroke()});
+  raiz.querySelectorAll('svg circle').forEach(C=>{x.fillStyle=C.getAttribute('fill');x.beginPath();x.arc(+C.getAttribute('cx'),+C.getAttribute('cy'),+C.getAttribute('r'),0,7);x.fill()});
+  return c;
+}
+async function salvarFichaPNG(raiz){if(!raiz)return;document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
+  const q=pecaDe(raiz)||P,nome=(([q.ref,q.nome].filter(Boolean).join(' - '))||'ficha').replace(/[\\/:*?"<>|]+/g,'').trim()+'.png';
+  const c=fichaPNG(raiz);const blob=await new Promise(r=>c.toBlob(r,'image/png'));if(!blob){toast('Não consegui gerar a imagem');return}
+  const file=new File([blob],nome,{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})&&matchMedia('(pointer:coarse)').matches){try{await navigator.share({files:[file],title:nome});return}catch(e){if(e.name==='AbortError')return}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},3000);toast('Ficha salva em PNG')}
+$('#b-png-ficha').onclick=()=>salvarFichaPNG($('#ficha .fichaA'));
+
 // ---------- telas ----------
 function encaixar(){ // folha A4 cabe na largura da tela
   $$('.folha-espaco').forEach(w=>{const f=w.firstElementChild;const larg=w.parentElement.clientWidth-24;const s=Math.min(1,larg/1123);
@@ -886,7 +925,7 @@ $('#b-png').onclick=()=>{
   c.toBlob(bl=>{const l=document.createElement('a');l.href=URL.createObjectURL(bl);l.download=`${P.ref||'mockup'}_${P.ting}.png`.replace(/[^\w.\-]+/g,'_');document.body.appendChild(l);l.click();setTimeout(()=>{URL.revokeObjectURL(l.href);l.remove()},2000)},'image/png');
 };
 function imprimir(tela){$('#t-'+tela).classList.add('imprimir');setTimeout(()=>{window.print();$('#t-'+tela).classList.remove('imprimir')},50)}
-$('#b-pdf-ficha').onclick=()=>imprimir('ficha');$('#b-pdf-mapa').onclick=()=>imprimir('mapa');
+$('#b-pdf-mapa').onclick=()=>imprimir('mapa');
 $('#t-mapa').addEventListener('input',e=>{mapa.nome=$('#m-nome').value;mapa.texto=$('#m-texto').value;mapa.lado=$('#m-lado').value;gravar('mapa',mapa);clearTimeout(ir.t);ir.t=setTimeout(()=>{$('#mapa').innerHTML=mapaHTML();encaixar()},400)});
 $('#b-limpa-mapa').onclick=()=>{if(!mapa.itens.length)return;mapa.itens=[];gravar('mapa',mapa);atualizarMapa();toast('Mapa vazio')};
 $('#b-arrumar-mapa').onclick=()=>{mapa.pos={};gravar('mapa',mapa);atualizarMapa();toast('Mapa arrumado em grade')};
@@ -1349,9 +1388,10 @@ $('#pd-ler').onclick=()=>{
   revisar(G)};
 let lote=ler('lote',[]);
 function mostrarLote(){const ps=lote.map(id=>pecas.find(p=>p.id===id)).filter(Boolean);
-  $('#lote').innerHTML=ps.length?ps.map(p=>`<div class="lote-f"><div class="botoes naoimprime" style="margin-bottom:6px"><button class="btn claro" data-abrirl="${p.id}">Editar esta peça</button></div><div class="folha-wrap"><div class="folha-espaco"><div class="folha">${fichaHTML(p)}</div></div></div></div>`).join(''):'<div class="vazio">Nenhum pedido lido ainda.</div>'}
+  $('#lote').innerHTML=ps.length?ps.map(p=>`<div class="lote-f"><div class="botoes naoimprime" style="margin-bottom:6px"><button class="btn claro" data-abrirl="${p.id}">Editar esta peça</button><button class="btn claro" data-pngl="${p.id}">Salvar PNG</button></div><div class="folha-wrap"><div class="folha-espaco"><div class="folha">${fichaHTML(p)}</div></div></div></div>`).join(''):'<div class="vazio">Nenhum pedido lido ainda.</div>'}
 $('#lote').addEventListener('click',e=>{const b=e.target.closest('[data-abrirl]');if(!b)return;P=JSON.parse(JSON.stringify(pecas.find(p=>p.id===b.dataset.abrirl)));gravar('atual',P);desenharExtras();preencher();pintarEditor();ir('peca')});
-$('#b-pdf-lote').onclick=()=>imprimir('lote');
+$('#b-png-lote').onclick=async()=>{const fs=[...$$('#lote .fichaA')];for(const f of fs){await salvarFichaPNG(f);await new Promise(r=>setTimeout(r,700))}};
+$('#lote').addEventListener('click',e=>{const b=e.target.closest('[data-pngl]');if(b)salvarFichaPNG(b.closest('.lote-f').querySelector('.fichaA'))});
 $('#b-lote-mapa').onclick=()=>{lote.forEach(id=>{if(!mapa.itens.includes(id))mapa.itens.push(id)});gravar('mapa',mapa);toast('Peças no mapa')};
 
 // ---------- caixa de escolha com busca ----------
