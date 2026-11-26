@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611261640";</script>
+<script>var VERSAO="202611261750";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -22,6 +22,20 @@ button,select,input,textarea{font:inherit;color:inherit}
 header{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;display:flex;align-items:center;gap:12px;padding:10px max(16px,env(safe-area-inset-left));flex-wrap:wrap}
 header .marca{display:flex;align-items:center;gap:8px;font-weight:500;letter-spacing:.02em;margin-right:auto}
 header .marca img{height:28px;filter:invert(1)}
+#salvo{font-size:12px;background:#2e7d32;color:#fff;border-radius:999px;padding:3px 10px;opacity:0;transition:opacity .3s}
+#salvo.on{opacity:1}
+.mfig{position:absolute;margin:0;display:flex;flex-direction:column;align-items:center;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.mfig img{width:100%;flex:1;min-height:0;object-fit:contain;pointer-events:none}
+.mfig figcaption{font-size:10px;color:#555;text-align:center;line-height:1.2}
+.mfig .alca{position:absolute;right:-6px;bottom:-6px;width:26px;height:26px;border-radius:50%;background:#17150f;color:#fff;font-size:13px;display:grid;place-items:center;touch-action:none;cursor:nwse-resize}
+.mfig.arrastando{outline:2px dashed #e3b000;z-index:5}
+.mfig.mtexto{display:block}
+@media print{.mfig .alca{display:none}}
+.cest{background:var(--card);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:4px;text-align:left;border:0;cursor:pointer;font:inherit;color:inherit}
+.cest .im{height:90px;display:grid;place-items:center;background:#faf8f5;border-radius:8px;padding:6px}
+.cest .im{overflow:hidden}.cest .im img{max-width:100%;max-height:78px;object-fit:contain}
+.cest b{font-size:14px;font-weight:600}
+.cest span{font-size:12px;color:var(--mute);line-height:1.35}
 nav{display:flex;gap:4px;flex-wrap:wrap}
 nav button{background:transparent;border:1px solid #ffffff40;color:#fff;border-radius:999px;padding:8px 16px;min-height:44px;cursor:pointer}
 nav button.on{background:#fff;color:var(--ink)}
@@ -40,8 +54,8 @@ main{padding:16px max(16px,env(safe-area-inset-left)) 40px;max-width:1400px;marg
 .bloco h3{margin:0 0 10px;font-size:15px;font-weight:600}
 .linha{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute)}
-input[type=text],textarea,.cbx-b span,.cbx-p li,.cor,.grade th,.rev .peca b,#pd-rev h3{text-transform:uppercase}
-select,input[type=text],input[type=number],textarea{font-size:16px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+input[type=text],input[type=search],textarea,.cbx-b span,.cbx-p li,.cor,.grade th,.rev .peca b,#pd-rev h3{text-transform:uppercase}
+select,input[type=text],input[type=number],input[type=search],textarea{font-size:16px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
 textarea{min-height:90px;resize:vertical}
 .check{flex-direction:row;align-items:center;gap:10px;color:var(--ink);font-size:15px;min-height:44px}
 .check input{width:22px;height:22px;accent-color:var(--ink)}
@@ -111,7 +125,7 @@ span.ed:empty,div.ed:empty{display:inline-block;min-width:40px;min-height:1em}
 .mapa{text-transform:uppercase}
 .mapa .tit{position:absolute;left:22px;top:16px;font-family:Jost,sans-serif;font-size:13px;line-height:1.3}
 .mapa .tit b{font-family:"Archivo Narrow",sans-serif;font-size:15px;font-weight:700;letter-spacing:.02em}
-.mgrade{position:absolute;left:22px;right:22px;top:62px;bottom:22px;display:grid;gap:10px;align-content:start}
+.mgrade0{position:absolute;left:22px;right:22px;top:62px;bottom:22px;display:grid;gap:10px;align-content:start}
 .mgrade figure{margin:0;display:flex;flex-direction:column;align-items:center;min-height:0;overflow:hidden}
 .mgrade img{width:100%;height:100%;object-fit:contain;min-height:0;flex:1}
 .mgrade figcaption{font-size:10px;color:#555;text-align:center;line-height:1.2}
@@ -175,13 +189,14 @@ dialog::backdrop{background:#0006}
 </head>
 <body>
 <header class="naoimprime">
-  <div class="marca"><img src="arquivos/estampas/sereia.png" alt=""> Estúdio Santacosta <small style="opacity:.6;font-weight:400">· teste</small></div>
+  <div class="marca"><img src="arquivos/estampas/sereia.png" alt=""> Estúdio Santacosta <small style="opacity:.6;font-weight:400">· teste</small><span id="salvo" aria-live="polite">Salvo ✓</span></div>
   <nav>
     <button data-t="pedido">Pedido</button>
     <button data-t="peca" class="on">Peça</button>
     <button data-t="ficha">Ficha técnica</button>
     <button data-t="mapa">Mapa</button>
     <button data-t="salvas">Peças salvas</button>
+    <button data-t="estampas">Estampas</button>
     <button data-t="cores">Cores</button>
   </nav>
 </header>
@@ -323,17 +338,27 @@ dialog::backdrop{background:#0006}
     <div class="botoes" style="margin-top:10px">
       <button class="btn" id="b-pdf-mapa">Salvar PDF / imprimir</button>
       <button class="btn claro" id="b-todas-mapa">Pôr todas as peças</button>
+      <button class="btn claro" id="b-arrumar-mapa">Arrumar sozinho</button>
       <button class="btn perigo" id="b-limpa-mapa">Esvaziar mapa</button>
     </div>
     <h4 class="sub">Peças do mapa</h4>
     <p class="aviso" style="margin:0">Toque em “+ Pôr” para colocar a peça no mapa. Use as setas para mudar a ordem e × para tirar.</p>
     <div class="mlista" id="m-lista"></div>
-    <p class="aviso">As peças se arrumam sozinhas em grade, na ordem da lista, sem uma ficar em cima da outra.</p>
+    <p class="aviso">No mapa, arraste cada peça para onde quiser e puxe a bolinha ↘ para aumentar ou diminuir. “Arrumar sozinho” volta para a grade.</p>
   </div>
   <div class="folha-wrap"><div class="folha-espaco"><div class="folha mapa" id="mapa"></div></div></div>
 </section>
 <!-- ================= SALVAS ================= -->
-<section class="tela" id="t-salvas"><div id="lista-salvas"></div></section>
+<section class="tela" id="t-salvas"><div class="bloco" style="margin-bottom:12px"><label>Procurar peça<input type="search" id="s-busca" placeholder="REFERÊNCIA, NOME, CLIENTE, PEDIDO, COR…"></label></div><div id="lista-salvas"></div></section>
+<!-- ================= ESTAMPAS ================= -->
+<section class="tela" id="t-estampas">
+  <div class="bloco" style="margin-bottom:12px">
+    <label>Procurar estampa<input type="search" id="e-busca" placeholder="NOME, LOCAL, REFERÊNCIA, CLIENTE…"></label>
+    <div class="botoes" style="margin-top:10px"><button class="btn" id="e-subir">+ Subir estampa</button><button class="btn claro" id="e-subir-car">+ Subir carimbo</button><button class="btn claro" id="e-escrever">+ Escrever com o alfabeto</button></div>
+    <p class="aviso" style="margin-bottom:0">Toque numa estampa para preencher os dados. O que você puser em tamanho, cor e tipo vira o padrão: quando escolher a estampa numa peça, ela já vem assim.</p>
+  </div>
+  <div class="lista" id="e-lista"></div>
+</section>
 <!-- ================= CORES ================= -->
 <section class="tela" id="t-cores">
   <div class="bloco" style="margin-bottom:12px"><label>Pesquisar cor<input type="search" id="c-busca" placeholder="NOME OU CÓDIGO"></label></div>
@@ -381,6 +406,28 @@ dialog::backdrop{background:#0006}
     <div class="botoes" style="margin-top:14px"><button class="btn" value="ok">Guardar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button></div>
   </form>
 </dialog>
+<dialog id="dlg-est">
+  <form method="dialog">
+    <h3 style="margin-top:0">Dados da estampa</h3>
+    <div id="de-prev" style="height:110px;display:grid;place-items:center;background:#faf8f5;border-radius:10px;margin-bottom:10px"></div>
+    <label>Nome (o que é)<input type="text" id="de-nome"></label>
+    <div class="linha" style="margin-top:10px">
+      <label>Onde fica<select id="de-loc"><option value="">—</option><option>FRONTAL (PEITO)</option><option>MINI (LADO DO PEITO)</option><option>NUCA</option><option>COSTAS (GRANDE)</option><option>BARRA</option><option>MANGA</option><option>CARIMBO INTERNO</option><option>OUTRO</option></select></label>
+      <label>Tipo<select id="de-tipo"><option value="">—</option><option>ESTAMPA</option><option>BORDADO</option></select></label>
+    </div>
+    <div class="linha" style="margin-top:10px">
+      <label>Largura padrão (cm)<input type="number" step="0.1" min="0.5" id="de-larg"></label>
+      <label>Cor padrão<select id="de-cor"></select></label>
+    </div>
+    <div class="linha" style="margin-top:10px">
+      <label>Referência / pedido<input type="text" id="de-ref" placeholder="EX.: TZL2709"></label>
+      <label>Cliente ou coleção<input type="text" id="de-cli"></label>
+    </div>
+    <label style="margin-top:10px">Observações<input type="text" id="de-obs"></label>
+    <p class="aviso" id="de-usada"></p>
+    <div class="botoes" style="margin-top:10px"><button class="btn" value="ok">Guardar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button><button class="btn perigo" value="del" id="de-del" formnovalidate>Apagar arquivo</button></div>
+  </form>
+</dialog>
 <div id="zoom" hidden>
   <div class="zbar"><button class="btn claro" data-z="-1">−</button><button class="btn claro" data-z="1">+</button><span id="z-lado" style="color:#fff;margin:0 auto"></span><button class="btn" data-z="0">Fechar</button></div>
   <div class="zarea"><img id="z-img" alt=""></div>
@@ -426,6 +473,8 @@ const EST={
  'guarda-carimbo':{nome:'CARIMBO GUARDA (7 × 11,5 CM)',w:7.02,h:11.48,car:1}
 };
 const PRONTOS=['brava','guarda','ilhadomel']; // escritas prontas com o alfabeto
+let INFO=(()=>{try{return JSON.parse(localStorage.getItem('sc_estinfo'))||{}}catch(e){return {}}})(); // dados de cada estampa: {nome,loc,tipo,larg,cor,ref,cli,obs}
+const nomeEst=k=>String((INFO[k]&&INFO[k].nome)||(EST[k]?EST[k].nome:(k.startsWith('txt:')?k.slice(4)+' (ALFABETO)':k))).toUpperCase();
 const GRADE=['PP','P','M','G','2G','3G','4G'], LOJAS=['BRAVA','E-COMM','GUARDA','BALNEÁRIO'];
 const TING0=[["AVELÃ", "#c45226"], ["RAMI", "#c8b294"], ["AM AÇAFRÃO 1006P", "#e1be63"], ["AM MANTEIGA 10390", "#ebd394"], ["LJ LARANJA 1228P / 11315", "#ff6b05"], ["CL PÊSSEGO 1430P", "#f57278"], ["VM JELLY NEW", "#b03740"], ["VM RED BERRY", "#d1434a"], ["RS ROSE 10769", "#eb5282"], ["ROSA ARRANJO 11509", "#ffbcbf"], ["LS UNICÓRNIO", "#d4b6d2"], ["RX MÁGICO", "#85539d"], ["PRINCESS BLUE", "#5c3bab"], ["AZ ASTER 1007P / 1139P", "#2796d8"], ["AZ MIRAGE 11462", "#608a9f"], ["AZ ESTERLINO 10818", "#92a6af"], ["VD AZULADO 1439P", "#59b8b8"], ["VD LIMO 10718", "#8be1bd"], ["VD MILITAR 348P", "#365434"], ["VD ULTRAMARINE 1403P", "#188471"], ["VD ESMERALDA 1135P", "#30682b"], ["VD GRAVINHA 323P", "#868b6c"], ["VD LÍRIO 1425P / 10837", "#daffbe"], ["BRANCO", "#ffffff"], ["OFF WHITE 9780", "#ebe3d0"], ["BG NATURAL CLASSIC", "#d1c7aa"], ["CZ GELO 339P / 11711", "#bbb6b6"], ["CZ CHUMBO 1033P / 9669", "#4b4946"], ["PRETO", "#1c1c1c"], ["AZ MARINHO MARMORIZADO", "#1f2b44"], ["PRETO MARMORIZADO", "#2a2a2a"], ["RX VELUDO 507P / 10721", "#322e57"], ["RX GLIXONIA 344P", "#603f64"], ["RX PRISMA 10590", "#5c439b"], ["RX OPULÊNCIA 9732", "#5a4f94"], ["RX AMETISTA 1489P / 55076", "#5f3752"], ["LS MÍSTICO 1408P", "#575266"], ["LS RAPSÓDIA 11739", "#b093bb"], ["RX NEON 848P / 10510", "#c858c1"], ["BO AMORA 10949", "#703048"], ["RS ENCANTO 10647", "#9e5c6a"], ["RS SMOCKINS 10147", "#9f405e"], ["RS FÚCSIA GR-3181", "#630833"], ["RS PINK 10751", "#ff78d1"], ["CL SALMÃO 1073P", "#ff9f89"], ["CL MELÃO 898P / 10753", "#ed7a66"], ["LJ ROCHE 9107", "#904434"], ["LJ DAMASCO 8652", "#db8248"], ["LJ ARTESÃ 10897", "#e19944"], ["LJ MEL 1507P / 8790", "#eda24c"], ["VM CHILLI 10788", "#ab4032"], ["VM SHARON 10684", "#a83d37"], ["CL RECIFE 1117P / 11562", "#ffa979"], ["CL BEIJINHO 10778", "#ffc2b1"], ["CL ROSA-DO-DESERTO 10811", "#fe8a82"], ["VM AURORA 11170", "#db3333"], ["VM ROCOCÓ 1280P / 11166", "#a82b2b"], ["VM AZALÉIA 1294P / 10988", "#803244"], ["VM XAROPE 17839", "#bd2030"], ["BO CHOCOLATE 2768P / 8428", "#491a1a"], ["BO RUBI 10871", "#80233f"], ["RS CARMINE 10897", "#863c53"], ["RS GOIABA 549P / 10647", "#c4768e"], ["RS CAMELIA 10828", "#ff6f98"], ["RS FLORAL 1091P / 10482", "#e4c0ca"], ["RS IOGURTE 1073P", "#ff9a93"], ["AZ CÉU 1449P / 11068", "#3496df"], ["AZ PARAQUEDAS 1503P / 10986", "#065296"], ["AZ MARINHO 1407P / 10974", "#254f70"], ["AZ MASÓLICA 1011P", "#1a2f40"], ["AZ POÇA 325P / 11174", "#1b2934"], ["AZ ÍNDIGO 1174P", "#0d283d"], ["AZ PACÍFICO 1405P / 11407", "#264054"], ["AZ NÓRDICO 1413P / 10229", "#78acd1"], ["AZ DUSK 9480", "#8eadc4"], ["AZ BEBÊ 1509P / 11519", "#76c1d1"], ["AZ TOPÁZIO 1498P / 10143", "#4ca9bd"], ["AZ BÁLTICO 9888", "#4cbdb3"], ["CH GRAFITE 1184P / 11190", "#54565b"], ["CZ GRIFO 1427P", "#7f878c"], ["CH FUMAÇA 1033P", "#434447"], ["CQ TRIGO 10783", "#ad8f63"], ["CQ AREIA 10502", "#c4b591"], ["CQ LINHO 10973", "#b8af97"], ["MR TAUPE 1059P", "#59392a"], ["MR CÂNHAMO 1502P", "#9d7e55"], ["MR AMÊNDOA 10690", "#9b583b"], ["MR CASTANHO 8441P", "#9d4d2b"], ["AM CANÁRIO 987P / 9386", "#ffdf53"], ["AM CÍTRICO 10830", "#ffe881"], ["AM MOSTARDA 1292P", "#e8a251"], ["AM CARAMELO 11236", "#bb7c34"], ["VD BROTO 1511-P / 10671", "#5a8142"], ["VD LIMA 10674 / 1504-P", "#2e5320"], ["VD VERDE BRONZE 1497-P / 58072", "#3d4132"], ["VD CIPRESTE 11278 / 11356", "#4e5042"], ["VD SÁLVIA 10999", "#686a5d"], ["VD FLUORESCENTE 10741", "#a1d66c"], ["VD MENTA 10911", "#68ad6c"], ["VD TURQUESA 10910 / 1432-P", "#7db298"], ["VD JADE 1138-P", "#237161"], ["VD AQUARELA 1439-P", "#488b93"], ["VD PETRÓLEO 1183-P / 11281", "#0f5e6f"], ["VD EXCÊNTRICO 1403-P", "#3e753b"], ["VD 17173", "#a8bc49"], ["VD FRESH 17176", "#a8bc49"], ["VD CACTO 17180", "#394030"]]; // tons da cartela do Canva (Catálogo Projetos Santacosta)
 const PANT0=[['BRANCO','#ffffff'],['PRETO','#111111'],['OFF WHITE','#efe0c6'],['AZUL 631U','#2bb3d9'],['GREY 3C','#c8c9c7'],['VERMELHO DA CROMIA','#d70707'],['ROXO DA CROMIA','#b021c4']];
@@ -433,7 +482,7 @@ const CARTELA="OFF WHITE|AZUL ANIS|PRETO|Avelã|Rami|AM Açafrão 1006P|VM Jelly
 
 // ---------- guardar no aparelho ----------
 const ler=(k,d)=>{try{const v=localStorage.getItem('sc_'+k);return v?JSON.parse(v):d}catch(e){return d}};
-const gravar=(k,v)=>{try{localStorage.setItem('sc_'+k,JSON.stringify(v))}catch(e){toast('Não consegui guardar neste aparelho')}};
+const gravar=(k,v)=>{try{localStorage.setItem('sc_'+k,JSON.stringify(v));const s=document.getElementById('salvo');if(s){s.classList.add('on');clearTimeout(gravar.t);gravar.t=setTimeout(()=>s.classList.remove('on'),1600)}}catch(e){toast('Não consegui guardar neste aparelho')}};
 let cores=ler('cores2',null);
 if(!cores){const velhas=ler('cores',null);cores={ting:TING0.map(([n,h])=>({n,h})),pant:PANT0.map(([n,h])=>({n,h}))};
   if(velhas){for(const c of velhas.pant||[]){const n=c.n.toUpperCase();if(!cores.pant.some(x=>x.n===n))cores.pant.push({n,h:c.h})}}
@@ -544,8 +593,9 @@ function pintarEditor(){
 // ---------- formulário ----------
 function opcoes(sel,lista,vazio){sel.innerHTML=(vazio?`<option value="">${vazio}</option>`:'')+lista.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join('')}
 function listaEst(car){ // [valor, nome] para as caixas de estampa
-  const l=car?Object.entries(EST).filter(([k,e])=>e.car||e.up).map(([k,e])=>[k,e.nome])
-    :[...PRONTOS.map(t=>['txt:'+t,t.toUpperCase()+' (ALFABETO)']),...Object.entries(EST).filter(([k,e])=>!e.car&&!k.startsWith('txt:')).map(([k,e])=>[k,e.nome])];
+  const txts=[...new Set([...PRONTOS.map(t=>'txt:'+t),...Object.keys(INFO).filter(k=>k.startsWith('txt:'))])];
+  const l=car?Object.entries(EST).filter(([k,e])=>e.car||e.up).map(([k,e])=>[k,nomeEst(k)])
+    :[...txts.map(k=>[k,nomeEst(k)]),...Object.entries(EST).filter(([k,e])=>!e.car&&!k.startsWith('txt:')).map(([k,e])=>[k,nomeEst(k)])];
   return [['__up','+ SUBIR ARQUIVO…'],...l]}
 const listaCor=t=>[['__nova','+ NOVA COR…'],...cores[t].map(c=>[c.n,c.n])];
 function garantirOpcao(sel,v){if(v&&![...sel.options].some(o=>o.value===v)){garantirTexto(v);sel.add(new Option(v.startsWith('txt:')?v.slice(4).toUpperCase()+' (ALFABETO)':v,v),sel.options[1]||null)}}
@@ -582,7 +632,8 @@ function ler_form(e){
   const artigoAntes=P.artigo;
   P.artigo=$('#f-artigo').value;P.ting=$('#f-ting').value;
   for(const k of['fr','co']){P[k].est=$(`#f-${k}-est`).value;if(id===`f-${k}-txt`){const t=$(`#f-${k}-txt`).value.trim();P[k].est=t?'txt:'+t.toLowerCase():''}
-    P[k].pos=$(`#f-${k}-pos`).value;P[k].cor=$(`#f-${k}-cor`).value;P[k].dist=$(`#f-${k}-dist`).value;P[k].tipo=$(`#f-${k}-tipo`).value;
+    P[k].pos=$(`#f-${k}-pos`).value;P[k].cor=$(`#f-${k}-cor`).value;
+    if(id===`f-${k}-est`||id===`f-${k}-txt`){const I=INFO[P[k].est];if(I){if(I.larg)$(`#f-${k}-larg`).value=I.larg;if(I.cor){garantirOpcao($(`#f-${k}-cor`),I.cor);$(`#f-${k}-cor`).value=P[k].cor=I.cor}if(I.tipo)$(`#f-${k}-tipo`).value=I.tipo}}P[k].dist=$(`#f-${k}-dist`).value;P[k].tipo=$(`#f-${k}-tipo`).value;
     const d=$(`#f-${k}-dist`).value,lg=$(`#f-${k}-larg`).value;P.ov=P.ov||{};if(String(P[k].dist)!==d)delete P.ov[k+'.loc'];if(String(P[k].larg||'')!==lg)delete P.ov[k+'.tam'];P[k].dist=d;P[k].larg=lg}
   const A=ART[P.artigo];
   if(id==='f-fr-pos'||id==='f-artigo')P.fr.dist=P.fr.pos==='mini'?A.mini[0]:A.frontal;
@@ -687,17 +738,28 @@ function fichaHTML(p){
 
 // ---------- mapa ----------
 function mapaHTML(){
-  const itens=mapa.itens.map(id=>pecas.find(p=>p.id===id)).filter(Boolean);
-  const figs=[];
-  for(const p of itens){
-    const lados=mapa.lado==='ambos'?['frente','costas']:[mapa.lado];
-    for(const l of lados)figs.push(`<figure><img src="${desenhar(p,l).toDataURL('image/png')}" alt=""><figcaption>${esc(p.ref||'')} ${esc(p.ting)}</figcaption></figure>`);
-  }
-  if(mapa.texto)figs.push(`<div class="mtexto">${esc(mapa.texto)}</div>`);
-  const n=Math.max(1,figs.length),cols=n<=4?n:n<=8?4:n<=12?6:Math.ceil(Math.sqrt(n*1.6)),rows=Math.ceil(n/cols);
-  return `<div class="tit">SANTACOSTA<br><b>MAPA ${esc(mapa.nome.toUpperCase())}</b></div>
-   <div class="mgrade" style="grid-template-columns:repeat(${cols},minmax(0,1fr));grid-template-rows:repeat(${rows},minmax(0,1fr))">${figs.join('')||'<p style="color:#888">Nenhuma peça no mapa ainda. Na tela Peça, toque em “Pôr no mapa”.</p>'}</div>`;
+  const itens=mapa.itens.map(id=>pecas.find(p=>p.id===id)).filter(Boolean);mapa.pos=mapa.pos||{};
+  const vis=[];for(const p of itens){const lados=mapa.lado==='ambos'?['frente','costas']:[mapa.lado];for(const l of lados)if(IMG[`${p.artigo}-${l}-peca`])vis.push({p,l,k:p.id+'|'+l})}
+  if(mapa.texto)vis.push({k:'texto'});
+  const n=Math.max(1,vis.length),cols=n<=4?n:n<=8?4:n<=12?6:Math.ceil(Math.sqrt(n*1.6)),rows=Math.ceil(n/cols);
+  const X0=22,Y0=62,W=1123-44,H=794-62-22,g=10,cw=(W-g*(cols-1))/cols,ch=(H-g*(rows-1))/rows;
+  const figs=vis.map((v,i)=>{let q=mapa.pos[v.k];if(!q){q={x:X0+(i%cols)*(cw+g),y:Y0+Math.floor(i/cols)*(ch+g),w:cw,h:ch}}
+    const st=`left:${q.x}px;top:${q.y}px;width:${q.w}px;height:${q.h}px`;
+    if(v.k==='texto')return `<div class="mfig mtexto" data-k="texto" style="${st}">${esc(mapa.texto)}<span class="alca">↘</span></div>`;
+    return `<figure class="mfig" data-k="${esc(v.k)}" style="${st}"><img src="${desenhar(v.p,v.l).toDataURL('image/png')}" alt=""><figcaption>${esc(v.p.ref||'')} ${esc(v.p.ting)}</figcaption><span class="alca">↘</span></figure>`});
+  return `<div class="tit">SANTACOSTA<br><b>MAPA ${esc(mapa.nome.toUpperCase())}</b></div>${figs.join('')||'<p style="position:absolute;left:22px;top:70px;color:#888">Nenhuma peça no mapa ainda. Toque em “+ Pôr” na lista acima.</p>'}`;
 }
+{let arr=null;
+ $('#mapa').addEventListener('pointerdown',e=>{const f=e.target.closest('.mfig');if(!f)return;e.preventDefault();
+   const s=$('#mapa').getBoundingClientRect().width/1123;
+   arr={f,s,x:e.clientX,y:e.clientY,l:f.offsetLeft,t:f.offsetTop,w:f.offsetWidth,h:f.offsetHeight,res:!!e.target.closest('.alca')};
+   f.classList.add('arrastando');f.setPointerCapture(e.pointerId)});
+ $('#mapa').addEventListener('pointermove',e=>{if(!arr)return;const dx=(e.clientX-arr.x)/arr.s,dy=(e.clientY-arr.y)/arr.s,f=arr.f;
+   if(arr.res){const k=Math.max(.25,(arr.w+dx)/arr.w);f.style.width=arr.w*k+'px';f.style.height=arr.h*k+'px'}
+   else{f.style.left=Math.max(0,Math.min(1123-arr.w,arr.l+dx))+'px';f.style.top=Math.max(0,Math.min(794-arr.h,arr.t+dy))+'px'}});
+ const fim=()=>{if(!arr)return;const f=arr.f;f.classList.remove('arrastando');mapa.pos=mapa.pos||{};
+   mapa.pos[f.dataset.k]={x:f.offsetLeft,y:f.offsetTop,w:f.offsetWidth,h:f.offsetHeight};arr=null;gravar('mapa',mapa)};
+ $('#mapa').addEventListener('pointerup',fim);$('#mapa').addEventListener('pointercancel',fim);}
 
 // ---------- telas ----------
 function encaixar(){ // folha A4 cabe na largura da tela
@@ -710,6 +772,7 @@ function ir(t){
   if(t==='ficha')$('#ficha').innerHTML=fichaHTML(P);
   if(t==='mapa'){$('#m-nome').value=mapa.nome;$('#m-texto').value=mapa.texto;$('#m-lado').value=mapa.lado;$('#mapa').innerHTML=mapaHTML();listarMapa()}
   if(t==='salvas')listar();
+  if(t==='estampas')listarEst();
   if(t==='lote')mostrarLote();
   if(t==='pedido'&&pedido&&pedido.ids)mostrarPedido();
   if(t==='cores')listarCores();
@@ -735,6 +798,7 @@ function imprimir(tela){$('#t-'+tela).classList.add('imprimir');setTimeout(()=>{
 $('#b-pdf-ficha').onclick=()=>imprimir('ficha');$('#b-pdf-mapa').onclick=()=>imprimir('mapa');
 $('#t-mapa').addEventListener('input',e=>{mapa.nome=$('#m-nome').value;mapa.texto=$('#m-texto').value;mapa.lado=$('#m-lado').value;gravar('mapa',mapa);clearTimeout(ir.t);ir.t=setTimeout(()=>{$('#mapa').innerHTML=mapaHTML();encaixar()},400)});
 $('#b-limpa-mapa').onclick=()=>{if(!mapa.itens.length)return;mapa.itens=[];gravar('mapa',mapa);atualizarMapa();toast('Mapa vazio')};
+$('#b-arrumar-mapa').onclick=()=>{mapa.pos={};gravar('mapa',mapa);atualizarMapa();toast('Mapa arrumado em grade')};
 $('#b-todas-mapa').onclick=()=>{pecas.forEach(p=>{if(!mapa.itens.includes(p.id))mapa.itens.push(p.id)});gravar('mapa',mapa);atualizarMapa()};
 const miniaturas={};
 function listarMapa(){const no=mapa.itens.map(id=>pecas.find(p=>p.id===id)).filter(Boolean),fora=pecas.filter(p=>!mapa.itens.includes(p.id));
@@ -788,15 +852,50 @@ $('#b-nota').onclick=()=>{const l=(P.costura||'').split('\n').filter(t=>t.trim()
   const el=$(`#ficha [data-c="cost:${l.length-1}"]`);if(el){el.focus();const s=getSelection(),rg=document.createRange();rg.selectNodeContents(el);s.removeAllRanges();s.addRange(rg)}};
 $('#b-marca').onclick=e=>{const on=$('#t-ficha').classList.toggle('editavel');$('#t-lote').classList.toggle('editavel',on);e.target.textContent=on?'Esconder marcação':'Mostrar o que dá para mudar'};
 
-function listar(){
-  $('#lista-salvas').innerHTML=pecas.length?`<div class="lista">${pecas.map(p=>`<div class="cartao"><img src="${desenhar(p,'frente').toDataURL('image/png')}" alt=""><b>${esc(p.ref||'Sem referência')}</b><span>${esc(ART[p.artigo].nome)} · ${esc(p.ting)}</span><span>${esc(p.nome)}</span>
-   <div class="botoes"><button class="btn" data-abrir="${p.id}">Abrir</button><button class="btn claro" data-pmapa="${p.id}">${mapa.itens.includes(p.id)?'No mapa ✓':'Pôr no mapa'}</button><button class="btn perigo" data-apagar="${p.id}">Apagar</button></div></div>`).join('')}</div>`:'<div class="vazio">Nenhuma peça salva ainda.</div>';
+function listar(){const q=semAcento($('#s-busca').value||'').trim();
+  const ps=pecas.filter(p=>!q||semAcento([p.ref,p.nome,p.pedido,p.colecao,p.ting,ART[p.artigo].nome,p.obs].join(' ')).includes(q));
+  $('#lista-salvas').innerHTML=!pecas.length?'<div class="vazio">Nenhuma peça salva ainda.</div>':!ps.length?'<div class="vazio">Nenhuma peça encontrada.</div>':`<div class="lista">${ps.map(p=>`<div class="cartao"><img src="${desenhar(p,'frente').toDataURL('image/png')}" alt=""><b>${esc(p.ref||'Sem referência')}</b><span>${esc(ART[p.artigo].nome)} · ${esc(p.ting)}</span><span>${esc(p.nome)}</span>
+   <div class="botoes"><button class="btn" data-abrir="${p.id}">Abrir</button><button class="btn claro" data-pmapa="${p.id}">${mapa.itens.includes(p.id)?'No mapa ✓':'Pôr no mapa'}</button><button class="btn perigo" data-apagar="${p.id}">Apagar</button></div></div>`).join('')}</div>`;
 }
+$('#s-busca').addEventListener('input',listar);
 $('#lista-salvas').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.abrir){P=JSON.parse(JSON.stringify(pecas.find(p=>p.id===b.dataset.abrir)));gravar('atual',P);desenharExtras();preencher();pintarEditor();ir('peca')}
   if(b.dataset.pmapa){const id=b.dataset.pmapa;mapa.itens=mapa.itens.includes(id)?mapa.itens.filter(i=>i!==id):[...mapa.itens,id];gravar('mapa',mapa);listar()}
   if(b.dataset.apagar){if(b.dataset.ok){pecas=pecas.filter(p=>p.id!==b.dataset.apagar);mapa.itens=mapa.itens.filter(i=>i!==b.dataset.apagar);gravar('pecas',pecas);gravar('mapa',mapa);listar()}else{b.dataset.ok=1;b.textContent='Toque de novo'}}
 });
+
+// ---------- estampas guardadas ----------
+function usosEst(k){const r=[];for(const p of pecas){const ch=[p.fr&&p.fr.est,p.co&&p.co.est,p.barra,p.carimbo,...(p.extras||[]).map(x=>x.est)];if(ch.includes(k))r.push(p.ref||p.nome||'SEM REF.')}return [...new Set(r)]}
+function todasEst(){return [...new Set([...PRONTOS.map(t=>'txt:'+t),...Object.keys(INFO).filter(k=>k.startsWith('txt:')),...Object.keys(EST).filter(k=>!k.startsWith('txt:'))])]}
+function listarEst(){const q=semAcento($('#e-busca').value||'').trim();
+  const h=todasEst().map(k=>{garantirTexto(k);const I=INFO[k]||{},E=EST[k]||{},us=usosEst(k);
+    const tam=I.larg?`${String(I.larg).replace('.',',')} CM DE LARGURA`:(E.w?fmtCm([E.w,E.h]):'');
+    const busca=semAcento([nomeEst(k),I.loc,I.tipo,I.ref,I.cli,I.obs,I.cor,us.join(' ')].join(' '));if(q&&!busca.includes(q))return '';
+    return `<button class="cest" data-est="${esc(k)}"><div class="im"><img src="${pretoURL(k)}" alt=""></div><b>${esc(nomeEst(k))}</b>
+      <span>${esc([I.loc||(E.car?'CARIMBO INTERNO':''),tam,I.tipo,I.cor].filter(Boolean).join(' · ')||'Toque para preencher')}</span>
+      ${I.ref||I.cli?`<span>${esc([I.ref,I.cli].filter(Boolean).join(' · '))}</span>`:''}${us.length?`<span>Usada em: ${esc(us.slice(0,6).join(', '))}${us.length>6?'…':''}</span>`:''}</button>`}).join('');
+  $('#e-lista').innerHTML=h||'<div class="vazio">Nenhuma estampa encontrada.</div>'}
+$('#e-busca').addEventListener('input',listarEst);
+let estAberta=null;
+function abrirEst(k){estAberta=k;const I=INFO[k]||{},E=EST[k]||{};
+  $('#de-prev').innerHTML=`<img src="${pretoURL(k)}" style="max-height:96px;max-width:90%" alt="">`;
+  $('#de-nome').value=I.nome||nomeEst(k).replace(/\s*\([^)]*\)\s*$/,'');$('#de-loc').value=I.loc||(E.car?'CARIMBO INTERNO':'');$('#de-tipo').value=I.tipo||'';
+  $('#de-larg').value=I.larg||'';$('#de-larg').placeholder=E.w?String(Math.round(E.w*10)/10).replace('.',','):'';
+  opcoes($('#de-cor'),cores.pant.map(c=>[c.n,c.n]),'—');$('#de-cor').value=I.cor||'';
+  $('#de-ref').value=I.ref||'';$('#de-cli').value=I.cli||'';$('#de-obs').value=I.obs||'';
+  const us=usosEst(k);$('#de-usada').textContent=us.length?'Usada nas fichas: '+us.join(', '):'Ainda não usada em nenhuma peça salva.';
+  $('#de-del').style.display=k.startsWith('up:')||(k.startsWith('txt:')&&!PRONTOS.includes(k.slice(4)))?'':'none';
+  $('#dlg-est').showModal()}
+$('#e-lista').addEventListener('click',e=>{const b=e.target.closest('[data-est]');if(b)abrirEst(b.dataset.est)});
+$('#dlg-est').addEventListener('close',()=>{const k=estAberta,v=$('#dlg-est').returnValue;estAberta=null;if(!k)return;
+  if(v==='ok'){const up=x=>x.trim().toUpperCase();INFO[k]={nome:up($('#de-nome').value),loc:$('#de-loc').value,tipo:$('#de-tipo').value,larg:$('#de-larg').value.replace(',','.'),cor:$('#de-cor').value,ref:up($('#de-ref').value),cli:up($('#de-cli').value),obs:up($('#de-obs').value)};
+    if(!INFO[k].nome)delete INFO[k].nome;gravar('estinfo',INFO);
+    if(k.startsWith('up:')){const u=UPS.find(u=>u.k===k);if(u&&INFO[k].nome){u.nome=INFO[k].nome;EST[k].nome=u.nome;try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){}}}
+    toast('Estampa guardada')}
+  if(v==='del'){if(k.startsWith('up:')){UPS=UPS.filter(u=>u.k!==k);try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){}delete EST[k]}delete INFO[k];gravar('estinfo',INFO);toast('Apagada')}
+  atualizarTudo();listarEst()});
+$('#e-subir').onclick=()=>abrirUp(null,0);$('#e-subir-car').onclick=()=>abrirUp(null,1);
+$('#e-escrever').onclick=()=>{const t=prompt('O que vai ser escrito com o alfabeto?');if(!t||!t.trim())return;const k='txt:'+t.trim().toLowerCase();INFO[k]=INFO[k]||{};gravar('estinfo',INFO);atualizarTudo();listarEst();abrirEst(k)};
 
 // ---------- cores ----------
 function listarCores(){const q=semAcento($('#c-busca').value||'');
@@ -847,7 +946,7 @@ function atualizarTudo(){montarForm();desenharExtras();preencher();pintarEditor(
 
 // ---------- subir arquivo de estampa / carimbo ----------
 let subindo=null,upImg=null;
-function abrirUp(sel){subindo={sel,car:sel.classList.contains('selcar')||sel.id==='pd-car'};upImg=null;$('#du-prev').innerHTML='<span class="aviso">Nenhuma imagem</span>';$('#du-nome').value='';$('#du-larg').value=subindo.car?'8':'10';
+function abrirUp(sel,car){subindo={sel,car:sel?sel.classList.contains('selcar')||sel.id==='pd-car':!!car};upImg=null;$('#du-prev').innerHTML='<span class="aviso">Nenhuma imagem</span>';$('#du-nome').value='';$('#du-larg').value=subindo.car?'8':'10';
   $('#du-tit').textContent=subindo.car?'Subir carimbo interno':'Subir arquivo de estampa';$('#dlg-up').showModal()}
 $('#du-arq').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{
   const s=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);const x=c.getContext('2d');x.drawImage(im,0,0,c.width,c.height);
@@ -859,7 +958,7 @@ $('#dlg-up').addEventListener('close',()=>{const {sel,car}=subindo||{};subindo=n
   const u={k,nome:`${nome} (${fmtCm([w,h])})`,w,h,src,car:car?1:0};UPS.push(u);try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS.pop();toast('Arquivo grande demais para guardar neste aparelho');return}
   EST[k]={nome:u.nome,w,h,car:u.car,up:1};IMG['e-'+k]=upImg;
   if(sel){garantirOpcao(sel,k);sel.querySelector(`option[value="${k}"]`).textContent=u.nome;sel.value=k;sel.dispatchEvent(new Event('change',{bubbles:true}))}
-  atualizarTudo();toast('Arquivo guardado')});
+  atualizarTudo();if($('#t-estampas').classList.contains('on')){listarEst();abrirEst(k)}else toast('Arquivo guardado')});
 
 // ---------- mais estampas (dentro da frente e das costas) ----------
 function desenharExtras(){
