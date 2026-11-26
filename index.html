@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611262150";</script>
+<script>var VERSAO="202611262200";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -479,7 +479,7 @@ dialog::backdrop{background:#0006}
       <label>Cliente ou coleção<input type="text" id="de-cli"></label>
     </div>
     <label style="margin-top:10px">Observações<input type="text" id="de-obs"></label>
-    <label style="margin-top:10px">Aumento só no desenho (×) — a ficha continua com a medida real<input type="number" step="0.1" min="0.5" id="de-vis" placeholder="1"></label>
+    <label class="btn claro" style="flex-direction:row;justify-content:center;color:var(--ink);margin-top:10px">Trocar o arquivo desta estampa (PDF ou imagem)<input type="file" id="de-arq" accept="application/pdf,.pdf,image/*" hidden></label>
     <p class="aviso" id="de-usada"></p>
     <div class="botoes" style="margin-top:10px"><button class="btn" value="ok">Guardar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button><button class="btn perigo" value="del" id="de-del" formnovalidate>Excluir estampa</button></div>
   </form>
@@ -1024,21 +1024,21 @@ function listarEst(){const q=semAcento($('#e-busca').value||'').trim();
   $('#e-lista').innerHTML=h||'<div class="vazio">Nenhuma estampa encontrada.</div>'}
 $('#e-busca').addEventListener('input',listarEst);
 let estAberta=null;
-function abrirEst(k){estAberta=k;const I=INFO[k]||{},E=EST[k]||{};
+function abrirEst(k){estAberta=k;trocaArq=null;const I=INFO[k]||{},E=EST[k]||{};
   $('#de-prev').innerHTML=`<img src="${pretoURL(k)}" style="max-height:96px;max-width:90%" alt="">`;
   $('#de-nome').value=nomeEst(k);$('#de-loc').value=I.loc||(E.car?'CARIMBO INTERNO':'');$('#de-tipo').value=I.tipo||'';
   $('#de-larg').value=I.larg||'';$('#de-larg').placeholder=E.w?String(Math.round(E.w*10)/10).replace('.',','):'';
-  opcoes($('#de-cor'),cores.pant.map(c=>[c.n,c.n]),'—');$('#de-cor').value=I.cor||'';
-  $('#de-vis').value=I.vis||'';$('#de-vis').placeholder=String(E.vis||1).replace('.',',');$('#de-ref').value=I.ref||'';$('#de-cli').value=I.cli||'';$('#de-obs').value=I.obs||'';
+  opcoes($('#de-cor'),cores.pant.map(c=>[c.n,c.n]),'—');$('#de-cor').value=I.cor||'BRANCO';
+  $('#de-ref').value=I.ref||'';$('#de-cli').value=I.cli||'';$('#de-obs').value=I.obs||'';
   const us=usosEst(k);$('#de-usada').textContent=us.length?'Usada nas fichas: '+us.join(', '):'Ainda não usada em nenhuma peça salva.';
   $('#de-del').style.display='';
   $('#dlg-est').showModal()}
 $('#e-lista').addEventListener('click',e=>{const b=e.target.closest('[data-est]');if(b)abrirEst(b.dataset.est)});
 $('#dlg-est').addEventListener('close',()=>{const k=estAberta,v=$('#dlg-est').returnValue;estAberta=null;if(!k)return;
-  if(v==='ok'){const up=x=>x.trim().toUpperCase();INFO[k]={nome:up($('#de-nome').value),loc:$('#de-loc').value,tipo:$('#de-tipo').value,larg:$('#de-larg').value.replace(',','.'),cor:$('#de-cor').value,ref:up($('#de-ref').value),cli:up($('#de-cli').value),obs:up($('#de-obs').value),vis:$('#de-vis').value.replace(',','.')};if(!INFO[k].vis)delete INFO[k].vis;
+  if(v==='ok'){const I0=INFO[k]||{},up=x=>x.trim().toUpperCase();INFO[k]={nome:up($('#de-nome').value),loc:$('#de-loc').value,tipo:$('#de-tipo').value,larg:$('#de-larg').value.replace(',','.'),cor:$('#de-cor').value,ref:up($('#de-ref').value),cli:up($('#de-cli').value),obs:up($('#de-obs').value)};if(I0.vis)INFO[k].vis=I0.vis;
     if(!INFO[k].nome)delete INFO[k].nome;gravar('estinfo',INFO);
     if(k.startsWith('up:')){const u=UPS.find(u=>u.k===k);if(u&&INFO[k].nome){u.nome=INFO[k].nome;EST[k].nome=u.nome;try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){}}}
-    toast('Estampa guardada')}
+    aplicarTroca(k);toast('Estampa guardada')}
   if(v==='del'){const us=usosEst(k);if(!confirm('Excluir a estampa '+nomeEst(k)+'?'+(us.length?' Ela continua nas peças que já usam ('+us.join(', ')+').':'')))return;
     if(k.startsWith('up:')&&!us.length){UPS=UPS.filter(u=>u.k!==k);try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){}delete EST[k];delete INFO[k]}else INFO[k]={apagado:1};
     gravar('estinfo',INFO);toast('Estampa excluída')}
@@ -1149,18 +1149,29 @@ async function lerPDF(f){const pdfjs=await import('./arquivos/pdfjs/pdf.min.mjs'
   await pg.render({canvasContext:c.getContext('2d'),canvas:c,viewport:vp,background:'rgba(0,0,0,0)'}).promise;return {c,cmPorPx:2.54/72/sc}}
 function lerImagem(f){return new Promise((ok,erro)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,2400/Math.max(im.width,im.height)),c=document.createElement('canvas');
   c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok({c,cmPorPx:0})};im.onerror=erro;im.src=r.result};r.readAsDataURL(f)})}
-$('#du-arq').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const pdf=/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name);
-  $('#du-prev').innerHTML='<span class="aviso">Lendo o arquivo…</span>';
-  let r;try{r=pdf?await lerPDF(f):await lerImagem(f)}catch(err){$('#du-prev').innerHTML='<span class="aviso">Não consegui abrir este arquivo.</span>';return}
-  let c=r.c;const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),a=d.data;let x0=c.width,x1=-1,y0=c.height,y1=-1;
+async function processarArquivo(f){const pdf=/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name);const r=pdf?await lerPDF(f):await lerImagem(f);
+  let c=r.c,larg=0;const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),a=d.data;let x0=c.width,x1=-1,y0=c.height,y1=-1;
   for(let i=0,p=0;i<a.length;i+=4,p++){if(a[i]>242&&a[i+1]>242&&a[i+2]>242)a[i+3]=0; // fundo branco vira transparente
     if(a[i+3]>10){const px=p%c.width,py=(p/c.width)|0;if(px<x0)x0=px;if(px>x1)x1=px;if(py<y0)y0=py;if(py>y1)y1=py}}
   x.putImageData(d,0,0);
   if(x1>=x0){const w=x1-x0+1,h=y1-y0+1,s=Math.min(1,2000/Math.max(w,h)),k=document.createElement('canvas');k.width=Math.round(w*s);k.height=Math.round(h*s); // corta a sobra em volta
-    k.getContext('2d').drawImage(c,x0,y0,w,h,0,0,k.width,k.height);if(r.cmPorPx)$('#du-larg').value=Math.round(w*r.cmPorPx*10)/10;c=k}
-  upImg=c;$('#du-prev').innerHTML='';const v=document.createElement('canvas');v.width=c.width;v.height=c.height;v.getContext('2d').drawImage(c,0,0);v.style.maxHeight='120px';v.style.maxWidth='100%';$('#du-prev').append(v);
-  if(pdf)$('#du-prev').insertAdjacentHTML('beforeend','<div class="aviso" style="width:100%;text-align:center">PDF lido em alta qualidade. A largura real veio do arquivo.</div>');
+    k.getContext('2d').drawImage(c,x0,y0,w,h,0,0,k.width,k.height);if(r.cmPorPx)larg=Math.round(w*r.cmPorPx*10)/10;c=k}
+  return {c,larg,pdf}}
+const miniCanvas=c=>{const v=document.createElement('canvas');v.width=c.width;v.height=c.height;v.getContext('2d').drawImage(c,0,0);v.style.maxHeight='110px';v.style.maxWidth='100%';return v};
+$('#du-arq').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  $('#du-prev').innerHTML='<span class="aviso">Lendo o arquivo…</span>';
+  let r;try{r=await processarArquivo(f)}catch(err){$('#du-prev').innerHTML='<span class="aviso">Não consegui abrir este arquivo.</span>';return}
+  upImg=r.c;if(r.larg)$('#du-larg').value=r.larg;$('#du-prev').innerHTML='';$('#du-prev').append(miniCanvas(r.c));
+  if(r.pdf)$('#du-prev').insertAdjacentHTML('beforeend','<div class="aviso" style="width:100%;text-align:center">PDF lido em alta qualidade. A largura real veio do arquivo.</div>');
   if(!$('#du-nome').value)$('#du-nome').value=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').toUpperCase()};
+let trocaArq=null;
+$('#de-arq').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;$('#de-prev').innerHTML='<span class="aviso">Lendo o arquivo…</span>';
+  try{trocaArq=await processarArquivo(f)}catch(err){$('#de-prev').innerHTML='<span class="aviso">Não consegui abrir este arquivo.</span>';return}
+  $('#de-prev').innerHTML='';$('#de-prev').append(miniCanvas(trocaArq.c));if(trocaArq.larg)$('#de-larg').value=trocaArq.larg;toast('Arquivo novo pronto. Toque em Guardar.')};
+function aplicarTroca(k){const r=trocaArq;trocaArq=null;if(!r)return;const E=EST[k]||{},w=+String($('#de-larg').value).replace(',','.')||r.larg||E.w||10,h=w*r.c.height/r.c.width;
+  const u={k,nome:(INFO[k]&&INFO[k].nome)||nomeEst(k),w,h,src:r.c.toDataURL('image/png'),car:E.car?1:0};const i=UPS.findIndex(x=>x.k===k);const antes=UPS.slice();if(i>=0)UPS[i]=u;else UPS.push(u);
+  try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS=antes;toast('Arquivo grande demais para guardar neste aparelho');return}
+  EST[k]={...E,nome:u.nome,w,h,up:1};IMG['e-'+k]=r.c;delete cacheURL[k];pintarEditor()}
 $('#dlg-up').addEventListener('close',()=>{const {sel,car}=subindo||{};subindo=null;if($('#dlg-up').returnValue!=='ok'||!upImg){if(sel)sel.dispatchEvent(new Event('voltar'));return}
   const nome=($('#du-nome').value||'ESTAMPA').toUpperCase(),w=+$('#du-larg').value||10,h=w*upImg.height/upImg.width,k='up:'+Date.now(),src=upImg.toDataURL('image/png');
   const u={k,nome,w,h,src,car:car?1:0};UPS.push(u);try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS.pop();toast('Arquivo grande demais para guardar neste aparelho');return}
