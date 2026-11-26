@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611262015";</script>
+<script>var VERSAO="202611262025";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -744,8 +744,7 @@ function fichaHTML(p){
   h+=ab(14,80,73,32,'cinza lbl',`<span style="margin:auto">${ed('colecao',p.colecao)}</span>`,'border-right:1px solid #111;border-bottom:1px solid #111;font-size:11px');
   h+=ab(87,12,199,68,'',`<div style="font-size:10px;padding:2px 4px">REF.</div><div style="font-size:34px;line-height:1;padding-left:12px">${ed('ref',p.ref)}</div>`,'border-right:1px solid #111;border-bottom:1px solid #111');
   h+=ab(87,80,199,32,'',`<div style="font-size:10px;padding:2px 4px;position:absolute">Nº PEDIDO</div><div style="font-size:26px;line-height:32px;text-align:right;padding-right:22px">${ed('pedido',p.pedido)}</div>`,'border-right:1px solid #111;border-bottom:1px solid #111');
-  h+=ab(14,112,272,22,'lbl',`<b style="font-size:11px;margin-right:6px">PREVISÃO DE ENTREGA:</b><span style="font-size:13px">${ed('previsao',p.previsao||'')}</span>`,'border-bottom:1px solid #111;border-right:1px solid #111;padding-left:4px');
-  h+=ab(14,134,272,46,'',`<div style="display:flex;height:100%"><div class="cinza" style="width:73px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border-right:1px solid #111">LEGENDA</div>
+  h+=ab(14,112,272,68,'',`<div style="display:flex;height:100%"><div class="cinza" style="width:73px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border-right:1px solid #111">LEGENDA</div>
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:6px;padding-left:7px;font-size:9px;white-space:nowrap;overflow:hidden"><div style="color:#2e3192"><b style="display:inline-block;width:9px;height:9px;background:#2e3192;margin-right:5px;vertical-align:-1px"></b>AZUL: INFORMAÇÃO DE COSTURA</div><div style="color:#e3201b"><b style="display:inline-block;width:9px;height:9px;background:#e3201b;margin-right:5px;vertical-align:-1px"></b>VERMELHO: INFORMAÇÃO DE ESTAMPA</div></div></div>`,'border-right:1px solid #111');
   h+=ab(286,12,348,34,'lbl',`<b>NOME:</b>${ed('nome',p.nome)}`,'border-right:1px solid #111;border-bottom:1px solid #111');
   h+=ab(286,46,348,34,'lbl',`<b>MODELO:</b>${ed('modelo',p.modelo||A.nome)}`,'border-right:1px solid #111;border-bottom:1px solid #111');
