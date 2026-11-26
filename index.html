@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611262345";</script>
+<script>var VERSAO="202611270030";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -32,6 +32,9 @@ header .marca img{height:28px;filter:invert(1)}
 .tile.mais{justify-content:center;font-size:30px;font-weight:300}
 .pest{display:none}.pest.on{display:block}
 #extras-todas .extra{display:none}#extras-todas .extra.on{display:block}
+.md-figs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:6px 0 10px}
+.md-figs figure{margin:0;background:#fff;border-radius:10px;padding:6px;text-align:center}.md-figs img{width:100%;display:block;border-radius:6px;background:#efebe4}
+.md-figs figcaption{font-size:10.5px;line-height:1.3;margin-top:4px;color:#b3261e;font-weight:600;text-transform:uppercase}
 .md-card{background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:10px}
 .md-card h4{margin:0 0 2px;font-size:15px}.md-card .sub2{font-size:12px;color:var(--mute);margin-bottom:8px}
 .md-l{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:6px;align-items:center;margin:4px 0}.md-l input{min-height:40px;padding:6px 8px}
@@ -128,6 +131,9 @@ textarea{min-height:90px;resize:vertical}
 .fichaA .cx .dd .ed{white-space:pre-line}.fichaA .cx .dd{border-top:1px solid #e3201b;font-size:10.5px;line-height:14px;padding:4px 6px}
 .fichaA .cx .lc{font-size:10px;line-height:13px;padding:4px 5px 5px;border-top:1px solid #e3201b}
 .fichaA svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.fichaA .mv{position:absolute;right:-11px;top:-11px;width:24px;height:24px;border-radius:50%;background:#17150f;color:#fff;font-size:13px;display:grid;place-items:center;touch-action:none;cursor:move;z-index:4;user-select:none;-webkit-user-select:none}
+.fichaA .cx,.fichaA .az2{overflow:visible!important}
+.fichaA .az2 .mv{right:auto;left:-14px;top:-6px}
 .fichaA .pt{position:absolute;width:26px;height:26px;border-radius:50%;touch-action:none;cursor:move;z-index:3}
 .editavel .fichaA .pt,.fichaA .pt:hover,.fichaA .pt.on{background:#e3b00055;box-shadow:0 0 0 1px #e3b000}
 .ed{outline:none;border-radius:2px;cursor:text;-webkit-user-select:text;user-select:text}
@@ -354,8 +360,9 @@ dialog::backdrop{background:#0006}
     <button class="btn" id="b-png-ficha">Salvar ficha em PNG</button>
     <button class="btn claro" id="b-nota">+ Nota de costura</button>
     <button class="btn claro" id="b-fx">+ Estampa</button>
+    <button class="btn claro" id="b-org">Quadros no lugar padrão</button>
   </div>
-  <p class="aviso naoimprime" style="margin:0 0 10px">Toque em qualquer texto da ficha para escrever (também a grade e o GRADE TOTAL). Arraste a ponta das linhas (o pontinho) para onde elas devem apontar. O que você escreve na ficha é só a informação técnica: não muda o desenho da peça. No TAMANHO dá para pôr um tamanho por grade, um por linha (ex.: PP/P: 20 CM ↵ M/G: 22 CM).</p>
+  <p class="aviso naoimprime" style="margin:0 0 10px">Toque em qualquer texto da ficha para escrever (também a grade e o GRADE TOTAL). Arraste a ponta das linhas (o pontinho) para onde elas devem apontar. Para mudar um quadro de lugar, arraste a bolinha preta ✥ do canto: vai tudo junto. O que você escreve na ficha é só a informação técnica: não muda o desenho da peça. No TAMANHO dá para pôr um tamanho por grade, um por linha (ex.: PP/P: 20 CM ↵ M/G: 22 CM).</p>
   <div class="folha-wrap"><div class="folha-espaco"><div class="folha" id="ficha"></div></div></div>
 </section>
 <!-- ================= MAPA ================= -->
@@ -825,9 +832,9 @@ function fichaHTML(p){
   let fundo=205;
   (p.costura||'').split('\n').filter(t=>t.trim()).forEach((t,i)=>{
     const an=(A.ancoras||[])[i],hN=linhasDe(t,19)*14,alvo=alvoDe('c'+i,an?pf(an[0],an[1]):[MF.x+MF.w*.3,fundo+hN/2]);
-    const top=Math.max(fundo,alvo?alvo[1]-hN/2:fundo);fundo=top+hN+10;
-    h+=ab(18,top,140,null,'az2',`<div class="ed" contenteditable="true" data-c="cost:${i}">${esc(t)}</div>`);
-    ponto([161,top+hN/2],alvo,'#2e3192','c'+i);
+    const top0=Math.max(fundo,alvo?alvo[1]-hN/2:fundo);fundo=top0+hN+10;const sv=PT['n'+i],L0=sv?sv[0]:18,top=sv?sv[1]:top0;
+    h+=ab(L0,top,140,null,'az2',`<div class="ed" contenteditable="true" data-c="cost:${i}">${esc(t)}</div><div class="mv naoimprime" data-mv="n${i}">✥</div>`);
+    ponto([alvo&&alvo[0]<L0+70?L0-3:L0+143,top+hN/2],alvo,'#2e3192','c'+i);
   });
   // estampas (vermelho): um quadro por estampa, com tipo, tamanho e localização
   const caixa=(x,top,w,it,ih0=58)=>{const lt=O(it.id,'loc',it.loc||''),ih=it.titulo?Math.round(ih0*2):ih0,cpl=Math.floor((w-8)/6.4);
@@ -842,8 +849,9 @@ function fichaHTML(p){
     const cs=itens.map(it=>caixa(x,0,w,it,ih)),tops=[];
     itens.forEach((it,i)=>{const top=apertado?fim:Math.max(fim,it.alvo?it.alvo[1]-30:fim);tops.push(top);fim=top+cs[i].hh+(apertado?6:10)});
     let teto=limite;for(let i=itens.length-1;i>=0;i--){tops[i]=Math.max(205,Math.min(tops[i],teto-cs[i].hh));teto=tops[i]-8}
-    itens.forEach((it,i)=>{h+=cs[i].html.replace('top:0px',`top:${tops[i]}px`);
-      const al=alvoDe('b'+it.id,it.alvo);if(al)ponto([lado==='frente'?x:x+w,tops[i]+(it.titulo?30:0)+30],al,'#e3201b','b'+it.id)})};
+    itens.forEach((it,i)=>{const sv=PT['q'+it.id],L0=sv?sv[0]:x,T0=sv?sv[1]:tops[i];
+      h+=cs[i].html.replace(`left:${x}px;top:0px`,`left:${L0}px;top:${T0}px`).replace('</div>'+'','</div>').replace(/<\/div>$/,`<div class="mv naoimprime" data-mv="q${it.id}">✥</div></div>`);
+      const al=alvoDe('b'+it.id,it.alvo);if(al)ponto([al[0]<L0+w/2?L0:L0+w,T0+(it.titulo?30:0)+30],al,'#e3201b','b'+it.id)})};
   const meio=e=>[e.x+e.w/2,e.y+e.h/2];
   const itF=posicoes(p,'frente').filter(e=>!e.papel.startsWith('extra')&&e.papel!=='carimbo').map(e=>e.papel==='frente'
     ?{id:'fr',chave:e.chave,cor:e.cor,tipo:p.fr.tipo,cm:e.cm,loc:textoFrente(p),alvo:pf(...meio(e))}
@@ -853,7 +861,7 @@ function fichaHTML(p){
   itF.splice(0,0,...extra('frente','antes',pf));itF.push(...extra('frente','depois',pf));
   coluna(426,172,itF,'frente');
   const itC=posicoes(p,'costas').filter(e=>!e.papel.startsWith('extra')).map(e=>({id:'co',chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.co.tipo,loc:`${num(p.co.dist)}cm DA COSTURA DA GOLA`,alvo:pc(...meio(e))}));
-  if(p.carimbo)itC.push({id:'car',chave:p.carimbo,cor:p.carimboCor,tipo:p.carimboTipo,titulo:'CARIMBO INTERNO',loc:`${String(A.carimboCm||2).replace('.',',')}cm ABAIXO DA COSTURA DA GOLA`,alvo:pc(A.co?A.co.cx:0,A.co?A.co.gola+2*A.esc:0)});
+  if(p.carimbo)itC.push({id:'car',chave:p.carimbo,cor:p.carimboCor,tipo:p.carimboTipo,titulo:'CARIMBO INTERNO',loc:`${String(A.carimboCm||2).replace('.',',')}cm ABAIXO DA COSTURA DA GOLA`,alvo:(()=>{const e=posicoes(p,'frente').find(e=>e.papel==='carimbo');return e?pf(e.x+e.w/2,Math.min(e.y+e.h/2,e.clip?e.y+(e.clip-e.y)/2:e.y+e.h/2)):pc(A.co?A.co.cx:0,A.co?A.co.gola+2*A.esc:0)})()});
   itC.splice(0,0,...extra('costas','antes',pc));itC.push(...extra('costas','depois',pc));
   coluna(612,170,itC,'costas');
   return `<div class="fichaA" data-pid="${p.id}" style="position:absolute;inset:0">${h}<svg viewBox="0 0 1123 794">${linhas.join('')}</svg>${pts.join('')}</div>`;
@@ -1026,6 +1034,14 @@ document.addEventListener('click',e=>{if(!e.target.closest||e.target.closest('.e
  const solta=()=>{if(!dp)return;const d=dp;dp=null;d.h.classList.remove('on');const q=pecaDe(d.h);if(!q)return;LIN[q.artigo]=LIN[q.artigo]||{};LIN[q.artigo][d.k]=[d.h.offsetLeft+13,d.h.offsetTop+13];if(q.pts)delete q.pts[d.k];gravar('linhas',LIN);
    if(q===P)guardarP();else gravar('pecas',pecas)};
  document.addEventListener('pointerup',solta);document.addEventListener('pointercancel',solta);}
+{let dm=null; // arrastar um quadro inteiro (título, estampa, textos e medidas juntos)
+ document.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('.fichaA .mv');if(!h)return;e.preventDefault();const bx=h.parentElement,fa=h.closest('.fichaA'),s=fa.getBoundingClientRect().width/1123;
+   dm={h,bx,fa,s,x:e.clientX,y:e.clientY,l:bx.offsetLeft,t:bx.offsetTop,k:h.dataset.mv};bx.style.outline='2px dashed #e3b000';h.setPointerCapture(e.pointerId)});
+ document.addEventListener('pointermove',e=>{if(!dm)return;dm.bx.style.left=Math.max(0,Math.min(1123-dm.bx.offsetWidth,dm.l+(e.clientX-dm.x)/dm.s))+'px';dm.bx.style.top=Math.max(0,Math.min(794-dm.bx.offsetHeight,dm.t+(e.clientY-dm.y)/dm.s))+'px'});
+ const solta=()=>{if(!dm)return;const d=dm;dm=null;d.bx.style.outline='';const q=pecaDe(d.h);if(!q)return;LIN[q.artigo]=LIN[q.artigo]||{};LIN[q.artigo][d.k]=[d.bx.offsetLeft,d.bx.offsetTop];gravar('linhas',LIN);
+   if($('#t-ficha').classList.contains('on'))$('#ficha').innerHTML=fichaHTML(P);if($('#t-lote').classList.contains('on'))mostrarLote();encaixar()};
+ document.addEventListener('pointerup',solta);document.addEventListener('pointercancel',solta);}
+$('#b-org').onclick=()=>{const L=LIN[P.artigo]||{};for(const k in L)if(/^[qn]/.test(k))delete L[k];gravar('linhas',LIN);$('#ficha').innerHTML=fichaHTML(P);encaixar();toast('Quadros no lugar padrão')};
 let fichaPendente=false;
 function talvezRedesenhar(){setTimeout(()=>{const a=document.activeElement;if(a&&a.matches&&a.matches('.fichaA .ed'))return; // ainda escrevendo noutro campo: espera
   if(!fichaPendente)return;fichaPendente=false;redesenharFichas();desenharExtras();preencher();pintarEditor()},350)}
@@ -1099,12 +1115,41 @@ const medDe=id=>MEDX[id]||MED0.find(m=>m.id===id);
 function aplicarMed(){for(const m0 of MED0){const m=medDe(m0.id),A=ART[m0.id];if(!A)continue;
   if(m.fr!=null&&m.fr!=='')A.frontal=+m.fr;if(m.mini&&m.mini.length)A.mini=[0,1,2].map(i=>+((m.mini[i]||m.mini[m.mini.length-1])[1]));A.nuca=+m.nuca;A.carimboCm=+m.car;A.miniG=m.mini}}
 aplicarMed();
+// desenho de cada medida (mockup branco + quadrado da estampa + seta da medida)
+const cacheDiag={};
+function diagrama(id,tipo,m){const A=ART[id],lado=tipo==='nuca'?'costas':'frente',G=lado==='frente'?A.fr:A.co,base=IMG[`${id}-${lado}-peca`];if(!A||!G||!base)return '';
+  const chave=[id,tipo,JSON.stringify(m)].join('|');if(cacheDiag[chave])return cacheDiag[chave];
+  const W=base.width,H=base.height,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),e=A.esc,V='#d61f1f';
+  x.fillStyle='#efebe4';x.fillRect(0,0,W,H);x.filter='drop-shadow(0 2px 6px rgba(0,0,0,.18))';x.drawImage(base,0,0);x.filter='none';
+  const cab=IMG[`${id}-${lado}-cabide`];if(cab)x.drawImage(cab,0,0);
+  const caixa=(l,t,w,h)=>{x.save();x.fillStyle='rgba(214,31,31,.12)';x.fillRect(l,t,w,h);x.setLineDash([12,8]);x.lineWidth=5;x.strokeStyle=V;x.strokeRect(l,t,w,h);x.restore()};
+  const seta=(x1,y1,x2,y2,txt,lx,ly)=>{x.save();x.strokeStyle=V;x.fillStyle=V;x.lineWidth=5;x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();
+    const p=(ax,ay,bx,by)=>{const a=Math.atan2(by-ay,bx-ax);x.beginPath();x.moveTo(bx,by);x.lineTo(bx-16*Math.cos(a-.45),by-16*Math.sin(a-.45));x.lineTo(bx-16*Math.cos(a+.45),by-16*Math.sin(a+.45));x.fill()};
+    p(x1,y1,x2,y2);p(x2,y2,x1,y1);
+    x.font='bold 44px Arial';const tw=x.measureText(txt).width;x.fillStyle='#fff';x.fillRect(lx-10,ly-30,tw+20,60);x.fillStyle=V;x.textBaseline='middle';x.fillText(txt,lx,ly);x.restore()};
+  const marca=(xx,yy)=>{x.save();x.strokeStyle=V;x.lineWidth=2;x.setLineDash([6,6]);x.beginPath();x.moveTo(xx-60,yy);x.lineTo(xx+60,yy);x.stroke();x.restore()};
+  const cm=v=>String(v).replace('.',',')+'CM';
+  if(tipo==='fr'){const w=Math.min(A.largMax||24,24)*e,h=7*e,fundo=G.gola+(+m.fr)*e;caixa(G.cx-w/2,fundo-h,w,h);marca(G.cx,G.gola);const sx=G.cx+w/2+30;seta(sx,G.gola,sx,fundo,cm(m.fr),Math.min(sx+14,W-150),(G.gola+fundo)/2)}
+  if(tipo==='mini'||tipo==='ass'){const g=(tipo==='mini'?m.mini:m.ass),v=+(g[0]||[0,20])[1],w=(tipo==='ass'?6:8)*e,h=(tipo==='ass'?2:5)*e,cx=G.cx+10*e,cy=G.ombro+v*e;caixa(cx-w/2,cy-h/2,w,h);marca(cx,G.ombro);
+    seta(cx,G.ombro,cx,cy,g.map(r=>r[1]).join(' / ')+'CM',Math.max(10,cx-260),G.ombro+(cy-G.ombro)*.45)}
+  if(tipo==='nuca'){const w=8*e,h=2.1*e,t=G.gola+(+m.nuca)*e;caixa(G.cx-w/2,t,w,h);marca(G.cx,G.gola);seta(G.cx+w/2+30,G.gola,G.cx+w/2+30,t,cm(m.nuca),G.cx+w/2+44,G.gola+60)}
+  if(tipo==='barra'){const w=2*e,h=2.5*e,r=G.lado-3.5*e,b=G.barra-3.5*e;caixa(r-w,b-h,w,h);seta(r,b+22,G.lado,b+22,'3,5CM',r-80,b+90);seta(r+22,b,r+22,G.barra,'3,5CM',r-230,b+20)}
+  const cr=tipo==='nuca'?[0,0,W,H*.55]:tipo==='barra'?[W*.35,H*.5,W*.65,H*.5]:null;let o=c;
+  if(cr){o=document.createElement('canvas');o.width=cr[2];o.height=cr[3];o.getContext('2d').drawImage(c,cr[0],cr[1],cr[2],cr[3],0,0,cr[2],cr[3])}
+  return cacheDiag[chave]=o.toDataURL('image/jpeg',.82)}
+function figsMed(id,m){const A=ART[id];if(!A)return '';const f=[],fig=(src,cap)=>src?`<figure><img src="${src}" alt=""><figcaption>${cap}</figcaption></figure>`:'';
+  if(m.fr!=null&&m.fr!==''&&A.fr)f.push(fig(diagrama(id,'fr',m),`ESTAMPA FRONTAL ${String(m.fr).replace('.',',')}CM ${esc(m.ref)}, MEDINDO PELA PARTE BAIXA`));
+  if(m.mini.length&&A.fr)f.push(fig(diagrama(id,'mini',m),`ESTAMPA MINI ABAIXO DO PONTO MAIS ALTO DO OMBRO: ${m.mini.map(r=>esc(r[0])+' '+String(r[1]).replace('.',',')+'CM').join(' · ')}`));
+  if(m.ass.length&&A.fr)f.push(fig(diagrama(id,'ass',m),`ASSINATURA BORDADO ABAIXO DO PONTO MAIS ALTO DO OMBRO: ${m.ass.map(r=>esc(r[0])+' '+String(r[1]).replace('.',',')+'CM').join(' · ')}`));
+  if(A.co)f.push(fig(diagrama(id,'nuca',m),`ESTAMPA NUCA ${String(m.nuca).replace('.',',')}CM ABAIXO DA COSTURA DA GOLA · CARIMBO INTERNO ${String(m.car).replace('.',',')}CM (POR DENTRO)`));
+  if(A.fr)f.push(fig(diagrama(id,'barra',m),'SEREIA BARRA: 3,5CM DA COSTURA LATERAL, 3,5CM DA COSTURA DA BARRA, LADO ESQUERDO DE QUEM VESTE'));
+  return f.length?`<div class="md-figs">${f.join('')}</div>`:''}
 function listarMedidas(){const q=semAcento($('#md-busca').value||'').trim();let g0='',h='';
   const num=v=>v==null?'':String(v).replace('.',',');
   for(const m0 of MED0){const m=medDe(m0.id);if(q&&!semAcento(m.nome+' '+m.g).includes(q))continue;
     if(m.g!==g0){g0=m.g;h+=`<div class="md-g">${esc(g0)}</div>`}
     const linhas=(campo,arr)=>arr.map((r,i)=>`<div class="md-l"><input type="text" data-md="${m0.id}|${campo}|${i}|0" value="${esc(r[0])}"><input type="text" inputmode="decimal" data-md="${m0.id}|${campo}|${i}|1" value="${num(r[1])}"></div>`).join('');
-    h+=`<div class="md-card"><h4>${esc(m.nome)}</h4><div class="sub2">${ART[m0.id]?'Mockup no site ✓ — vale para as próximas peças':'Ainda sem mockup no site (só consulta)'}</div>
+    h+=`<div class="md-card"><h4>${esc(m.nome)}</h4><div class="sub2">${ART[m0.id]?'Mockup no site ✓ — vale para as próximas peças':'Ainda sem mockup no site (só consulta)'}</div>${figsMed(m0.id,m)}
       ${m.fr!=null||m0.fr!=null?`<div class="md-l"><span>Estampa frontal: cm ${esc(m.ref)}, medindo pela parte baixa</span><input type="text" inputmode="decimal" data-md="${m0.id}|fr" value="${num(m.fr)}"></div>`:''}
       ${m.frG&&m.frG.length?`<div class="md-t">Estampa frontal por tamanho (cm ${esc(m.ref)})</div>${linhas('frG',m.frG)}`:''}
       ${m.mini.length?`<div class="md-t">Estampa mini (cm abaixo do ponto mais alto do ombro)</div>${linhas('mini',m.mini)}`:''}
