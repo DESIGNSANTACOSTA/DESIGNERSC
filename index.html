@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611262315";</script>
+<script>var VERSAO="202611262345";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -32,6 +32,11 @@ header .marca img{height:28px;filter:invert(1)}
 .tile.mais{justify-content:center;font-size:30px;font-weight:300}
 .pest{display:none}.pest.on{display:block}
 #extras-todas .extra{display:none}#extras-todas .extra.on{display:block}
+.md-card{background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.md-card h4{margin:0 0 2px;font-size:15px}.md-card .sub2{font-size:12px;color:var(--mute);margin-bottom:8px}
+.md-l{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:6px;align-items:center;margin:4px 0}.md-l input{min-height:40px;padding:6px 8px}
+.md-t{font-size:13px;font-weight:600;margin:10px 0 2px}
+.md-g{font-size:13px;font-weight:700;margin:16px 0 8px;letter-spacing:.04em;color:var(--mute)}
 .padrao{background:#fffbe8;border:1px solid #f0d98a;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45;margin-bottom:12px}
 #cv-frente,#cv-costas{touch-action:none;cursor:pointer}
 #salvo{font-size:12px;background:#2e7d32;color:#fff;border-radius:999px;padding:3px 10px;opacity:0;transition:opacity .3s}
@@ -384,6 +389,12 @@ dialog::backdrop{background:#0006}
   </div>
   <div class="lista" id="mk-lista"></div>
 </section>
+<!-- ================= MEDIDAS ================= -->
+<section class="tela" id="t-medidas">
+  <div class="padrao naoimprime"><b>Medidas padrão de localização</b> (da Ficha de Localização Santacosta). O que você mudar aqui vale para as próximas peças. A sereia da barra é sempre: 3,5CM DA COSTURA LATERAL, 3,5CM DA COSTURA DA BARRA, ESTAMPADA DO ESQUERDO DE QUEM VESTE.</div>
+  <div class="bloco" style="margin-bottom:12px"><label>Procurar artigo<input type="search" id="md-busca" placeholder="EX.: CROPPED, REGATA, INFANTIL"></label></div>
+  <div id="md-lista"></div>
+</section>
 <!-- ================= ESTAMPAS ================= -->
 <section class="tela" id="t-estampas">
   <div class="padrao naoimprime"><b>Padrão de nomes.</b> Só o nome da estampa, em caixa alta, sem tamanho nem cor (ex.: SEREIA + SANTACOSTA, ITAPUÁ). Tamanho, cor, onde fica, referência e cliente vão nos campos de cada estampa.</div>
@@ -605,7 +616,7 @@ function claridade(img){ // quanto clarear a foto branca para a cor de tingiment
 // ---------- estado da peça ----------
 function novaPeca(){
   return {id:'p'+Date.now(),artigo:'camiseta-unissex',ting:'AZ PACÍFICO 1405P / 11407',
-    fr:{est:'txt:brava',pos:'frontal',cor:'BRANCO',dist:11},co:{est:'sereia-santacosta',pos:'nuca',cor:'BRANCO',dist:2},
+    fr:{est:'txt:brava',pos:'frontal',cor:'BRANCO',dist:ART['camiseta-unissex'].frontal},co:{est:'sereia-santacosta',pos:'nuca',cor:'BRANCO',dist:ART['camiseta-unissex'].nuca},
     barra:'sereia',barraCor:'BRANCO',barraTipo:'ESTAMPA',carimbo:'brava-carimbo',carimboCor:'GREY 3C',extras:[],
     ref:'',pedido:'',colecao:'VRA 2027',nome:'',obs:'',grade:{},costura:ART['camiseta-unissex'].costura};
 }
@@ -761,7 +772,8 @@ $('#t-peca').addEventListener('input',e=>{if(e.target.dataset.x!=null){mudouExtr
 function textoFrente(p){
   const A=ART[p.artigo],f=p.fr;
   if(f.pos==='mini'){const d=(+f.dist||A.mini[0])-A.mini[0];const m=A.mini.map(v=>String(v+d).replace('.',','));
-    return `PP, P e M: ${m[0]}cm\nG e 2G: ${m[1]}cm\n3G e 4G: ${m[2]}cm\nABAIXO DO PONTO MAIS ALTO DO OMBRO MEDINDO PELO CENTRO DO DESENHO, AO LADO ESQUERDO DE QUEM VESTE`}
+    const G=(A.miniG&&A.miniG.length?A.miniG.map(r=>r[0]):['PP - P - M','G - 2G','3G - 4G']);
+    return G.map((g,i)=>`${g}: ${m[Math.min(i,m.length-1)]}cm`).join('\n')+`\nABAIXO DO PONTO MAIS ALTO DO OMBRO MEDINDO PELO CENTRO DO DESENHO, AO LADO ESQUERDO DE QUEM VESTE`}
   return `${String(f.dist).replace('.',',')}cm ABAIXO DA COSTURA DA GOLA MEDINDO PELA PARTE BAIXA DA ESTAMPA`;
 }
 const cacheURL={};
@@ -841,7 +853,7 @@ function fichaHTML(p){
   itF.splice(0,0,...extra('frente','antes',pf));itF.push(...extra('frente','depois',pf));
   coluna(426,172,itF,'frente');
   const itC=posicoes(p,'costas').filter(e=>!e.papel.startsWith('extra')).map(e=>({id:'co',chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.co.tipo,loc:`${num(p.co.dist)}cm DA COSTURA DA GOLA`,alvo:pc(...meio(e))}));
-  if(p.carimbo)itC.push({id:'car',chave:p.carimbo,cor:p.carimboCor,tipo:p.carimboTipo,titulo:'CARIMBO INTERNO',loc:'2cm DA COSTURA DA GOLA',alvo:pc(A.co?A.co.cx:0,A.co?A.co.gola+2*A.esc:0)});
+  if(p.carimbo)itC.push({id:'car',chave:p.carimbo,cor:p.carimboCor,tipo:p.carimboTipo,titulo:'CARIMBO INTERNO',loc:`${String(A.carimboCm||2).replace('.',',')}cm ABAIXO DA COSTURA DA GOLA`,alvo:pc(A.co?A.co.cx:0,A.co?A.co.gola+2*A.esc:0)});
   itC.splice(0,0,...extra('costas','antes',pc));itC.push(...extra('costas','depois',pc));
   coluna(612,170,itC,'costas');
   return `<div class="fichaA" data-pid="${p.id}" style="position:absolute;inset:0">${h}<svg viewBox="0 0 1123 794">${linhas.join('')}</svg>${pts.join('')}</div>`;
@@ -916,7 +928,7 @@ function encaixar(){ // folha A4 cabe na largura da tela
   $$('.folha-espaco').forEach(w=>{const f=w.firstElementChild;const larg=w.parentElement.clientWidth-24;const s=Math.min(1,larg/1123);
     f.style.transform=`scale(${s})`;w.style.height=(794*s)+'px';w.style.width=(1123*s)+'px';w.style.margin='0 auto'});
 }
-const BIB=[['salvas','Peças salvas'],['mockups','Mockups'],['estampas','Estampas'],['cores','Cores']];
+const BIB=[['salvas','Peças salvas'],['mockups','Mockups'],['medidas','Medidas'],['estampas','Estampas'],['cores','Cores']];
 let telaAtual=null;const pilha=[];
 function ir(t,voltando){
   if(!voltando&&telaAtual&&telaAtual!==t){pilha.push(telaAtual);try{history.pushState({t},'','#'+t)}catch(e){}}
@@ -932,6 +944,7 @@ function ir(t,voltando){
   if(t==='salvas')listar();
   if(t==='estampas')listarEst();
   if(t==='mockups')listarMockups();
+  if(t==='medidas')listarMedidas();
   if(t==='lote')mostrarLote();
   if(t==='pedido'&&pedido&&pedido.ids)mostrarPedido();
   if(t==='cores')listarCores();
@@ -1079,6 +1092,34 @@ $('#dlg-est').addEventListener('close',()=>{const k=estAberta,v=$('#dlg-est').re
   atualizarTudo();listarEst()});
 $('#e-subir').onclick=()=>abrirUp(null,0);
 $('#e-escrever').onclick=()=>{const t=prompt('O que vai ser escrito com o alfabeto?');if(!t||!t.trim())return;const k='txt:'+t.trim().toLowerCase();INFO[k]=INFO[k]&&!INFO[k].apagado?INFO[k]:{};gravar('estinfo',INFO);atualizarTudo();listarEst();abrirEst(k)};
+
+const MED0=[{"id": "camiseta-unissex", "g": "CAMISETAS", "nome": "CAMISETA UNISSEX", "fr": 11, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "manga-longa", "g": "CAMISETAS", "nome": "CAMISETA MANGA LONGA", "fr": 11, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "camiseta-over", "g": "CAMISETAS", "nome": "CAMISETA OVERSIZED", "fr": 11, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nota": "[CONFERIR] NÃO ESTÁ NA FICHA DE LOCALIZAÇÃO; MEDIDAS IGUAIS À UNISSEX.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "slim-gola-v", "g": "CAMISETAS", "nome": "CAMISETA SLIM GOLA V", "fr": 9, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nota": "[CONFERIR] NÃO ESTÁ NA FICHA DE LOCALIZAÇÃO.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "lycra-manga-longa", "g": "CAMISETAS", "nome": "LYCRA MANGA LONGA", "fr": null, "mini": [], "ass": [], "nota": "[CONFERIR] NÃO ESTÁ NA FICHA DE LOCALIZAÇÃO. SÓ COSTAS.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "babylook-acinturada", "g": "BABY LOOK", "nome": "BABY LOOK ACINTURADA (MODELAGEM ANTIGA)", "fr": 5, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "babylook-reta", "g": "BABY LOOK", "nome": "BABY LOOK RETA (MODELAGEM NOVA)", "fr": 9, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "cropped-manga", "g": "CROPPEDS", "nome": "CROPPED COM MANGA", "fr": 9, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "cropped-afio", "g": "CROPPEDS", "nome": "CROPPED REGATA A FIO", "fr": 5, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nota": "[CONFERIR] NA FICHA DE LOCALIZAÇÃO ESTÁ COMO CROPPED NADADOR.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "cropped-ribana", "g": "CROPPEDS", "nome": "CROPPED REGATA RIBANA", "fr": null, "mini": [], "ass": [], "nota": "BORDADO PEITO ABAIXO DO PONTO MAIS ALTO DO OMBRO, MEDINDO PELA PARTE BAIXA: 17CM PARA A REFERÊNCIA A, 3CM PARA A REFERÊNCIA B, 4,5CM PARA A REFERÊNCIA C.\nETIQUETA INTERNA CENTRALIZADA AO MEIO DAS COSTAS, RENTE À COSTURA DA GOLA.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "regata-machao", "g": "REGATAS", "nome": "REGATA MACHÃO", "fr": 9, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "regata-friso", "g": "REGATAS", "nome": "REGATA MASCULINA COM FRISO", "fr": 9, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "regata-ribana", "g": "REGATAS", "nome": "REGATA RIBANA", "fr": null, "mini": [], "ass": [], "nota": "BORDADO PEITO ABAIXO DO PONTO MAIS ALTO DO OMBRO, MEDINDO PELA PARTE BAIXA: 17CM PARA A REFERÊNCIA A, 3CM PARA A REFERÊNCIA B, 4,5CM PARA A REFERÊNCIA C.\nETIQUETA INTERNA CENTRALIZADA AO MEIO DAS COSTAS, RENTE À COSTURA DA GOLA.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-manga", "g": "VESTIDOS", "nome": "VESTIDO COM MANGA", "fr": 6, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 22], ["G - 2G", 23], ["3G - 4G", 24]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-nadador", "g": "VESTIDOS", "nome": "VESTIDO CURTO NADADOR", "fr": 6.5, "mini": [["PP - P - M", 22], ["G - 2G", 23], ["3G - 4G", 24]], "ass": [["PP - P - M", 22], ["G - 2G", 23], ["3G - 4G", 24]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-alca-fio", "g": "VESTIDOS", "nome": "VESTIDO ALÇA FIO", "fr": 4.5, "ref": "ABAIXO DA COSTURA DO FRISO", "mini": [["PP - P - M", 8], ["G - 2G", 9]], "ass": [["PP - P - M", 8], ["G - 2G", 9]], "nota": "MINI ABAIXO DA COSTURA DO FRISO.", "nuca": 2, "car": 2, "frG": []}, {"id": "body-baby", "g": "INFANTIL", "nome": "BODY BABY", "fr": null, "frG": [["RN - P - M", 5.5], ["G - 2G", 6]], "mini": [["RN - P - M", 11.5], ["G - 2G", 12]], "ass": [], "nota": "MINI G - 2G: ARTE COM 22CM.", "nuca": 2, "car": 2, "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "camiseta-infantil", "g": "INFANTIL", "nome": "CAMISETA INFANTIL", "fr": null, "frG": [["1 - 2 - 4 (ARTE COM 19CM)", 5.5], ["6 - 8 (ARTE COM 22CM)", 7], ["10 - 12 - 14 (ARTE COM 27CM)", 8]], "mini": [["2 - 4", 15], ["6 - 8", 16], ["10 - 12 - 14", 18]], "ass": [], "nuca": 2, "car": 2, "nota": "", "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "manga-longa-infantil", "g": "INFANTIL", "nome": "CAMISETA MANGA LONGA INFANTIL", "fr": null, "frG": [["1 - 2 - 4 (ARTE COM 19CM)", 5.5], ["6 - 8 (ARTE COM 22CM)", 7], ["10 - 12 - 14 (ARTE COM 27CM)", 8.5]], "mini": [["1 - 2 - 4", 15], ["6 - 8", 16], ["10 - 12 - 14", 18]], "ass": [], "nuca": 2, "car": 2, "nota": "", "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-infantil-manga", "g": "INFANTIL", "nome": "VESTIDO INFANTIL COM MANGA", "fr": null, "frG": [["2 - 4", 4], ["6 - 8", 5], ["10 - 12", 6], ["14", 7]], "mini": [], "ass": [], "nota": "[CONFERIR] OUTRA PÁGINA DA FICHA DIZ: 2 - 4 - 6: 4CM; 8 - 10 - 12 - 14: 5,5CM.", "nuca": 2, "car": 2, "ref": "ABAIXO DA COSTURA DA GOLA"}];
+let MEDX=ler('medidas',{});
+const medDe=id=>MEDX[id]||MED0.find(m=>m.id===id);
+function aplicarMed(){for(const m0 of MED0){const m=medDe(m0.id),A=ART[m0.id];if(!A)continue;
+  if(m.fr!=null&&m.fr!=='')A.frontal=+m.fr;if(m.mini&&m.mini.length)A.mini=[0,1,2].map(i=>+((m.mini[i]||m.mini[m.mini.length-1])[1]));A.nuca=+m.nuca;A.carimboCm=+m.car;A.miniG=m.mini}}
+aplicarMed();
+function listarMedidas(){const q=semAcento($('#md-busca').value||'').trim();let g0='',h='';
+  const num=v=>v==null?'':String(v).replace('.',',');
+  for(const m0 of MED0){const m=medDe(m0.id);if(q&&!semAcento(m.nome+' '+m.g).includes(q))continue;
+    if(m.g!==g0){g0=m.g;h+=`<div class="md-g">${esc(g0)}</div>`}
+    const linhas=(campo,arr)=>arr.map((r,i)=>`<div class="md-l"><input type="text" data-md="${m0.id}|${campo}|${i}|0" value="${esc(r[0])}"><input type="text" inputmode="decimal" data-md="${m0.id}|${campo}|${i}|1" value="${num(r[1])}"></div>`).join('');
+    h+=`<div class="md-card"><h4>${esc(m.nome)}</h4><div class="sub2">${ART[m0.id]?'Mockup no site ✓ — vale para as próximas peças':'Ainda sem mockup no site (só consulta)'}</div>
+      ${m.fr!=null||m0.fr!=null?`<div class="md-l"><span>Estampa frontal: cm ${esc(m.ref)}, medindo pela parte baixa</span><input type="text" inputmode="decimal" data-md="${m0.id}|fr" value="${num(m.fr)}"></div>`:''}
+      ${m.frG&&m.frG.length?`<div class="md-t">Estampa frontal por tamanho (cm ${esc(m.ref)})</div>${linhas('frG',m.frG)}`:''}
+      ${m.mini.length?`<div class="md-t">Estampa mini (cm abaixo do ponto mais alto do ombro)</div>${linhas('mini',m.mini)}`:''}
+      ${m.ass.length?`<div class="md-t">Assinatura bordado (cm abaixo do ponto mais alto do ombro)</div>${linhas('ass',m.ass)}`:''}
+      <div class="md-l"><span>Estampa nuca: cm abaixo da costura da gola</span><input type="text" inputmode="decimal" data-md="${m0.id}|nuca" value="${num(m.nuca)}"></div>
+      <div class="md-l"><span>Carimbo interno: cm abaixo da costura da gola</span><input type="text" inputmode="decimal" data-md="${m0.id}|car" value="${num(m.car)}"></div>
+      <label style="margin-top:8px">Observações<textarea data-md="${m0.id}|nota" rows="2">${esc(m.nota)}</textarea></label>
+      ${MEDX[m0.id]?`<button type="button" class="btn claro" style="margin-top:8px" data-mdv="${m0.id}">Voltar ao que está na ficha de localização</button>`:''}</div>`}
+  $('#md-lista').innerHTML=h||'<div class="vazio">Nenhum artigo encontrado.</div>'}
+$('#md-busca').addEventListener('input',listarMedidas);
+$('#md-lista').addEventListener('change',e=>{const t=e.target;if(!t.dataset.md)return;const[id,campo,i,j]=t.dataset.md.split('|');const m=JSON.parse(JSON.stringify(medDe(id)));
+  const v=t.value.trim().toUpperCase(),n=v.replace(',','.');
+  if(i!=null){m[campo][+i][+j]=+j?(n===''?'':+n):v}else m[campo]=campo==='nota'?v:(n===''?null:+n);
+  MEDX[id]=m;gravar('medidas',MEDX);aplicarMed();toast('Medida guardada — vale para as próximas peças');listarMedidas()});
+$('#md-lista').addEventListener('click',e=>{const b=e.target.closest('[data-mdv]');if(!b)return;delete MEDX[b.dataset.mdv];gravar('medidas',MEDX);aplicarMed();listarMedidas()});
 
 // ---------- mockups (artigos) ----------
 function salvarArtx(){try{localStorage.setItem('sc_artx',JSON.stringify(ARTX));gravar('x',0);return true}catch(e){toast('Foto grande demais para guardar neste aparelho');return false}}
