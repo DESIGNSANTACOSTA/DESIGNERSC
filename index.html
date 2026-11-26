@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611262025";</script>
+<script>var VERSAO="202611262055";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -112,8 +112,8 @@ textarea{min-height:90px;resize:vertical}
 .fichaA .cx{border:1px solid #e3201b;border-radius:5px;background:#fff;overflow:hidden}
 .fichaA .cx .im{height:58px;display:flex;align-items:center;justify-content:center;padding:5px}
 .fichaA .cx .im img{max-width:100%;max-height:100%}
-.fichaA .cx .dd{border-top:1px solid #e3201b;font-size:10.5px;line-height:14px;padding:4px 6px}
-.fichaA .cx .lc{font-size:10px;line-height:12.5px;padding:3px 4px 5px;border-top:1px solid #e3201b}
+.fichaA .cx .dd .ed{white-space:pre-line}.fichaA .cx .dd{border-top:1px solid #e3201b;font-size:10.5px;line-height:14px;padding:4px 6px}
+.fichaA .cx .lc{font-size:10px;line-height:13px;padding:4px 5px 5px;border-top:1px solid #e3201b}
 .fichaA svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .fichaA .pt{position:absolute;width:26px;height:26px;border-radius:50%;touch-action:none;cursor:move;z-index:3}
 .editavel .fichaA .pt,.fichaA .pt:hover,.fichaA .pt.on{background:#e3b00055;box-shadow:0 0 0 1px #e3b000}
@@ -327,12 +327,10 @@ dialog::backdrop{background:#0006}
 <section class="tela" id="t-ficha">
   <div class="botoes naoimprime" style="margin-bottom:12px">
     <button class="btn" id="b-pdf-ficha">Salvar PDF / imprimir</button>
-    <button class="btn claro" data-ir="peca">Voltar para a peça</button>
     <button class="btn claro" id="b-nota">+ Nota de costura</button>
-    <button class="btn claro" id="b-marca">Mostrar o que dá para mudar</button>
-    <button class="btn claro" id="b-linhas">Linhas no lugar padrão</button>
+    <button class="btn claro" id="b-fx">+ Estampa</button>
   </div>
-  <p class="aviso naoimprime" style="margin:0 0 10px">Toque em qualquer texto da ficha para escrever (também a grade e o GRADE TOTAL). Arraste a ponta das linhas (o pontinho) para onde elas devem apontar. O que você escreve na ficha é só a informação técnica: não muda o desenho da peça.</p>
+  <p class="aviso naoimprime" style="margin:0 0 10px">Toque em qualquer texto da ficha para escrever (também a grade e o GRADE TOTAL). Arraste a ponta das linhas (o pontinho) para onde elas devem apontar. O que você escreve na ficha é só a informação técnica: não muda o desenho da peça. No TAMANHO dá para pôr um tamanho por grade, um por linha (ex.: PP/P: 20 CM ↵ M/G: 22 CM).</p>
   <div class="folha-wrap"><div class="folha-espaco"><div class="folha" id="ficha"></div></div></div>
 </section>
 <!-- ================= MAPA ================= -->
@@ -427,6 +425,17 @@ dialog::backdrop{background:#0006}
     <div id="du-prev" style="margin:10px 0;min-height:60px;display:grid;place-items:center;background:#faf8f5;border-radius:10px"></div>
     <div class="linha"><label>Nome<input type="text" id="du-nome" required></label><label>Largura real (cm)<input type="number" step="0.1" id="du-larg" value="10"></label></div>
     <div class="botoes" style="margin-top:14px"><button class="btn" value="ok">Guardar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button></div>
+  </form>
+</dialog>
+<dialog id="dlg-fx">
+  <form method="dialog">
+    <h3 style="margin-top:0">Nova estampa na peça</h3>
+    <div class="linha"><label>Estampa<select id="fx-est"></select></label><label>Ou escreva com o alfabeto<input type="text" id="fx-txt"></label></div>
+    <div class="linha" style="margin-top:10px"><label>Lado<select id="fx-lado"><option value="frente">Frente</option><option value="costas">Costas</option></select></label><label>Onde<select id="fx-onde"></select></label></div>
+    <div class="linha" style="margin-top:10px"><label>Cor (Pantone)<select id="fx-cor"></select></label><label>Tipo<select id="fx-tipo"><option>ESTAMPA</option><option>BORDADO</option></select></label></div>
+    <label style="margin-top:10px">Localização (texto vermelho da ficha)<input type="text" id="fx-loc" placeholder="EX.: 5CM ABAIXO DA COSTURA DO OMBRO, CENTRALIZADA NA MANGA"></label>
+    <p class="aviso">Depois dá para arrastar a estampa no desenho da peça e a ponta da linha na ficha.</p>
+    <div class="botoes" style="margin-top:10px"><button class="btn" value="ok">Colocar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button></div>
   </form>
 </dialog>
 <dialog id="dlg-art">
@@ -544,6 +553,7 @@ let cores=ler('cores2',null);
 if(!cores){const velhas=ler('cores',null);cores={ting:TING0.map(([n,h])=>({n,h})),pant:PANT0.map(([n,h])=>({n,h}))};
   if(velhas){for(const c of velhas.pant||[]){const n=c.n.toUpperCase();if(!cores.pant.some(x=>x.n===n))cores.pant.push({n,h:c.h})}}
   try{localStorage.setItem('sc_cores2',JSON.stringify(cores))}catch(e){}}
+let LIN=ler('linhas',{}); // pontas das linhas da ficha por artigo
 let pecas=ler('pecas',[]), mapa=ler('mapa',{nome:'',texto:'',lado:'frente',itens:[]});
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -616,7 +626,7 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
   const A=ART[p.artigo],out=[];if(!(lado==='frente'?A.fr:A.co))return out;
   const larg=A.largMax||Math.min(28,.6*2*((A.fr||A.co).lado?(A.fr.lado-A.fr.cx):230)/A.esc);
   const por=(chave,cor,cx,top,ancora,papel,caber,lu,vz)=>{const E=EST[chave];if(!E)return;let wc=E.w,hc=E.h;lu=+String(lu||'').replace(',','.')||+E.larg0||0;
-    if(caber&&(chave.startsWith('txt:')||E.up)&&wc>larg){hc*=larg/wc;wc=larg}
+    const lim=caber>1?caber:larg;if(caber&&(chave.startsWith('txt:')||E.up)&&wc>lim){hc*=lim/wc;wc=lim}
     const cm=[wc,hc]; // medida real (vai para a ficha); a largura da tela da peça é só para o desenho
     if(lu>0){hc*=lu/wc;wc=lu}
     const vis=+((INFO[chave]||{}).vis||E.vis||1)*(+vz||1);const w=wc*A.esc*vis,h=hc*A.esc*vis;let X=cx-w/2,Y=top;
@@ -628,7 +638,7 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
     if(bar)por(bar,p.barraCor||p.sereiaCor||'BRANCO',A.fr.lado-3.5*A.esc,A.fr.barra-3.5*A.esc,'barra','barra',0,p.barraLarg,p.barraVz);
   }else{const f=p.co;if(f.est)por(f.est,f.cor,A.co.cx,A.co.gola+(+f.dist||0)*A.esc,'topo','costas',1,f.larg,f.vz)}
   (p.extras||[]).forEach((x,i)=>{if(x.lado!==lado||!x.est)return;const pt=(A.lugares[lado]||{})[x.onde]||Object.values(A.lugares[lado])[0];if(!pt)return;
-    por(x.est,x.cor,pt[0]+(+x.dx||0)*A.esc,pt[1]+(+x.dy||0)*A.esc,'centro','extra'+i,0,x.larg,x.vz)});
+    por(x.est,x.cor,pt[0]+(+x.dx||0)*A.esc,pt[1]+(+x.dy||0)*A.esc,'centro','extra'+i,8,x.larg,x.vz)});
   return out;
 }
 function desenhar(p,lado,k=1){
@@ -760,7 +770,7 @@ function fichaHTML(p){
   const falta=`<div style="border:1px dashed #999;color:#777;font-size:12px;padding:40px 10px;text-align:center">Sem imagem desta vista ainda</div>`;
   h+=ab(MF.x,MF.y,MF.w,null,'',bf?`<img src="${jpg(desenhar(p,'frente',1))}" style="width:100%;display:block" alt="">`:falta);
   h+=ab(MC.x,MC.y,MC.w,null,'',bc?`<img src="${jpg(desenhar(p,'costas',1))}" style="width:100%;display:block" alt="">`:falta);
-  const PT=p.pts||{},alvoDe=(k,v)=>PT[k]||v,pts=[];
+  const PT=Object.assign({},(LIN||{})[p.artigo]||{},p.pts||{}),alvoDe=(k,v)=>PT[k]||v,pts=[];
   const ponto=(a,b,cor,k)=>{linhas.push(`<line data-l="${k}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${cor}" stroke-width="1"/><circle data-l="${k}" cx="${b[0]}" cy="${b[1]}" r="2.6" fill="${cor}"/>`);
     pts.push(`<div class="pt naoimprime" data-pt="${k}" style="left:${b[0]-13}px;top:${b[1]-13}px"></div>`)};
   const linhasDe=(t,porLinha)=>t.split('\n').reduce((a,l)=>a+Math.max(1,Math.ceil(l.length/porLinha)),0);
@@ -773,8 +783,9 @@ function fichaHTML(p){
     ponto([161,top+hN/2],alvo,'#2e3192','c'+i);
   });
   // estampas (vermelho): um quadro por estampa, com tipo, tamanho e localização
-  const caixa=(x,top,w,it,ih=58)=>{const lt=O(it.id,'loc',it.loc||'');
-    const hh=(it.titulo?30:0)+ih+3*14+14+(lt?linhasDe(lt,22)*12.5+6:12);
+  const caixa=(x,top,w,it,ih0=58)=>{const lt=O(it.id,'loc',it.loc||''),ih=it.titulo?Math.round(ih0*2):ih0,cpl=Math.floor((w-8)/6.4);
+    const tt=String(O(it.id,'tam','')),nt=tt.includes('\n')?tt.split('\n').length:1;
+    const hh=(it.titulo?30:0)+ih+(2+nt)*14+14+(lt?linhasDe(lt,cpl)*13+8:12);
     const html=ab(x,top,w,null,'cx',`${it.titulo?`<div class="vm" style="padding:3px 2px 0">${esc(it.titulo)}</div>`:''}<div class="im" style="height:${ih}px"><img src="${pretoURL(it.chave)}" alt=""></div>
       <div class="dd"><div>COR: ${ed(`b:${it.id}.cor`,O(it.id,'cor',String(it.cor).toUpperCase()))}</div><div>TIPO: ${ed(`b:${it.id}.tipo`,it.tipo||'ESTAMPA')}</div><div>TAMANHO: ${ed(`b:${it.id}.tam`,O(it.id,'tam',it.tam||(it.cm?fmtCm(it.cm):tamTxt(it.chave))))}</div></div><div class="vm lc ed" contenteditable="true" data-c="b:${it.id}.loc">${esc(O(it.id,'loc',it.loc||''))}</div>`);
     return {html,hh};
@@ -789,11 +800,11 @@ function fichaHTML(p){
   const meio=e=>[e.x+e.w/2,e.y+e.h/2];
   const itF=posicoes(p,'frente').filter(e=>!e.papel.startsWith('extra')).map(e=>e.papel==='frente'
     ?{id:'fr',chave:e.chave,cor:e.cor,tipo:p.fr.tipo,cm:e.cm,loc:textoFrente(p),alvo:pf(...meio(e))}
-    :{id:'barra',chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.barraTipo||p.sereiaTipo,loc:'3,5cm DA COSTURA LATERAL\n3,5cm DA COSTURA DA BARRA\nESTAMPADA DO ESQUERDO DE QUEM VESTE',alvo:pf(...meio(e))});
+    :{id:'barra',chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.barraTipo||p.sereiaTipo,loc:'3,5CM DA COSTURA LATERAL\n3,5CM DA COSTURA DA BARRA\nESTAMPADA DO ESQUERDO\nDE QUEM VESTE',alvo:pf(...meio(e))});
   const extra=(lado,ordem,pp)=>posicoes(p,lado).filter(e=>e.papel.startsWith('extra')).map(e=>{const x=p.extras[+e.papel.slice(5)];
      return x.ordem===ordem?{id:'x'+e.papel.slice(5),chave:e.chave,cor:e.cor,cm:e.cm,tipo:x.tipo,tam:x.tam,loc:(x.loc||'').toUpperCase(),alvo:pp(...meio(e))}:null}).filter(Boolean);
   itF.splice(0,0,...extra('frente','antes',pf));itF.push(...extra('frente','depois',pf));
-  coluna(428,150,itF,'frente');
+  coluna(426,172,itF,'frente');
   const itC=posicoes(p,'costas').filter(e=>!e.papel.startsWith('extra')).map(e=>({id:'co',chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.co.tipo,loc:`${num(p.co.dist)}cm DA COSTURA DA GOLA`,alvo:pc(...meio(e))}));
   if(p.carimbo)itC.push({id:'car',chave:p.carimbo,cor:p.carimboCor,tipo:p.carimboTipo,titulo:'CARIMBO INTERNO',loc:'2cm DA COSTURA DA GOLA',alvo:pc(A.co?A.co.cx:0,A.co?A.co.gola+2*A.esc:0)});
   itC.splice(0,0,...extra('costas','antes',pc));itC.push(...extra('costas','depois',pc));
@@ -896,7 +907,7 @@ $('#m-lista').addEventListener('click',e=>{const b=e.target.closest('button');if
 function pecaDe(el){const r=el.closest('[data-pid]');if(!r)return null;const id=r.dataset.pid;return id===P.id?P:pecas.find(p=>p.id===id)}
 function gravarEd(el){
   const q=pecaDe(el);if(!q)return false;const c=el.dataset.c;q.ov=q.ov||{};
-  const multi=c==='obs'||c.endsWith('.loc');let v=el.innerText.replace(/\u00a0/g,' ').split('\n').map(t=>t.trim()).filter((t,i,a)=>multi?true:t).join(multi?'\n':' ').trim().toUpperCase();
+  const multi=c==='obs'||c.endsWith('.loc')||c.endsWith('.tam');let v=el.innerText.replace(/\u00a0/g,' ').split('\n').map(t=>t.trim()).filter((t,i,a)=>multi?true:t).join(multi?'\n':' ').trim().toUpperCase();
   const num=t=>{const m=String(t).match(/\d+(?:[.,]\d+)?/);return m?m[0].replace(',','.'):null};
   if(c.startsWith('gt:')){const g=c.slice(3),t=+v.replace(/\D/g,'')||0,lojas=LOJAS.reduce((a,l)=>a+(+q.grade[l+'|'+g]||0),0),pr=Math.max(0,t-lojas);if(pr)q.grade['PROJETO|'+g]=String(pr);else delete q.grade['PROJETO|'+g];return true}
   if(c.startsWith('g:')){const k=c.slice(2);v=v.replace(/\D/g,'');if(v)q.grade[k]=v;else delete q.grade[k];return true}
@@ -925,7 +936,7 @@ document.addEventListener('click',e=>{if(!e.target.closest||e.target.closest('.e
    dp={h,fa,s,x:e.clientX,y:e.clientY,l:h.offsetLeft,t:h.offsetTop,k:h.dataset.pt};h.classList.add('on');h.setPointerCapture(e.pointerId)});
  document.addEventListener('pointermove',e=>{if(!dp)return;const nx=dp.l+(e.clientX-dp.x)/dp.s,ny=dp.t+(e.clientY-dp.y)/dp.s;dp.h.style.left=nx+'px';dp.h.style.top=ny+'px';
    dp.fa.querySelectorAll(`[data-l="${dp.k}"]`).forEach(el=>{if(el.tagName==='line'){el.setAttribute('x2',nx+13);el.setAttribute('y2',ny+13)}else{el.setAttribute('cx',nx+13);el.setAttribute('cy',ny+13)}})});
- const solta=()=>{if(!dp)return;const d=dp;dp=null;d.h.classList.remove('on');const q=pecaDe(d.h);if(!q)return;q.pts=q.pts||{};q.pts[d.k]=[d.h.offsetLeft+13,d.h.offsetTop+13];
+ const solta=()=>{if(!dp)return;const d=dp;dp=null;d.h.classList.remove('on');const q=pecaDe(d.h);if(!q)return;LIN[q.artigo]=LIN[q.artigo]||{};LIN[q.artigo][d.k]=[d.h.offsetLeft+13,d.h.offsetTop+13];if(q.pts)delete q.pts[d.k];gravar('linhas',LIN);
    if(q===P)guardarP();else gravar('pecas',pecas)};
  document.addEventListener('pointerup',solta);document.addEventListener('pointercancel',solta);}
 let fichaPendente=false;
@@ -934,12 +945,18 @@ function talvezRedesenhar(){setTimeout(()=>{const a=document.activeElement;if(a&
 document.addEventListener('focusout',e=>{const el=e.target;if(!(el.matches&&el.matches('.fichaA .ed')))return;
   if(el.innerText!==el._antes){const q=pecaDe(el);if(q&&gravarEd(el)){if(q===P)guardarP();else gravar('pecas',pecas);fichaPendente=true}}
   talvezRedesenhar()});
-document.addEventListener('keydown',e=>{const el=e.target;if(e.key==='Enter'&&el.matches&&el.matches('.fichaA .ed')){const c=el.dataset.c;if(!(c==='obs'||c.endsWith('.loc'))){e.preventDefault();el.blur()}}});
+document.addEventListener('keydown',e=>{const el=e.target;if(e.key==='Enter'&&el.matches&&el.matches('.fichaA .ed')){const c=el.dataset.c;if(!(c==='obs'||c.endsWith('.loc')||c.endsWith('.tam'))){e.preventDefault();el.blur()}}});
 document.addEventListener('paste',e=>{const el=e.target.closest&&e.target.closest('.fichaA .ed');if(!el)return;e.preventDefault();document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text'))});
 $('#b-nota').onclick=()=>{const l=(P.costura||'').split('\n').filter(t=>t.trim());l.push('NOVA NOTA');P.costura=l.join('\n');guardarP();preencher();$('#ficha').innerHTML=fichaHTML(P);encaixar();
   const el=$(`#ficha [data-c="cost:${l.length-1}"]`);if(el){el.focus();const s=getSelection(),rg=document.createRange();rg.selectNodeContents(el);s.removeAllRanges();s.addRange(rg)}};
-$('#b-linhas').onclick=()=>{P.pts={};guardarP();$('#ficha').innerHTML=fichaHTML(P);encaixar();toast('Linhas no lugar padrão')};
-$('#b-marca').onclick=e=>{const on=$('#t-ficha').classList.toggle('editavel');$('#t-lote').classList.toggle('editavel',on);e.target.textContent=on?'Esconder marcação':'Mostrar o que dá para mudar'};
+// + Estampa direto na ficha (ex.: manga)
+function fxLugares(){const L=(ART[P.artigo].lugares||{})[$('#fx-lado').value]||{};$('#fx-onde').innerHTML=Object.keys(L).map(k=>`<option>${esc(k)}</option>`).join('');if(/manga/i.test(Object.keys(L).join()))$('#fx-onde').value=Object.keys(L).find(k=>/manga/i.test(k))}
+$('#b-fx').onclick=()=>{$('#fx-est').innerHTML=listaEst().filter(([k])=>!k.startsWith('__')).map(([k,n])=>`<option value="${esc(k)}">${esc(n)}</option>`).join('');
+  $('#fx-cor').innerHTML=cores.pant.map(c=>`<option>${esc(c.n)}</option>`).join('');$('#fx-est').value='sereia';$('#fx-lado').value=ART[P.artigo].fr?'frente':'costas';fxLugares();$('#fx-txt').value='';$('#fx-loc').value='';$('#dlg-fx').showModal()};
+$('#fx-lado').onchange=fxLugares;
+$('#dlg-fx').addEventListener('close',()=>{if($('#dlg-fx').returnValue!=='ok')return;const t=$('#fx-txt').value.trim();
+  P.extras=P.extras||[];P.extras.push({lado:$('#fx-lado').value,onde:$('#fx-onde').value,est:t?'txt:'+t.toLowerCase():$('#fx-est').value,cor:$('#fx-cor').value,tipo:$('#fx-tipo').value,ordem:'depois',loc:$('#fx-loc').value.toUpperCase(),tam:''});
+  guardarP();desenharExtras();pintarEditor();$('#ficha').innerHTML=fichaHTML(P);encaixar();toast('Estampa colocada na ficha')});
 
 function listar(){const q=semAcento($('#s-busca').value||'').trim();
   const ps=pecas.filter(p=>!q||semAcento([p.ref,p.nome,p.pedido,p.colecao,p.ting,ART[p.artigo].nome,p.obs].join(' ')).includes(q));
@@ -1408,6 +1425,9 @@ function migrar(q){if(!q)return q;const up=v=>v?String(v).toUpperCase():v;
   ['fr','co'].forEach(k=>{if(q[k])q[k].cor=up(q[k].cor)});q.sereiaCor=up(q.sereiaCor);q.carimboCor=up(q.carimboCor);(q.extras||[]).forEach(x=>x.cor=up(x.cor));
   if(q.ting&&!cores.ting.some(c=>c.n===q.ting)){const c=acharCor('ting',q.ting);q.ting=c?c.n:up(q.ting)}return q}
 P=migrar(P);pecas.forEach(migrar);
+// linhas da ficha: o jeito que ele ajusta vira o padrão daquele artigo
+for(const q of[...pecas,P])if(q&&q.pts&&Object.keys(q.pts).length){LIN[q.artigo]=Object.assign(LIN[q.artigo]||{},q.pts);delete q.pts}
+gravar('linhas',LIN);gravar('atual',P);gravar('pecas',pecas);
 montarForm();desenharExtras();preencher();
 preparar().then(()=>{preencher();pintarEditor();ir(location.hash.slice(1)||'peca')});
 }
