@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611270030";</script>
+<script>var VERSAO="202611270045";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -908,16 +908,14 @@ function fichaPNG(raiz,K=3){
     else bw.forEach((b,i)=>{if(!b||cs['border'+['Top','Right','Bottom','Left'][i]+'Style']==='none')return;x.strokeStyle=bc[i];x.lineWidth=b;x.beginPath();
       if(i===0){x.moveTo(l,t+b/2);x.lineTo(l+w,t+b/2)}if(i===2){x.moveTo(l,t+h-b/2);x.lineTo(l+w,t+h-b/2)}if(i===3){x.moveTo(l+b/2,t);x.lineTo(l+b/2,t+h)}if(i===1){x.moveTo(l+w-b/2,t);x.lineTo(l+w-b/2,t+h)}x.stroke()});
     if(el.tagName==='IMG'&&el.complete&&el.naturalWidth){try{x.drawImage(el,l,t,w,h)}catch(e){}}
+    for(const n of el.childNodes){if(n.nodeType!==3||!n.data.trim())continue; // textos deste elemento (na ordem, para um quadro cobrir o de baixo)
+      x.font=`${cs.fontStyle} ${cs.fontWeight} ${parseFloat(cs.fontSize)}px ${cs.fontFamily}`;x.fillStyle=cs.color;x.textBaseline='middle';
+      const up=cs.textTransform==='uppercase';const rg=document.createRange();let run='',rx=0,ry=null,rh=0;
+      const solta=()=>{if(run.trim())x.fillText(up?run.toUpperCase():run,rx,ry+rh/2);run=''};
+      for(let i=0;i<n.data.length;i++){rg.setStart(n,i);rg.setEnd(n,i+1);const rs=rg.getClientRects();if(!rs.length)continue;const[l2,t2,w2,h2]=box(rs[0]);
+        if(ry===null||Math.abs(t2-ry)>2){solta();rx=l2;ry=t2;rh=h2}run+=n.data[i]}
+      solta()}
   }
-  // textos
-  const tw=document.createTreeWalker(raiz,NodeFilter.SHOW_TEXT);let n;
-  while(n=tw.nextNode()){const pe=n.parentElement;if(!n.data.trim()||!pe||pe.closest('.pt,.naoimprime,svg'))continue;const cs=getComputedStyle(pe);
-    x.font=`${cs.fontStyle} ${cs.fontWeight} ${parseFloat(cs.fontSize)}px ${cs.fontFamily}`;x.fillStyle=cs.color;x.textBaseline='middle';
-    const up=cs.textTransform==='uppercase';const rg=document.createRange();let run='',rx=0,ry=null,rh=0;
-    const solta=()=>{if(run.trim())x.fillText(up?run.toUpperCase():run,rx,ry+rh/2);run=''};
-    for(let i=0;i<n.data.length;i++){rg.setStart(n,i);rg.setEnd(n,i+1);const rs=rg.getClientRects();if(!rs.length)continue;const[l,t,w,h]=box(rs[0]);
-      if(ry===null||Math.abs(t-ry)>2){solta();rx=l;ry=t;rh=h}run+=n.data[i]}
-    solta()}
   // linhas e pontos
   raiz.querySelectorAll('svg line').forEach(L=>{x.strokeStyle=L.getAttribute('stroke');x.lineWidth=+L.getAttribute('stroke-width')||1;x.beginPath();x.moveTo(+L.getAttribute('x1'),+L.getAttribute('y1'));x.lineTo(+L.getAttribute('x2'),+L.getAttribute('y2'));x.stroke()});
   raiz.querySelectorAll('svg circle').forEach(C=>{x.fillStyle=C.getAttribute('fill');x.beginPath();x.arc(+C.getAttribute('cx'),+C.getAttribute('cy'),+C.getAttribute('r'),0,7);x.fill()});
