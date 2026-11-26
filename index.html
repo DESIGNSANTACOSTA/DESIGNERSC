@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611261945";</script>
+<script>var VERSAO="202611262000";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -332,7 +332,7 @@ dialog::backdrop{background:#0006}
     <button class="btn claro" id="b-marca">Mostrar o que dá para mudar</button>
     <button class="btn claro" id="b-linhas">Linhas no lugar padrão</button>
   </div>
-  <p class="aviso naoimprime" style="margin:0 0 10px">Toque em qualquer texto da ficha para escrever (também a grade e o GRADE TOTAL). Arraste a ponta das linhas (o pontinho) para onde elas devem apontar. Mudar o TAMANHO muda a medida real da estampa; mudar os cm da localização muda a distância da gola.</p>
+  <p class="aviso naoimprime" style="margin:0 0 10px">Toque em qualquer texto da ficha para escrever (também a grade e o GRADE TOTAL). Arraste a ponta das linhas (o pontinho) para onde elas devem apontar. O que você escreve na ficha é só a informação técnica: não muda o desenho da peça.</p>
   <div class="folha-wrap"><div class="folha-espaco"><div class="folha" id="ficha"></div></div></div>
 </section>
 <!-- ================= MAPA ================= -->
@@ -523,7 +523,7 @@ function aplicarArtx(){for(const k in ARTX){const x=ARTX[k];if(x.apagado){delete
   if(x.geoFr){a.fr=x.geoFr;delete a.ancoras}if(x.geoCo)a.co=x.geoCo;if(x.geoFr||x.geoCo||a.novo)lugaresDe(a)}}
 aplicarArtx();
 const EST={
- 'sereia-santacosta':{nome:'SEREIA + SANTACOSTA',w:8.1,h:2.1,vis:1.6},
+ 'sereia-santacosta':{nome:'SEREIA + SANTACOSTA',w:8.1,h:2.1,vis:2.5},
  'sereia':{nome:'SEREIA',w:1.59,h:2,vis:3},
  'brava-carimbo':{nome:'CARIMBO BRAVA',w:10.01,h:8.43,car:1},
  'guarda-carimbo':{nome:'CARIMBO GUARDA',w:7.02,h:11.48,car:1}
@@ -902,13 +902,9 @@ function gravarEd(el){
   if(c.startsWith('cost:')){const l=(q.costura||'').split('\n').filter(t=>t.trim()),i=+c.slice(5);if(v)l[i]=v;else l.splice(i,1);q.costura=l.join('\n');return true}
   if(c.startsWith('b:')){const[id,f]=c.slice(2).split('.');const alvo=id==='fr'?q.fr:id==='co'?q.co:id[0]==='x'?(q.extras||[])[+id.slice(1)]:null;const k=id+'.'+f;
     if(f==='tipo'){if(alvo)alvo.tipo=v;else if(id==='barra')q.barraTipo=v;else q.carimboTipo=v;return true}
-    if(f==='cor'){const n=(cores.pant.find(x=>semAcento(x.n)===semAcento(v))||{}).n;
-      if(n){if(alvo)alvo.cor=n;else if(id==='barra')q.barraCor=n;else q.carimboCor=n;delete q.ov[k]}else q.ov[k]=v;return true}
-    if(f==='tam'){const w=num(v);if(id==='barra'&&w){q.barraLarg=w;delete q.ov[k];return true}if(alvo&&w){alvo.larg=w;if(alvo.tam)alvo.tam='';delete q.ov[k]}else if(v)q.ov[k]=v;else delete q.ov[k];return true}
-    if(f==='loc'){if(id[0]==='x'){alvo.loc=v;return true}
-      if(alvo&&num(v)!=null){alvo.dist=num(v);const gen=id==='fr'?textoFrente(q):`${String(alvo.dist).replace('.',',')}CM DA COSTURA DA GOLA`;
-        if(semAcento(gen).replace(/\s/g,'')===semAcento(v).replace(/\s/g,'')){delete q.ov[k];return true}}
-      if(v)q.ov[k]=v;else delete q.ov[k];return true}}
+    // na ficha tudo é só texto técnico: não mexe no desenho da peça
+    if(f==='loc'&&id[0]==='x'){alvo.loc=v;return true}
+    if(v)q.ov[k]=v;else delete q.ov[k];return true}
   if(c==='modelo'&&v===ART[q.artigo].nome)v='';
   if(c==='tingTexto'&&v===String(q.ting).toUpperCase())v='';
   q[c]=v;return true;
