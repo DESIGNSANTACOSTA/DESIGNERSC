@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611270130";</script>
+<script>var VERSAO="202611270210";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -255,7 +255,7 @@ dialog::backdrop{background:#0006}
 </section>
 <!-- ================= PEÇA ================= -->
 <section class="tela on" id="t-peca">
- <div class="barra-peca naoimprime"><div><small>Peça aberta</small><b id="pc-nome">—</b></div><div class="botoes"><button class="btn claro" id="b-dup-atual">Duplicar esta</button><button class="btn" id="b-nova-topo">+ Nova peça</button></div></div>
+ <div class="barra-peca naoimprime"><div><small>Peça aberta</small><b id="pc-nome">—</b></div><div class="botoes"><button class="btn claro" id="b-salvar-topo">Salvar peça</button><button class="btn claro" id="b-dup-atual">Duplicar esta</button><button class="btn" id="b-nova-topo">+ Nova peça</button></div></div>
  <div class="editor">
   <div class="palco">
     <div class="vistas">
@@ -407,7 +407,7 @@ dialog::backdrop{background:#0006}
 </section>
 <!-- ================= ESTAMPAS ================= -->
 <section class="tela" id="t-estampas">
-  <div class="padrao naoimprime"><b>Padrão de nomes.</b> Só o nome da estampa, em caixa alta, sem tamanho nem cor (ex.: SEREIA + SANTACOSTA, ITAPUÁ). Tamanho, cor, onde fica, referência e cliente vão nos campos de cada estampa.</div>
+  <div class="padrao naoimprime"><b>Padrão de nomes.</b> Só o nome da estampa, em caixa alta, sem tamanho nem cor. Esses ficam nas especificações de cada estampa.</div>
   <div class="bloco" style="margin-bottom:12px">
     <label>Procurar estampa<input type="search" id="e-busca" placeholder="NOME, LOCAL, REFERÊNCIA, CLIENTE…"></label>
     <div class="botoes" style="margin-top:10px"><button class="btn" id="e-subir">+ Subir estampa</button><button class="btn claro" id="e-escrever">+ Escrever com o alfabeto</button></div>
@@ -417,7 +417,7 @@ dialog::backdrop{background:#0006}
 </section>
 <!-- ================= CORES ================= -->
 <section class="tela" id="t-cores">
-  <div class="padrao naoimprime"><b>Padrão de nomes.</b> Tingimento: COR + CÓDIGO DA LAVANDERIA / CÓDIGO DA ESTAMPARIA RUDIMAR (ex.: AZUL 1449P / 11068), sem nome fantasia. Quando tiver os dois códigos, os dois aparecem na ficha; se só tiver um, vai só ele. Estampa: COR + CÓDIGO PANTONE com U (ex.: AZUL 631U). O site monta o nome sozinho pelos campos.</div>
+  <div class="padrao naoimprime"><b>Padrão de nomes.</b> Tingimento: COR + CÓDIGO DA LAVANDERIA (TOM DA COR, COM P) / CÓDIGO DO RUDIMAR (SÓ NÚMEROS). Ex.: AZUL 1449P / 11068.</div>
   <div class="bloco" style="margin-bottom:12px"><label>Pesquisar cor<input type="search" id="c-busca" placeholder="NOME OU CÓDIGO"></label></div>
   <div class="bloco" style="margin-bottom:12px">
     <h3>Cores de tingimento</h3>
@@ -491,12 +491,9 @@ dialog::backdrop{background:#0006}
     <div id="da-prev" style="display:flex;gap:8px;justify-content:center;margin:10px 0;min-height:90px;background:#faf8f5;border-radius:10px;padding:6px"></div>
     <div class="linha">
       <label>Largura do peito (cm)<input type="number" step="0.5" id="da-peito"></label>
-      <label>Frontal: distância da gola (cm)<input type="number" step="0.5" id="da-frontal"></label>
+      <input type="hidden" id="da-frontal"><input type="hidden" id="da-nuca"><input type="hidden" id="da-larg">
     </div>
-    <div class="linha" style="margin-top:10px">
-      <label>Nuca: distância da gola (cm)<input type="number" step="0.5" id="da-nuca"></label>
-      <label>Largura máx. da estampa da frente (cm)<input type="number" step="0.5" id="da-larg"></label>
-    </div>
+    <p class="aviso" style="margin:6px 0 0">As alturas das estampas ficam em Biblioteca → Medidas.</p>
     <label style="margin-top:10px">Notas de costura padrão (uma por linha)<textarea id="da-cost"></textarea></label>
     <div class="botoes" style="margin-top:12px"><button class="btn" value="ok">Guardar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button><button class="btn perigo" value="del" id="da-del" formnovalidate>Excluir</button></div>
   </form>
@@ -633,7 +630,7 @@ function novaPeca(){
 let P=ler('atual',null)||novaPeca();
 const desf=[];let ultimoP=null,ultimoT=0;
 function marcarDesfazer(){const j=JSON.stringify(P);if(ultimoP&&ultimoP!==j&&Date.now()-ultimoT>900){desf.push(ultimoP);if(desf.length>40)desf.shift();ultimoT=Date.now()}if(ultimoP!==j)ultimoP=j;const b=document.getElementById('b-desfazer');if(b)b.hidden=!desf.length}
-function guardarP(){marcarDesfazer();gravar('atual',P);const i=pecas.findIndex(p=>p.id===P.id),c=JSON.parse(JSON.stringify(P));if(i>=0)pecas[i]=c;else pecas.unshift(c);gravar('pecas',pecas);const t=document.getElementById('pc-nome');if(t)t.textContent=P.ref||P.nome||'Peça sem referência'}
+function guardarP(){marcarDesfazer();gravar('atual',P);const i=pecas.findIndex(p=>p.id===P.id),c=JSON.parse(JSON.stringify(P));if(i>=0){pecas[i]=c;gravar('pecas',pecas)}const t=document.getElementById('pc-nome');if(t)t.textContent=(P.ref||P.nome||'Peça sem referência')+(i>=0?' ✓':' — ainda não salva')}
 const hexDe0=(tipo,n)=>(cores[tipo].find(c=>c.n===n)||cores[tipo].find(c=>c.n.toUpperCase()===String(n).toUpperCase())||{h:'#cccccc'}).h;
 const hexDe=(tipo,n)=>hexDe0(tipo,n);
 
@@ -744,7 +741,7 @@ function preencher(){
   if(!ART[P.artigo][painelSel==='co'?'co':'fr']&&(painelSel==='fr'||painelSel==='barra'||painelSel==='co'))painelSel=ART[P.artigo].fr?'fr':'co';
   if(painelSel[0]==='x'&&!(P.extras||[])[+painelSel.slice(1)])painelSel='fr';
   $('#f-car-dist').value=CAR.dist??2;$('#f-car-larg').value=CAR.larg||'';$('#f-car-larg').placeholder=P.carimbo&&EST[P.carimbo]?String(Math.round(EST[P.carimbo].w*10)/10).replace('.',','):'';
-  tilesEst();mostrarPainel();$('#pc-nome').textContent=P.ref||P.nome||'Peça sem referência';
+  tilesEst();mostrarPainel();$('#pc-nome').textContent=(P.ref||P.nome||'Peça sem referência')+(pecas.some(q=>q.id===P.id)?' ✓':' — ainda não salva');
   $$('#f-grade input').forEach(i=>i.value=P.grade[i.dataset.g]||'');somar();
 }
 function somar(){
@@ -924,7 +921,7 @@ function fichaPNG(raiz,K=3){
   raiz.querySelectorAll('svg circle').forEach(C=>{x.fillStyle=C.getAttribute('fill');x.beginPath();x.arc(+C.getAttribute('cx'),+C.getAttribute('cy'),+C.getAttribute('r'),0,7);x.fill()});
   return c;
 }
-async function salvarFichaPNG(raiz){if(!raiz)return;document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
+async function salvarFichaPNG(raiz){if(!raiz)return;if(pecaDe(raiz)===P)salvar(true);document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
   const q=pecaDe(raiz)||P,nome=(([q.ref,q.nome].filter(Boolean).join(' - '))||'ficha').replace(/[\\/:*?"<>|]+/g,'').trim()+'.png';
   const c=fichaPNG(raiz);const blob=await new Promise(r=>c.toBlob(r,'image/png'));if(!blob){toast('Não consegui gerar a imagem');return}
   const file=new File([blob],nome,{type:'image/png'});
@@ -974,9 +971,10 @@ function salvar(silencio){
 $('#b-salvar').onclick=()=>salvar();
 $('#b-ficha').onclick=()=>ir('ficha');
 $('#b-mapa').onclick=()=>{salvar(true);if(!mapa.itens.includes(P.id))mapa.itens.push(P.id);gravar('mapa',mapa);toast('Peça no mapa ('+mapa.itens.length+')')};
+$('#b-salvar-topo').onclick=()=>{salvar();$('#pc-nome').textContent=(P.ref||P.nome||'Peça sem referência')+' ✓'};
 $('#b-nova-topo').onclick=()=>$('#b-nova').click();
-$('#b-dup-atual').onclick=()=>{guardarP();const c=JSON.parse(JSON.stringify(P));c.id='p'+Date.now();c.ref=(P.ref?P.ref+' ':'')+'(CÓPIA)';P=c;guardarP();desenharExtras();preencher();pintarEditor();toast('Cópia criada — é ela que está aberta agora (a outra continua salva)')};
-$('#b-nova').onclick=()=>{salvar(true);const ant=P;P=novaPeca();Object.assign(P,{pedido:ant.pedido,colecao:ant.colecao,nome:ant.nome});guardarP();desenharExtras();preencher();pintarEditor();toast('Nova peça (a anterior foi salva)')};
+$('#b-dup-atual').onclick=()=>{salvar(true);const c=JSON.parse(JSON.stringify(P));c.id='p'+Date.now();c.ref=(P.ref?P.ref+' ':'')+'(CÓPIA)';P=c;salvar(true);desenharExtras();preencher();pintarEditor();toast('Cópia criada — é ela que está aberta agora (a outra continua salva)')};
+$('#b-nova').onclick=()=>{if(!pecas.some(q=>q.id===P.id)&&confirm('Esta peça ainda não foi salva na Biblioteca. Salvar antes de começar outra?'))salvar(true);const ant=P;P=novaPeca();Object.assign(P,{pedido:ant.pedido,colecao:ant.colecao,nome:ant.nome});guardarP();desenharExtras();preencher();pintarEditor();toast('Nova peça (a anterior foi salva)')};
 $('#b-png').onclick=()=>{
   const a=desenhar(P,'frente'),b=desenhar(P,'costas'),c=document.createElement('canvas');c.width=a.width+b.width+40;c.height=Math.max(a.height,b.height);
   const x=c.getContext('2d');x.drawImage(a,0,0);x.drawImage(b,a.width+40,0);
@@ -1116,8 +1114,9 @@ $('#e-escrever').onclick=()=>{const t=prompt('O que vai ser escrito com o alfabe
 
 const MED0=[{"id": "camiseta-unissex", "g": "CAMISETAS", "nome": "CAMISETA UNISSEX", "fr": 11, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "manga-longa", "g": "CAMISETAS", "nome": "CAMISETA MANGA LONGA", "fr": 11, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "camiseta-over", "g": "CAMISETAS", "nome": "CAMISETA OVERSIZED", "fr": 11, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nota": "[CONFERIR] NÃO ESTÁ NA FICHA DE LOCALIZAÇÃO; MEDIDAS IGUAIS À UNISSEX.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "slim-gola-v", "g": "CAMISETAS", "nome": "CAMISETA SLIM GOLA V", "fr": 9, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nota": "[CONFERIR] NÃO ESTÁ NA FICHA DE LOCALIZAÇÃO.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "lycra-manga-longa", "g": "CAMISETAS", "nome": "LYCRA MANGA LONGA", "fr": null, "mini": [], "ass": [], "nota": "[CONFERIR] NÃO ESTÁ NA FICHA DE LOCALIZAÇÃO. SÓ COSTAS.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "babylook-acinturada", "g": "BABY LOOK", "nome": "BABY LOOK ACINTURADA (MODELAGEM ANTIGA)", "fr": 5, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "babylook-reta", "g": "BABY LOOK", "nome": "BABY LOOK RETA (MODELAGEM NOVA)", "fr": 9, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "cropped-manga", "g": "CROPPEDS", "nome": "CROPPED COM MANGA", "fr": 9, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "cropped-afio", "g": "CROPPEDS", "nome": "CROPPED REGATA A FIO", "fr": 5, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nota": "[CONFERIR] NA FICHA DE LOCALIZAÇÃO ESTÁ COMO CROPPED NADADOR.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "cropped-ribana", "g": "CROPPEDS", "nome": "CROPPED REGATA RIBANA", "fr": null, "mini": [], "ass": [], "nota": "BORDADO PEITO ABAIXO DO PONTO MAIS ALTO DO OMBRO, MEDINDO PELA PARTE BAIXA: 17CM PARA A REFERÊNCIA A, 3CM PARA A REFERÊNCIA B, 4,5CM PARA A REFERÊNCIA C.\nETIQUETA INTERNA CENTRALIZADA AO MEIO DAS COSTAS, RENTE À COSTURA DA GOLA.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "regata-machao", "g": "REGATAS", "nome": "REGATA MACHÃO", "fr": 9, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "regata-friso", "g": "REGATAS", "nome": "REGATA MASCULINA COM FRISO", "fr": 9, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "regata-ribana", "g": "REGATAS", "nome": "REGATA RIBANA", "fr": null, "mini": [], "ass": [], "nota": "BORDADO PEITO ABAIXO DO PONTO MAIS ALTO DO OMBRO, MEDINDO PELA PARTE BAIXA: 17CM PARA A REFERÊNCIA A, 3CM PARA A REFERÊNCIA B, 4,5CM PARA A REFERÊNCIA C.\nETIQUETA INTERNA CENTRALIZADA AO MEIO DAS COSTAS, RENTE À COSTURA DA GOLA.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-manga", "g": "VESTIDOS", "nome": "VESTIDO COM MANGA", "fr": 6, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 22], ["G - 2G", 23], ["3G - 4G", 24]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-nadador", "g": "VESTIDOS", "nome": "VESTIDO CURTO NADADOR", "fr": 6.5, "mini": [["PP - P - M", 22], ["G - 2G", 23], ["3G - 4G", 24]], "ass": [["PP - P - M", 22], ["G - 2G", 23], ["3G - 4G", 24]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-alca-fio", "g": "VESTIDOS", "nome": "VESTIDO ALÇA FIO", "fr": 4.5, "ref": "ABAIXO DA COSTURA DO FRISO", "mini": [["PP - P - M", 8], ["G - 2G", 9]], "ass": [["PP - P - M", 8], ["G - 2G", 9]], "nota": "MINI ABAIXO DA COSTURA DO FRISO.", "nuca": 2, "car": 2, "frG": []}, {"id": "body-baby", "g": "INFANTIL", "nome": "BODY BABY", "fr": null, "frG": [["RN - P - M", 5.5], ["G - 2G", 6]], "mini": [["RN - P - M", 11.5], ["G - 2G", 12]], "ass": [], "nota": "MINI G - 2G: ARTE COM 22CM.", "nuca": 2, "car": 2, "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "camiseta-infantil", "g": "INFANTIL", "nome": "CAMISETA INFANTIL", "fr": null, "frG": [["1 - 2 - 4 (ARTE COM 19CM)", 5.5], ["6 - 8 (ARTE COM 22CM)", 7], ["10 - 12 - 14 (ARTE COM 27CM)", 8]], "mini": [["2 - 4", 15], ["6 - 8", 16], ["10 - 12 - 14", 18]], "ass": [], "nuca": 2, "car": 2, "nota": "", "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "manga-longa-infantil", "g": "INFANTIL", "nome": "CAMISETA MANGA LONGA INFANTIL", "fr": null, "frG": [["1 - 2 - 4 (ARTE COM 19CM)", 5.5], ["6 - 8 (ARTE COM 22CM)", 7], ["10 - 12 - 14 (ARTE COM 27CM)", 8.5]], "mini": [["1 - 2 - 4", 15], ["6 - 8", 16], ["10 - 12 - 14", 18]], "ass": [], "nuca": 2, "car": 2, "nota": "", "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-infantil-manga", "g": "INFANTIL", "nome": "VESTIDO INFANTIL COM MANGA", "fr": null, "frG": [["2 - 4", 4], ["6 - 8", 5], ["10 - 12", 6], ["14", 7]], "mini": [], "ass": [], "nota": "[CONFERIR] OUTRA PÁGINA DA FICHA DIZ: 2 - 4 - 6: 4CM; 8 - 10 - 12 - 14: 5,5CM.", "nuca": 2, "car": 2, "ref": "ABAIXO DA COSTURA DA GOLA"}];
 let MEDX=ler('medidas',{});
-const medDe=id=>MEDX[id]||MED0.find(m=>m.id===id);
-function aplicarMed(){for(const m0 of MED0){const m=medDe(m0.id),A=ART[m0.id];if(!A)continue;
+const medDe=id=>{if(MEDX[id])return MEDX[id];const m=MED0.find(m=>m.id===id);if(m)return m;const A=ART[id]||{};
+  const B=[['PP - P - M',20],['G - 2G',21],['3G - 4G',22]];return {id,g:'MOCKUPS NOVOS',nome:A.nome||id,fr:A.frontal??9,frG:[],mini:B,ass:B,nuca:A.nuca??2,car:2,nota:'',ref:'ABAIXO DA COSTURA DA GOLA'}};
+function aplicarMed(){for(const id of new Set([...MED0.map(m=>m.id),...Object.keys(MEDX)])){const m=medDe(id),A=ART[id];if(!A)continue;
   if(m.fr!=null&&m.fr!=='')A.frontal=+m.fr;if(m.mini&&m.mini.length)A.mini=[0,1,2].map(i=>+((m.mini[i]||m.mini[m.mini.length-1])[1]));A.nuca=+m.nuca;A.carimboCm=+m.car;A.miniG=m.mini}}
 aplicarMed();
 // desenho de cada medida (mockup branco + quadrado da estampa + seta da medida)
@@ -1134,11 +1133,15 @@ function diagrama(id,tipo,m){const A=ART[id],lado=tipo==='nuca'?'costas':'frente
     x.font='bold 44px Arial';const tw=x.measureText(txt).width;x.fillStyle='#fff';x.fillRect(lx-10,ly-30,tw+20,60);x.fillStyle=V;x.textBaseline='middle';x.fillText(txt,lx,ly);x.restore()};
   const marca=(xx,yy)=>{x.save();x.strokeStyle=V;x.lineWidth=2;x.setLineDash([6,6]);x.beginPath();x.moveTo(xx-60,yy);x.lineTo(xx+60,yy);x.stroke();x.restore()};
   const cm=v=>String(v).replace('.',',')+'CM';
-  if(tipo==='fr'){const w=Math.min(A.largMax||24,24)*e,h=7*e,fundo=G.gola+(+m.fr)*e;caixa(G.cx-w/2,fundo-h,w,h);marca(G.cx,G.gola);const sx=G.cx+w/2+30;seta(sx,G.gola,sx,fundo,cm(m.fr),Math.min(sx+14,W-150),(G.gola+fundo)/2)}
-  if(tipo==='mini'||tipo==='ass'){const g=(tipo==='mini'?m.mini:m.ass),v=+(g[0]||[0,20])[1],w=(tipo==='ass'?6:8)*e,h=(tipo==='ass'?2:5)*e,cx=G.cx+10*e,cy=G.ombro+v*e;caixa(cx-w/2,cy-h/2,w,h);marca(cx,G.ombro);
-    seta(cx,G.ombro,cx,cy,g.map(r=>r[1]).join(' / ')+'CM',Math.max(10,cx-260),G.ombro+(cy-G.ombro)*.45)}
-  if(tipo==='nuca'){const w=8*e,h=2.1*e,t=G.gola+(+m.nuca)*e;caixa(G.cx-w/2,t,w,h);marca(G.cx,G.gola);seta(G.cx+w/2+30,G.gola,G.cx+w/2+30,t,cm(m.nuca),G.cx+w/2+44,G.gola+60)}
-  if(tipo==='barra'){const w=2*e,h=2.5*e,r=G.lado-3.5*e,b=G.barra-3.5*e;caixa(r-w,b-h,w,h);seta(r,b+22,G.lado,b+22,'3,5CM',r-80,b+90);seta(r+22,b,r+22,G.barra,'3,5CM',r-230,b+20)}
+  // mesmas posições que o site usa para desenhar as peças
+  const q={...novaPeca(),artigo:id,ting:'BRANCO',fr:{est:'txt:itapuá',pos:tipo==='fr'?'frontal':'mini',cor:'BRANCO',larg:tipo==='fr'?'':tipo==='ass'?5:8,dist:tipo==='fr'?(+m.fr||A.frontal):+((tipo==='ass'?m.ass:m.mini)[0]||[0,A.mini[0]])[1]},
+    co:{est:'sereia-santacosta',pos:'nuca',cor:'BRANCO',dist:+m.nuca},barra:'sereia',carimbo:'',extras:[]};
+  const pos=papel=>posicoes(q,lado).find(z=>z.papel===papel);
+  if(tipo==='fr'){const z=pos('frente');if(z){caixa(z.x,z.y,z.w,z.h);marca(G.cx,G.gola);const sx=Math.min(W-30,z.x+z.w+28);seta(sx,G.gola,sx,z.y+z.h,cm(m.fr),Math.max(10,sx-190),(G.gola+z.y+z.h)/2)}}
+  if(tipo==='mini'||tipo==='ass'){const g=(tipo==='mini'?m.mini:m.ass),z=pos('frente');if(z){let w=z.w,h=z.h;const cx=z.x+z.w/2,cy=z.y+z.h/2;caixa(cx-w/2,cy-h/2,w,h);marca(cx,G.ombro);
+    seta(cx,G.ombro,cx,cy,g.map(r=>String(r[1]).replace('.',',')).join(' / ')+'CM',Math.max(10,cx-320),G.ombro+(cy-G.ombro)*.5)}}
+  if(tipo==='nuca'){const z=pos('costas');if(z){caixa(z.x,z.y,z.w,z.h);marca(G.cx,G.gola);const sx=z.x+z.w+24;seta(sx,G.gola,sx,z.y,cm(m.nuca),Math.min(sx+14,W-140),G.gola+40)}}
+  if(tipo==='barra'){const z=pos('barra');if(z){caixa(z.x,z.y,z.w,z.h);const r=z.x+z.w,b=z.y+z.h;seta(r,z.y-26,G.lado,z.y-26,'3,5CM',z.x-170,z.y-26);seta(z.x-26,b,z.x-26,G.barra,'3,5CM',z.x-200,(b+G.barra)/2+30)}}
   const cr=tipo==='nuca'?[0,0,W,H*.55]:tipo==='barra'?[W*.35,H*.5,W*.65,H*.5]:null;let o=c;
   if(cr){o=document.createElement('canvas');o.width=cr[2];o.height=cr[3];o.getContext('2d').drawImage(c,cr[0],cr[1],cr[2],cr[3],0,0,cr[2],cr[3])}
   return cacheDiag[chave]=o.toDataURL('image/jpeg',.82)}
@@ -1151,7 +1154,8 @@ function figsMed(id,m){const A=ART[id];if(!A)return '';const f=[],fig=(src,cap)=
   return f.length?`<div class="md-figs">${f.join('')}</div>`:''}
 function listarMedidas(){const q=semAcento($('#md-busca').value||'').trim();let g0='',h='';
   const num=v=>v==null?'':String(v).replace('.',',');
-  for(const m0 of MED0){const m=medDe(m0.id);if(q&&!semAcento(m.nome+' '+m.g).includes(q))continue;
+  const todas=[...MED0.filter(m0=>ART[m0.id]),...Object.keys(ART).filter(k=>!MED0.some(m0=>m0.id===k)).map(k=>medDe(k)),...MED0.filter(m0=>!ART[m0.id]&&!(ARTX[m0.id]&&ARTX[m0.id].apagado))];let semTit=false;
+  for(const m0 of todas){const m=medDe(m0.id);if(q&&!semAcento(m.nome+' '+m.g).includes(q))continue;if(!ART[m0.id]&&!semTit){semTit=true;g0='';h+=`<div class="md-g" style="margin-top:28px">SEM MOCKUP NO SITE AINDA — SÓ CONSULTA (QUANDO VOCÊ CRIAR O MOCKUP COM ESSE NOME, AS MEDIDAS VÃO JUNTO)</div>`}
     if(m.g!==g0){g0=m.g;h+=`<div class="md-g">${esc(g0)}</div>`}
     const linhas=(campo,arr)=>arr.map((r,i)=>`<div class="md-l"><input type="text" data-md="${m0.id}|${campo}|${i}|0" value="${esc(r[0])}"><input type="text" inputmode="decimal" data-md="${m0.id}|${campo}|${i}|1" value="${num(r[1])}"></div>`).join('');
     h+=`<div class="md-card"><h4>${esc(m.nome)}</h4><div class="sub2">${ART[m0.id]?'Mockup no site ✓ — vale para as próximas peças':'Ainda sem mockup no site (só consulta)'}</div>${figsMed(m0.id,m)}
@@ -1199,13 +1203,16 @@ $('#dlg-art').addEventListener('close',()=>{const k=artAberto,v=$('#dlg-art').re
   if(v==='del'){if(P.artigo===k||pecas.some(p=>p.artigo===k)){toast('Tem peça salva usando este mockup. Troque o artigo dessas peças antes.');return}if(!confirm('Excluir este mockup?'))return;ARTX[k]={apagado:1};salvarArtx();delete ART[k];listarMockups();atualizarTudo();return}
   if(v!=='ok')return;const novo=$('#dlg-art').dataset.novo;if(novo&&!artImgs.frente&&!artImgs.costas){toast('Escolha pelo menos uma foto');return}
   const x=ARTX[k]=ARTX[k]||{};const num=id=>{const t=$(id).value.replace(',','.');return t===''?null:+t};
-  x.nome=$('#da-nome').value.trim().toUpperCase()||'PEÇA NOVA';x.frontal=num('#da-frontal');x.nuca=num('#da-nuca');x.largMax=num('#da-larg');x.costura=$('#da-cost').value.toUpperCase();
+  x.nome=$('#da-nome').value.trim().toUpperCase()||'PEÇA NOVA';x.costura=$('#da-cost').value.toUpperCase();
   const peito=num('#da-peito')||50;x.img=x.img||{};
   if(artImgs.frente){const g=medirPNG(artImgs.frente,peito);x.esc=g.esc;x.geoFr={cx:g.cx,gola:g.gola,ombro:g.ombro,lado:g.lado,barra:g.barra};x.img.frente=artImgs.frente.toDataURL('image/png')}
   if(artImgs.costas){const g=medirPNG(artImgs.costas,peito);if(!x.esc)x.esc=g.esc;x.geoCo={cx:g.cx,gola:g.gola};x.img.costas=artImgs.costas.toDataURL('image/png')}
   if(!salvarArtx())return;
   aplicarArtx();for(const l of['frente','costas'])if(artImgs[l]){const im=new Image();im.src=x.img[l];IMG[`${k}-${l}-peca`]=im;IMG[`${k}-${l}-cabide`]=null;im.onload=()=>{im.fk=claridade(im);listarMockups();pintarEditor()}}
-  listarMockups();atualizarTudo();toast('Mockup guardado')});
+  if(novo&&!MEDX[k]){const nn=semAcento(x.nome).replace(/[^a-z0-9 ]/g,'');const achado=MED0.find(m=>!ART[m.id]||m.id===k?semAcento(m.nome).replace(/[^a-z0-9 ]/g,'').split(' ').filter(w=>w.length>2).every(w=>nn.includes(w)):false);
+    MEDX[k]=achado?{...JSON.parse(JSON.stringify(achado)),id:k}:{...medDe(k),nome:x.nome};MEDX[k].nome=x.nome;gravar('medidas',MEDX);aplicarMed();if(achado)toast('Mockup guardado — usei as medidas de '+achado.nome)}
+  if(MEDX[k]&&MEDX[k].nome!==x.nome){MEDX[k].nome=x.nome;gravar('medidas',MEDX)}
+  listarMockups();atualizarTudo();if(!novo)toast('Mockup guardado')});
 
 // ---------- cores ----------
 const FAMS=[['AM','AMARELO'],['AZ','AZUL'],['BG','BEGE'],['BO','BORDÔ'],['CH','CHUMBO'],['CL','CORAL'],['CQ','CAQUI'],['CZ','CINZA'],['LJ','LARANJA'],['LS','LILÁS'],['MR','MARROM'],['RS','ROSA'],['RX','ROXO'],['VD','VERDE'],['VM','VERMELHO']];
@@ -1636,7 +1643,6 @@ function migrar(q){if(!q)return q;const up=v=>v?String(v).toUpperCase():v;
   ['fr','co'].forEach(k=>{if(q[k])q[k].cor=up(q[k].cor)});q.sereiaCor=up(q.sereiaCor);q.carimboCor=up(q.carimboCor);(q.extras||[]).forEach(x=>x.cor=up(x.cor));
   if(q.ting&&!cores.ting.some(c=>c.n===q.ting)){const c=acharCor('ting',q.ting);q.ting=c?c.n:up(q.ting)}return q}
 P=migrar(P);pecas.forEach(migrar);
-if(!pecas.some(q=>q.id===P.id)){pecas.unshift(JSON.parse(JSON.stringify(P)));try{localStorage.setItem('sc_pecas',JSON.stringify(pecas))}catch(e){}} // a peça aberta sempre fica salva
 if(!localStorage.getItem('sc_corMig1')){ // cores de tingimento: só COR + CÓDIGOS (sem nome fantasia)
   const usados=new Set(cores.ting.map(c=>c.n));
   for(const c of cores.ting){const tk=String(c.n).split(/\s+/);const f=FAMS.find(([a])=>a===tk[0]);if(!f)continue;tk.shift();
