@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611261750";</script>
+<script>var VERSAO="202611261900";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -22,6 +22,10 @@ button,select,input,textarea{font:inherit;color:inherit}
 header{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;display:flex;align-items:center;gap:12px;padding:10px max(16px,env(safe-area-inset-left));flex-wrap:wrap}
 header .marca{display:flex;align-items:center;gap:8px;font-weight:500;letter-spacing:.02em;margin-right:auto}
 header .marca img{height:28px;filter:invert(1)}
+.acoes{display:flex;gap:6px}.acoes button{background:#ffffff1a;border:1px solid #ffffff40;color:#fff;border-radius:999px;padding:8px 14px;min-height:44px;cursor:pointer;font-size:15px}
+.subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.subnav button{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 16px;min-height:44px;cursor:pointer;font-size:15px;color:var(--ink)}.subnav button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.padrao{background:#fffbe8;border:1px solid #f0d98a;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45;margin-bottom:12px}
+#cv-frente,#cv-costas{touch-action:none;cursor:pointer}
 #salvo{font-size:12px;background:#2e7d32;color:#fff;border-radius:999px;padding:3px 10px;opacity:0;transition:opacity .3s}
 #salvo.on{opacity:1}
 .mfig{position:absolute;margin:0;display:flex;flex-direction:column;align-items:center;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
@@ -190,14 +194,13 @@ dialog::backdrop{background:#0006}
 <body>
 <header class="naoimprime">
   <div class="marca"><img src="arquivos/estampas/sereia.png" alt=""> Estúdio Santacosta <small style="opacity:.6;font-weight:400">· teste</small><span id="salvo" aria-live="polite">Salvo ✓</span></div>
+  <div class="acoes"><button id="b-voltar" hidden>← Voltar</button><button id="b-desfazer" hidden>↶ Desfazer</button></div>
   <nav>
     <button data-t="pedido">Pedido</button>
     <button data-t="peca" class="on">Peça</button>
     <button data-t="ficha">Ficha técnica</button>
     <button data-t="mapa">Mapa</button>
-    <button data-t="salvas">Peças salvas</button>
-    <button data-t="estampas">Estampas</button>
-    <button data-t="cores">Cores</button>
+    <button data-t="salvas" data-bib>Biblioteca</button>
   </nav>
 </header>
 <main>
@@ -234,7 +237,7 @@ dialog::backdrop{background:#0006}
       <figure><canvas id="cv-frente"></canvas><figcaption>FRENTE</figcaption></figure>
       <figure><canvas id="cv-costas"></canvas><figcaption>COSTAS</figcaption></figure>
     </div>
-    <p class="aviso">Toque na peça para ver de perto. A posição no desenho é aproximada; a medida que vale é a da ficha.</p>
+    <p class="aviso">Arraste a estampa para subir ou descer. Puxe o canto de baixo à direita da estampa para aumentar ou diminuir. Toque sem arrastar para ver de perto.</p>
   </div>
   <div class="painel">
     <div class="bloco">
@@ -350,6 +353,14 @@ dialog::backdrop{background:#0006}
 </section>
 <!-- ================= SALVAS ================= -->
 <section class="tela" id="t-salvas"><div class="bloco" style="margin-bottom:12px"><label>Procurar peça<input type="search" id="s-busca" placeholder="REFERÊNCIA, NOME, CLIENTE, PEDIDO, COR…"></label></div><div id="lista-salvas"></div></section>
+<!-- ================= MOCKUPS ================= -->
+<section class="tela" id="t-mockups">
+  <div class="bloco" style="margin-bottom:12px">
+    <div class="botoes"><button class="btn" id="mk-novo">+ Novo mockup</button></div>
+    <p class="aviso" style="margin-bottom:0">Toque num mockup para mudar o nome, as fotos (frente e costas) e as medidas padrão. Use PNG com fundo transparente, peça branca, de frente.</p>
+  </div>
+  <div class="lista" id="mk-lista"></div>
+</section>
 <!-- ================= ESTAMPAS ================= -->
 <section class="tela" id="t-estampas">
   <div class="bloco" style="margin-bottom:12px">
@@ -361,6 +372,7 @@ dialog::backdrop{background:#0006}
 </section>
 <!-- ================= CORES ================= -->
 <section class="tela" id="t-cores">
+  <div class="padrao naoimprime"><b>Padrão de nomes.</b> Tingimento: FAMÍLIA + NOME + PANTONE / CÓDIGO (ex.: AZ PACÍFICO 1405P / 11407). Estampa (Pantone): NOME + CÓDIGO com U (ex.: AZUL 631U). O site monta o nome sozinho pelos campos.</div>
   <div class="bloco" style="margin-bottom:12px"><label>Pesquisar cor<input type="search" id="c-busca" placeholder="NOME OU CÓDIGO"></label></div>
   <div class="bloco" style="margin-bottom:12px">
     <h3>Cores de tingimento</h3>
@@ -380,9 +392,15 @@ dialog::backdrop{background:#0006}
   <form method="dialog" id="form-cor">
     <h3 id="dc-tit" style="margin-top:0">Nova cor</h3>
     <div class="linha">
-      <label>Nome<input type="text" id="dc-nome" list="cartela" required placeholder="EX.: VINHO"></label>
-      <label>Código<input type="text" id="dc-cod" placeholder="EX.: 7421"></label>
+      <label id="dc-fam-l">Família<select id="dc-fam"><option value="">—</option></select></label>
+      <label>Nome<input type="text" id="dc-nome" list="cartela" placeholder="EX.: PACÍFICO"></label>
     </div>
+    <div class="linha" style="margin-top:10px">
+      <label id="dc-pan-l">Pantone<input type="text" id="dc-pan" placeholder="EX.: 1405P"></label>
+      <label id="dc-cod-l">Código<input type="text" id="dc-cod" placeholder="EX.: 11407"></label>
+    </div>
+    <label style="margin-top:10px">Observações (fornecedor, base, lavagem…)<input type="text" id="dc-obs"></label>
+    <p class="aviso" style="margin:6px 0 0">Nome que vai ficar: <b id="dc-final"></b></p>
     <p class="aviso" id="dc-dica" style="margin:6px 0"></p>
     <div class="seletor">
       <canvas id="dc-sv" width="300" height="180"></canvas>
@@ -406,11 +424,33 @@ dialog::backdrop{background:#0006}
     <div class="botoes" style="margin-top:14px"><button class="btn" value="ok">Guardar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button></div>
   </form>
 </dialog>
+<dialog id="dlg-art">
+  <form method="dialog">
+    <h3 style="margin-top:0" id="da-tit">Mockup</h3>
+    <label>Nome (PEÇA + MODELAGEM/DETALHE)<input type="text" id="da-nome" placeholder="EX.: CROPPED REGATA A FIO"></label>
+    <div class="linha" style="margin-top:10px">
+      <label class="btn claro" style="flex-direction:row;justify-content:center;color:var(--ink)">Foto da frente<input type="file" id="da-fr" accept="image/png" hidden></label>
+      <label class="btn claro" style="flex-direction:row;justify-content:center;color:var(--ink)">Foto das costas<input type="file" id="da-co" accept="image/png" hidden></label>
+    </div>
+    <div id="da-prev" style="display:flex;gap:8px;justify-content:center;margin:10px 0;min-height:90px;background:#faf8f5;border-radius:10px;padding:6px"></div>
+    <div class="linha">
+      <label>Largura do peito (cm)<input type="number" step="0.5" id="da-peito"></label>
+      <label>Frontal: distância da gola (cm)<input type="number" step="0.5" id="da-frontal"></label>
+    </div>
+    <div class="linha" style="margin-top:10px">
+      <label>Nuca: distância da gola (cm)<input type="number" step="0.5" id="da-nuca"></label>
+      <label>Largura máx. da estampa da frente (cm)<input type="number" step="0.5" id="da-larg"></label>
+    </div>
+    <label style="margin-top:10px">Notas de costura padrão (uma por linha)<textarea id="da-cost"></textarea></label>
+    <div class="botoes" style="margin-top:12px"><button class="btn" value="ok">Guardar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button><button class="btn perigo" value="del" id="da-del" formnovalidate>Excluir</button></div>
+  </form>
+</dialog>
 <dialog id="dlg-est">
   <form method="dialog">
     <h3 style="margin-top:0">Dados da estampa</h3>
     <div id="de-prev" style="height:110px;display:grid;place-items:center;background:#faf8f5;border-radius:10px;margin-bottom:10px"></div>
     <label>Nome (o que é)<input type="text" id="de-nome"></label>
+    <p class="aviso" style="margin:4px 0 0">Padrão: só o nome, em caixa alta, sem tamanho nem cor (ex.: SEREIA + SANTACOSTA). Tamanho, cor e local vão nos campos abaixo.</p>
     <div class="linha" style="margin-top:10px">
       <label>Onde fica<select id="de-loc"><option value="">—</option><option>FRONTAL (PEITO)</option><option>MINI (LADO DO PEITO)</option><option>NUCA</option><option>COSTAS (GRANDE)</option><option>BARRA</option><option>MANGA</option><option>CARIMBO INTERNO</option><option>OUTRO</option></select></label>
       <label>Tipo<select id="de-tipo"><option value="">—</option><option>ESTAMPA</option><option>BORDADO</option></select></label>
@@ -424,6 +464,7 @@ dialog::backdrop{background:#0006}
       <label>Cliente ou coleção<input type="text" id="de-cli"></label>
     </div>
     <label style="margin-top:10px">Observações<input type="text" id="de-obs"></label>
+    <label style="margin-top:10px">Aumento só no desenho (×) — a ficha continua com a medida real<input type="number" step="0.1" min="0.5" id="de-vis" placeholder="1"></label>
     <p class="aviso" id="de-usada"></p>
     <div class="botoes" style="margin-top:10px"><button class="btn" value="ok">Guardar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button><button class="btn perigo" value="del" id="de-del" formnovalidate>Apagar arquivo</button></div>
   </form>
@@ -466,15 +507,26 @@ const ART={
 for(const a of Object.values(ART)){if(a.lugares)continue;const e=a.esc,F=a.fr,C=a.co,w=F?F.lado-F.cx:20*e;a.lugares={frente:{},costas:{}};
   if(F)a.lugares.frente={'Peito (centro)':[F.cx,F.gola+10*e],'Manga direita de quem veste':[F.cx-w-4*e,F.ombro+10*e],'Manga esquerda de quem veste':[F.cx+w+4*e,F.ombro+10*e],'Barra (centro)':[F.cx,F.barra-8*e]};
   if(C)a.lugares.costas={'Costas (meio)':[C.cx,C.gola+22*e],'Costas (baixo)':[C.cx,C.gola+40*e],'Manga esquerda de quem veste':[C.cx-w-4*e,C.gola+12*e],'Manga direita de quem veste':[C.cx+w+4*e,C.gola+12*e]};}
+function lugaresDe(a){const e=a.esc,F=a.fr,C=a.co,w=F?F.lado-F.cx:20*e;a.lugares={frente:{},costas:{}};
+  if(F)a.lugares.frente={'Peito (centro)':[F.cx,F.gola+10*e],'Manga direita de quem veste':[F.cx-w-4*e,F.ombro+10*e],'Manga esquerda de quem veste':[F.cx+w+4*e,F.ombro+10*e],'Barra (centro)':[F.cx,F.barra-8*e]};
+  if(C)a.lugares.costas={'Costas (meio)':[C.cx,C.gola+22*e],'Costas (baixo)':[C.cx,C.gola+40*e],'Manga esquerda de quem veste':[C.cx-w-4*e,C.gola+12*e],'Manga direita de quem veste':[C.cx+w+4*e,C.gola+12*e]};}
+let ARTX=(()=>{try{return JSON.parse(localStorage.getItem('sc_artx'))||{}}catch(e){return {}}})(); // mockups mudados ou novos
+const ART0=JSON.parse(JSON.stringify(ART));
+function aplicarArtx(){for(const k in ARTX){const x=ARTX[k];if(x.apagado){delete ART[k];continue}
+  const a=ART[k]||(ART[k]={nome:k.toUpperCase(),esc:10,fr:null,co:null,frontal:9,mini:[20,21,22],nuca:2,costas:4,costura:'',novo:1});
+  for(const c of['nome','frontal','nuca','largMax','costura','esc'])if(x[c]!=null&&x[c]!=='')a[c]=x[c];
+  if(x.geoFr){a.fr=x.geoFr;delete a.ancoras}if(x.geoCo)a.co=x.geoCo;if(x.geoFr||x.geoCo||a.novo)lugaresDe(a)}}
+aplicarArtx();
 const EST={
- 'sereia-santacosta':{nome:'SEREIA + SANTACOSTA (8,4 CM)',w:8.42,h:2.11},
- 'sereia':{nome:'SEREIA (1,6 × 2 CM)',w:1.59,h:2},
- 'brava-carimbo':{nome:'CARIMBO BRAVA (10 × 8,4 CM)',w:10.01,h:8.43,car:1},
- 'guarda-carimbo':{nome:'CARIMBO GUARDA (7 × 11,5 CM)',w:7.02,h:11.48,car:1}
+ 'sereia-santacosta':{nome:'SEREIA + SANTACOSTA',w:8.42,h:2.11,vis:1.6},
+ 'sereia':{nome:'SEREIA',w:1.59,h:2,vis:2},
+ 'brava-carimbo':{nome:'CARIMBO BRAVA',w:10.01,h:8.43,car:1},
+ 'guarda-carimbo':{nome:'CARIMBO GUARDA',w:7.02,h:11.48,car:1}
 };
 const PRONTOS=['brava','guarda','ilhadomel']; // escritas prontas com o alfabeto
 let INFO=(()=>{try{return JSON.parse(localStorage.getItem('sc_estinfo'))||{}}catch(e){return {}}})(); // dados de cada estampa: {nome,loc,tipo,larg,cor,ref,cli,obs}
-const nomeEst=k=>String((INFO[k]&&INFO[k].nome)||(EST[k]?EST[k].nome:(k.startsWith('txt:')?k.slice(4)+' (ALFABETO)':k))).toUpperCase();
+const nomeEst=k=>String((INFO[k]&&INFO[k].nome)||(k.startsWith('txt:')?k.slice(4):(EST[k]?EST[k].nome:k))).replace(/\s*\((?:ALFABETO|[\d,.\s×xX]+CM)\)\s*$/i,'').toUpperCase();
+const rotuloEst=k=>{const E=EST[k],I=INFO[k]||{};const t=I.larg?String(I.larg).replace('.',',')+' CM':(E?String(Math.round(E.w*10)/10).replace('.',',')+' CM':'');return nomeEst(k)+(k.startsWith('txt:')?' (ALFABETO)':'')+(t?' · '+t:'')};
 const GRADE=['PP','P','M','G','2G','3G','4G'], LOJAS=['BRAVA','E-COMM','GUARDA','BALNEÁRIO'];
 const TING0=[["AVELÃ", "#c45226"], ["RAMI", "#c8b294"], ["AM AÇAFRÃO 1006P", "#e1be63"], ["AM MANTEIGA 10390", "#ebd394"], ["LJ LARANJA 1228P / 11315", "#ff6b05"], ["CL PÊSSEGO 1430P", "#f57278"], ["VM JELLY NEW", "#b03740"], ["VM RED BERRY", "#d1434a"], ["RS ROSE 10769", "#eb5282"], ["ROSA ARRANJO 11509", "#ffbcbf"], ["LS UNICÓRNIO", "#d4b6d2"], ["RX MÁGICO", "#85539d"], ["PRINCESS BLUE", "#5c3bab"], ["AZ ASTER 1007P / 1139P", "#2796d8"], ["AZ MIRAGE 11462", "#608a9f"], ["AZ ESTERLINO 10818", "#92a6af"], ["VD AZULADO 1439P", "#59b8b8"], ["VD LIMO 10718", "#8be1bd"], ["VD MILITAR 348P", "#365434"], ["VD ULTRAMARINE 1403P", "#188471"], ["VD ESMERALDA 1135P", "#30682b"], ["VD GRAVINHA 323P", "#868b6c"], ["VD LÍRIO 1425P / 10837", "#daffbe"], ["BRANCO", "#ffffff"], ["OFF WHITE 9780", "#ebe3d0"], ["BG NATURAL CLASSIC", "#d1c7aa"], ["CZ GELO 339P / 11711", "#bbb6b6"], ["CZ CHUMBO 1033P / 9669", "#4b4946"], ["PRETO", "#1c1c1c"], ["AZ MARINHO MARMORIZADO", "#1f2b44"], ["PRETO MARMORIZADO", "#2a2a2a"], ["RX VELUDO 507P / 10721", "#322e57"], ["RX GLIXONIA 344P", "#603f64"], ["RX PRISMA 10590", "#5c439b"], ["RX OPULÊNCIA 9732", "#5a4f94"], ["RX AMETISTA 1489P / 55076", "#5f3752"], ["LS MÍSTICO 1408P", "#575266"], ["LS RAPSÓDIA 11739", "#b093bb"], ["RX NEON 848P / 10510", "#c858c1"], ["BO AMORA 10949", "#703048"], ["RS ENCANTO 10647", "#9e5c6a"], ["RS SMOCKINS 10147", "#9f405e"], ["RS FÚCSIA GR-3181", "#630833"], ["RS PINK 10751", "#ff78d1"], ["CL SALMÃO 1073P", "#ff9f89"], ["CL MELÃO 898P / 10753", "#ed7a66"], ["LJ ROCHE 9107", "#904434"], ["LJ DAMASCO 8652", "#db8248"], ["LJ ARTESÃ 10897", "#e19944"], ["LJ MEL 1507P / 8790", "#eda24c"], ["VM CHILLI 10788", "#ab4032"], ["VM SHARON 10684", "#a83d37"], ["CL RECIFE 1117P / 11562", "#ffa979"], ["CL BEIJINHO 10778", "#ffc2b1"], ["CL ROSA-DO-DESERTO 10811", "#fe8a82"], ["VM AURORA 11170", "#db3333"], ["VM ROCOCÓ 1280P / 11166", "#a82b2b"], ["VM AZALÉIA 1294P / 10988", "#803244"], ["VM XAROPE 17839", "#bd2030"], ["BO CHOCOLATE 2768P / 8428", "#491a1a"], ["BO RUBI 10871", "#80233f"], ["RS CARMINE 10897", "#863c53"], ["RS GOIABA 549P / 10647", "#c4768e"], ["RS CAMELIA 10828", "#ff6f98"], ["RS FLORAL 1091P / 10482", "#e4c0ca"], ["RS IOGURTE 1073P", "#ff9a93"], ["AZ CÉU 1449P / 11068", "#3496df"], ["AZ PARAQUEDAS 1503P / 10986", "#065296"], ["AZ MARINHO 1407P / 10974", "#254f70"], ["AZ MASÓLICA 1011P", "#1a2f40"], ["AZ POÇA 325P / 11174", "#1b2934"], ["AZ ÍNDIGO 1174P", "#0d283d"], ["AZ PACÍFICO 1405P / 11407", "#264054"], ["AZ NÓRDICO 1413P / 10229", "#78acd1"], ["AZ DUSK 9480", "#8eadc4"], ["AZ BEBÊ 1509P / 11519", "#76c1d1"], ["AZ TOPÁZIO 1498P / 10143", "#4ca9bd"], ["AZ BÁLTICO 9888", "#4cbdb3"], ["CH GRAFITE 1184P / 11190", "#54565b"], ["CZ GRIFO 1427P", "#7f878c"], ["CH FUMAÇA 1033P", "#434447"], ["CQ TRIGO 10783", "#ad8f63"], ["CQ AREIA 10502", "#c4b591"], ["CQ LINHO 10973", "#b8af97"], ["MR TAUPE 1059P", "#59392a"], ["MR CÂNHAMO 1502P", "#9d7e55"], ["MR AMÊNDOA 10690", "#9b583b"], ["MR CASTANHO 8441P", "#9d4d2b"], ["AM CANÁRIO 987P / 9386", "#ffdf53"], ["AM CÍTRICO 10830", "#ffe881"], ["AM MOSTARDA 1292P", "#e8a251"], ["AM CARAMELO 11236", "#bb7c34"], ["VD BROTO 1511-P / 10671", "#5a8142"], ["VD LIMA 10674 / 1504-P", "#2e5320"], ["VD VERDE BRONZE 1497-P / 58072", "#3d4132"], ["VD CIPRESTE 11278 / 11356", "#4e5042"], ["VD SÁLVIA 10999", "#686a5d"], ["VD FLUORESCENTE 10741", "#a1d66c"], ["VD MENTA 10911", "#68ad6c"], ["VD TURQUESA 10910 / 1432-P", "#7db298"], ["VD JADE 1138-P", "#237161"], ["VD AQUARELA 1439-P", "#488b93"], ["VD PETRÓLEO 1183-P / 11281", "#0f5e6f"], ["VD EXCÊNTRICO 1403-P", "#3e753b"], ["VD 17173", "#a8bc49"], ["VD FRESH 17176", "#a8bc49"], ["VD CACTO 17180", "#394030"]]; // tons da cartela do Canva (Catálogo Projetos Santacosta)
 const PANT0=[['BRANCO','#ffffff'],['PRETO','#111111'],['OFF WHITE','#efe0c6'],['AZUL 631U','#2bb3d9'],['GREY 3C','#c8c9c7'],['VERMELHO DA CROMIA','#d70707'],['ROXO DA CROMIA','#b021c4']];
@@ -503,7 +555,9 @@ async function preparar(){
   for(const a in ART)for(const s of['frente','costas'])for(const t of['peca','cabide'])lista.push([`${a}-${s}-${t}`,`arquivos/base/${a}-${s}-${t}.png`]);
   for(const e in EST)if(!EST[e].up)lista.push(['e-'+e,`arquivos/estampas/${e}.png`]);
   for(const u of UPS)lista.push(['e-'+u.k,u.src]);
-  await Promise.all(lista.map(async([k,src])=>IMG[k]=await carregar(src+'?v='+VERSAO)));
+  for(const k in ARTX)for(const l of['frente','costas']){const src=(ARTX[k].img||{})[l];if(src){lista.push([`${k}-${l}-peca`,src]);if(ARTX[k].semCabide||ART[k]&&ART[k].novo)IMG[`${k}-${l}-cabide`]=null}}
+  await Promise.all(lista.map(async([k,src])=>IMG[k]=await carregar(src.startsWith('data:')?src:src+'?v='+VERSAO)));
+  for(const k in ARTX)if((ARTX[k].img||{}).frente||(ARTX[k].img||{}).costas)for(const l of['frente','costas'])if((ARTX[k].img||{})[l])IMG[`${k}-${l}-cabide`]=null;
   try{ALF=await (await fetch('arquivos/alfabeto.json?v='+VERSAO)).json();ALF.img=await carregar('arquivos/alfabeto.png?v='+VERSAO)}catch(e){ALF=null}
   for(const k in IMG)if(k.endsWith('-peca')&&IMG[k])IMG[k].fk=claridade(IMG[k]);
 }
@@ -520,7 +574,9 @@ function novaPeca(){
     ref:'',pedido:'',colecao:'VRA 2027',nome:'',obs:'',grade:{},costura:ART['camiseta-unissex'].costura};
 }
 let P=ler('atual',null)||novaPeca();
-function guardarP(){gravar('atual',P);const i=pecas.findIndex(p=>p.id===P.id);if(i>=0){pecas[i]=JSON.parse(JSON.stringify(P));gravar('pecas',pecas)}}
+const desf=[];let ultimoP=null,ultimoT=0;
+function marcarDesfazer(){const j=JSON.stringify(P);if(ultimoP&&ultimoP!==j&&Date.now()-ultimoT>900){desf.push(ultimoP);if(desf.length>40)desf.shift();ultimoT=Date.now()}if(ultimoP!==j)ultimoP=j;const b=document.getElementById('b-desfazer');if(b)b.hidden=!desf.length}
+function guardarP(){marcarDesfazer();gravar('atual',P);const i=pecas.findIndex(p=>p.id===P.id);if(i>=0){pecas[i]=JSON.parse(JSON.stringify(P));gravar('pecas',pecas)}}
 const hexDe0=(tipo,n)=>(cores[tipo].find(c=>c.n===n)||cores[tipo].find(c=>c.n.toUpperCase()===String(n).toUpperCase())||{h:'#cccccc'}).h;
 const hexDe=(tipo,n)=>hexDe0(tipo,n);
 
@@ -556,7 +612,7 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
   const larg=A.largMax||Math.min(28,.6*2*((A.fr||A.co).lado?(A.fr.lado-A.fr.cx):230)/A.esc);
   const por=(chave,cor,cx,top,ancora,papel,caber,lu)=>{const E=EST[chave];if(!E)return;let wc=E.w,hc=E.h;lu=+String(lu||'').replace(',','.');
     if(lu>0){hc*=lu/wc;wc=lu}else if(caber&&(chave.startsWith('txt:')||E.up)&&wc>larg){hc*=larg/wc;wc=larg}
-    const w=wc*A.esc,h=hc*A.esc;let X=cx-w/2,Y=top;
+    const vis=+((INFO[chave]||{}).vis||E.vis||1);const w=wc*A.esc*vis,h=hc*A.esc*vis;let X=cx-w/2,Y=top;
     if(ancora==='centro')Y=top-h/2;if(ancora==='barra'){X=cx-w;Y=top-h}out.push({chave,cor,x:X,y:Y,w,h,papel,cm:[wc,hc]})};
   if(lado==='frente'){const f=p.fr,aj=(A.ajY||0)*A.esc;
     if(f.est){if(f.pos==='mini')por(f.est,f.cor,A.fr.cx+10*A.esc,A.fr.ombro+(+f.dist||A.mini[0])*A.esc+aj,'centro','frente',0,f.larg);
@@ -565,7 +621,7 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
     if(bar)por(bar,p.barraCor||p.sereiaCor||'BRANCO',A.fr.lado-3.5*A.esc,A.fr.barra-3.5*A.esc,'barra','barra');
   }else{const f=p.co;if(f.est)por(f.est,f.cor,A.co.cx,A.co.gola+(+f.dist||0)*A.esc,'topo','costas',1,f.larg)}
   (p.extras||[]).forEach((x,i)=>{if(x.lado!==lado||!x.est)return;const pt=(A.lugares[lado]||{})[x.onde]||Object.values(A.lugares[lado])[0];if(!pt)return;
-    por(x.est,x.cor,pt[0],pt[1],'centro','extra'+i,0,x.larg)});
+    por(x.est,x.cor,pt[0]+(+x.dx||0)*A.esc,pt[1]+(+x.dy||0)*A.esc,'centro','extra'+i,0,x.larg)});
   return out;
 }
 function desenhar(p,lado,k=1){
@@ -594,8 +650,8 @@ function pintarEditor(){
 function opcoes(sel,lista,vazio){sel.innerHTML=(vazio?`<option value="">${vazio}</option>`:'')+lista.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join('')}
 function listaEst(car){ // [valor, nome] para as caixas de estampa
   const txts=[...new Set([...PRONTOS.map(t=>'txt:'+t),...Object.keys(INFO).filter(k=>k.startsWith('txt:'))])];
-  const l=car?Object.entries(EST).filter(([k,e])=>e.car||e.up).map(([k,e])=>[k,nomeEst(k)])
-    :[...txts.map(k=>[k,nomeEst(k)]),...Object.entries(EST).filter(([k,e])=>!e.car&&!k.startsWith('txt:')).map(([k,e])=>[k,nomeEst(k)])];
+  const l=car?Object.entries(EST).filter(([k,e])=>e.car||e.up).map(([k,e])=>[k,rotuloEst(k)])
+    :[...txts.map(k=>[k,rotuloEst(k)]),...Object.entries(EST).filter(([k,e])=>!e.car&&!k.startsWith('txt:')).map(([k,e])=>[k,rotuloEst(k)])];
   return [['__up','+ SUBIR ARQUIVO…'],...l]}
 const listaCor=t=>[['__nova','+ NOVA COR…'],...cores[t].map(c=>[c.n,c.n])];
 function garantirOpcao(sel,v){if(v&&![...sel.options].some(o=>o.value===v)){garantirTexto(v);sel.add(new Option(v.startsWith('txt:')?v.slice(4).toUpperCase()+' (ALFABETO)':v,v),sel.options[1]||null)}}
@@ -766,19 +822,33 @@ function encaixar(){ // folha A4 cabe na largura da tela
   $$('.folha-espaco').forEach(w=>{const f=w.firstElementChild;const larg=w.parentElement.clientWidth-24;const s=Math.min(1,larg/1123);
     f.style.transform=`scale(${s})`;w.style.height=(794*s)+'px';w.style.width=(1123*s)+'px';w.style.margin='0 auto'});
 }
-function ir(t){
-  $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+const BIB=[['salvas','Peças salvas'],['mockups','Mockups'],['estampas','Estampas'],['cores','Cores']];
+let telaAtual=null;const pilha=[];
+function ir(t,voltando){
+  if(!voltando&&telaAtual&&telaAtual!==t){pilha.push(telaAtual);try{history.pushState({t},'','#'+t)}catch(e){}}
+  telaAtual=t;$('#b-voltar').hidden=!pilha.length;
+  const naBib=BIB.some(([k])=>k===t);
+  $$('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t||(b.hasAttribute('data-bib')&&naBib)));
+  if(naBib){const sec=$('#t-'+t);let sn=sec.querySelector('.subnav');if(!sn){sn=document.createElement('div');sn.className='subnav naoimprime';sec.prepend(sn);
+      }
+    sn.innerHTML=BIB.map(([k,n])=>`<button data-t="${k}" class="${k===t?'on':''}">${n}</button>`).join('')}
   $$('.tela').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));
   if(t==='ficha')$('#ficha').innerHTML=fichaHTML(P);
   if(t==='mapa'){$('#m-nome').value=mapa.nome;$('#m-texto').value=mapa.texto;$('#m-lado').value=mapa.lado;$('#mapa').innerHTML=mapaHTML();listarMapa()}
   if(t==='salvas')listar();
   if(t==='estampas')listarEst();
+  if(t==='mockups')listarMockups();
   if(t==='lote')mostrarLote();
   if(t==='pedido'&&pedido&&pedido.ids)mostrarPedido();
   if(t==='cores')listarCores();
   requestAnimationFrame(encaixar);scrollTo(0,0);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-t],[data-ir]');if(b)ir(b.dataset.t||b.dataset.ir)});
+$('#b-desfazer').onclick=()=>{if(!desf.length)return;const ant=desf.pop();P=JSON.parse(ant);ultimoP=ant;ultimoT=Date.now();gravar('atual',P);
+  const i=pecas.findIndex(p=>p.id===P.id);if(i>=0){pecas[i]=JSON.parse(ant);gravar('pecas',pecas)}
+  $('#b-desfazer').hidden=!desf.length;desenharExtras();preencher();pintarEditor();if(telaAtual==='ficha')$('#ficha').innerHTML=fichaHTML(P),encaixar();toast('Desfeito')};
+$('#b-voltar').onclick=()=>{if(pilha.length)history.back()};
+addEventListener('popstate',()=>{const t=pilha.pop();if(t)ir(t,true);else $('#b-voltar').hidden=true});
 let larguraAntes=innerWidth;addEventListener('resize',()=>{if(innerWidth!==larguraAntes){larguraAntes=innerWidth;encaixar()}});
 
 function salvar(silencio){
@@ -879,16 +949,16 @@ $('#e-busca').addEventListener('input',listarEst);
 let estAberta=null;
 function abrirEst(k){estAberta=k;const I=INFO[k]||{},E=EST[k]||{};
   $('#de-prev').innerHTML=`<img src="${pretoURL(k)}" style="max-height:96px;max-width:90%" alt="">`;
-  $('#de-nome').value=I.nome||nomeEst(k).replace(/\s*\([^)]*\)\s*$/,'');$('#de-loc').value=I.loc||(E.car?'CARIMBO INTERNO':'');$('#de-tipo').value=I.tipo||'';
+  $('#de-nome').value=nomeEst(k);$('#de-loc').value=I.loc||(E.car?'CARIMBO INTERNO':'');$('#de-tipo').value=I.tipo||'';
   $('#de-larg').value=I.larg||'';$('#de-larg').placeholder=E.w?String(Math.round(E.w*10)/10).replace('.',','):'';
   opcoes($('#de-cor'),cores.pant.map(c=>[c.n,c.n]),'—');$('#de-cor').value=I.cor||'';
-  $('#de-ref').value=I.ref||'';$('#de-cli').value=I.cli||'';$('#de-obs').value=I.obs||'';
+  $('#de-vis').value=I.vis||'';$('#de-vis').placeholder=String(E.vis||1).replace('.',',');$('#de-ref').value=I.ref||'';$('#de-cli').value=I.cli||'';$('#de-obs').value=I.obs||'';
   const us=usosEst(k);$('#de-usada').textContent=us.length?'Usada nas fichas: '+us.join(', '):'Ainda não usada em nenhuma peça salva.';
   $('#de-del').style.display=k.startsWith('up:')||(k.startsWith('txt:')&&!PRONTOS.includes(k.slice(4)))?'':'none';
   $('#dlg-est').showModal()}
 $('#e-lista').addEventListener('click',e=>{const b=e.target.closest('[data-est]');if(b)abrirEst(b.dataset.est)});
 $('#dlg-est').addEventListener('close',()=>{const k=estAberta,v=$('#dlg-est').returnValue;estAberta=null;if(!k)return;
-  if(v==='ok'){const up=x=>x.trim().toUpperCase();INFO[k]={nome:up($('#de-nome').value),loc:$('#de-loc').value,tipo:$('#de-tipo').value,larg:$('#de-larg').value.replace(',','.'),cor:$('#de-cor').value,ref:up($('#de-ref').value),cli:up($('#de-cli').value),obs:up($('#de-obs').value)};
+  if(v==='ok'){const up=x=>x.trim().toUpperCase();INFO[k]={nome:up($('#de-nome').value),loc:$('#de-loc').value,tipo:$('#de-tipo').value,larg:$('#de-larg').value.replace(',','.'),cor:$('#de-cor').value,ref:up($('#de-ref').value),cli:up($('#de-cli').value),obs:up($('#de-obs').value),vis:$('#de-vis').value.replace(',','.')};if(!INFO[k].vis)delete INFO[k].vis;
     if(!INFO[k].nome)delete INFO[k].nome;gravar('estinfo',INFO);
     if(k.startsWith('up:')){const u=UPS.find(u=>u.k===k);if(u&&INFO[k].nome){u.nome=INFO[k].nome;EST[k].nome=u.nome;try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){}}}
     toast('Estampa guardada')}
@@ -897,9 +967,53 @@ $('#dlg-est').addEventListener('close',()=>{const k=estAberta,v=$('#dlg-est').re
 $('#e-subir').onclick=()=>abrirUp(null,0);$('#e-subir-car').onclick=()=>abrirUp(null,1);
 $('#e-escrever').onclick=()=>{const t=prompt('O que vai ser escrito com o alfabeto?');if(!t||!t.trim())return;const k='txt:'+t.trim().toLowerCase();INFO[k]=INFO[k]||{};gravar('estinfo',INFO);atualizarTudo();listarEst();abrirEst(k)};
 
+// ---------- mockups (artigos) ----------
+function salvarArtx(){try{localStorage.setItem('sc_artx',JSON.stringify(ARTX));gravar('x',0);return true}catch(e){toast('Foto grande demais para guardar neste aparelho');return false}}
+function listarMockups(){
+  $('#mk-lista').innerHTML=Object.entries(ART).map(([k,a])=>{const im=IMG[`${k}-frente-peca`]||IMG[`${k}-costas-peca`];
+    const q={...novaPeca(),artigo:k,ting:'BRANCO',fr:{est:'',pos:'frontal',cor:'BRANCO',dist:a.frontal},co:{est:'',pos:'nuca',cor:'BRANCO',dist:a.nuca},barra:'',carimbo:''};
+    const src=im?desenhar(q,IMG[`${k}-frente-peca`]?'frente':'costas',.35).toDataURL():'';
+    return `<button class="cest" data-art="${k}"><div class="im" style="height:150px">${src?`<img src="${src}" style="max-height:140px" alt="">`:'SEM FOTO'}</div><b>${esc(a.nome)}</b>
+      <span>${[a.fr?'FRENTE':'',a.co?'COSTAS':''].filter(Boolean).join(' + ')} · FRONTAL ${String(a.frontal).replace('.',',')} CM · NUCA ${String(a.nuca).replace('.',',')} CM${a.largMax?` · MÁX. ${String(a.largMax).replace('.',',')} CM`:''}</span></button>`}).join('')}
+let artAberto=null,artImgs={};
+function medirPNG(c,peitoCm){ // acha gola, ombro, lados e barra numa foto de peça com fundo transparente
+  const x=c.getContext('2d'),W=c.width,H=c.height,d=x.getImageData(0,0,W,H).data,op=(i,j)=>d[(j*W+i)*4+3]>40;
+  let x0=W,x1=0,y0=H,y1=0;for(let j=0;j<H;j+=2)for(let i=0;i<W;i+=2)if(op(i,j)){if(i<x0)x0=i;if(i>x1)x1=i;if(j<y0)y0=j;if(j>y1)y1=j}
+  const cx=Math.round((x0+x1)/2);let gola=y0;for(let j=y0;j<y1;j++)if(op(cx,j)){gola=j;break}
+  const yp=Math.round(gola+(y1-gola)*.3);let lado=cx;while(lado<W-1&&op(lado+1,yp))lado++;
+  return {cx,gola,ombro:y0,lado,barra:y1,esc:2*(lado-cx)/(peitoCm||50)}}
+function lerFoto(f){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);r(c)};im.src=fr.result};fr.readAsDataURL(f)})}
+function prevArt(){const k=artAberto,v=l=>artImgs[l]?artImgs[l].toDataURL():(IMG[`${k}-${l}-peca`]?IMG[`${k}-${l}-peca`].src:'');
+  $('#da-prev').innerHTML=['frente','costas'].map(l=>v(l)?`<figure style="margin:0;text-align:center;font-size:11px"><img src="${v(l)}" style="height:90px;background:#ccc;border-radius:6px" alt=""><br>${l.toUpperCase()}</figure>`:'').join('')||'<span class="aviso">Sem foto ainda</span>'}
+function abrirArt(k){const novo=!k;if(novo)k='art'+Date.now();artAberto=k;artImgs={};const a=ART[k]||{nome:'',frontal:9,nuca:2,costura:''};
+  $('#da-tit').textContent=novo?'Novo mockup':'Mockup';$('#da-nome').value=a.nome||'';$('#da-frontal').value=a.frontal??'';$('#da-nuca').value=a.nuca??'';$('#da-larg').value=a.largMax||'';$('#da-cost').value=a.costura||'';
+  $('#da-peito').value=a.fr&&a.esc?Math.round(2*(a.fr.lado-a.fr.cx)/a.esc*2)/2:50;$('#da-del').style.display=novo?'none':'';$('#dlg-art').dataset.novo=novo?1:'';prevArt();$('#dlg-art').showModal()}
+$('#mk-lista').addEventListener('click',e=>{const b=e.target.closest('[data-art]');if(b)abrirArt(b.dataset.art)});
+$('#mk-novo').onclick=()=>abrirArt(null);
+for(const[l,id]of[['frente','#da-fr'],['costas','#da-co']])$(id).onchange=async e=>{const f=e.target.files[0];if(!f)return;artImgs[l]=await lerFoto(f);e.target.value='';prevArt()};
+$('#dlg-art').addEventListener('close',()=>{const k=artAberto,v=$('#dlg-art').returnValue;artAberto=null;if(!k)return;
+  if(v==='del'){if(P.artigo===k||pecas.some(p=>p.artigo===k)){toast('Tem peça salva usando este mockup. Troque o artigo dessas peças antes.');return}if(!confirm('Excluir este mockup?'))return;ARTX[k]={apagado:1};salvarArtx();delete ART[k];listarMockups();atualizarTudo();return}
+  if(v!=='ok')return;const novo=$('#dlg-art').dataset.novo;if(novo&&!artImgs.frente&&!artImgs.costas){toast('Escolha pelo menos uma foto');return}
+  const x=ARTX[k]=ARTX[k]||{};const num=id=>{const t=$(id).value.replace(',','.');return t===''?null:+t};
+  x.nome=$('#da-nome').value.trim().toUpperCase()||'PEÇA NOVA';x.frontal=num('#da-frontal');x.nuca=num('#da-nuca');x.largMax=num('#da-larg');x.costura=$('#da-cost').value.toUpperCase();
+  const peito=num('#da-peito')||50;x.img=x.img||{};
+  if(artImgs.frente){const g=medirPNG(artImgs.frente,peito);x.esc=g.esc;x.geoFr={cx:g.cx,gola:g.gola,ombro:g.ombro,lado:g.lado,barra:g.barra};x.img.frente=artImgs.frente.toDataURL('image/png')}
+  if(artImgs.costas){const g=medirPNG(artImgs.costas,peito);if(!x.esc)x.esc=g.esc;x.geoCo={cx:g.cx,gola:g.gola};x.img.costas=artImgs.costas.toDataURL('image/png')}
+  if(!salvarArtx())return;
+  aplicarArtx();for(const l of['frente','costas'])if(artImgs[l]){const im=new Image();im.src=x.img[l];IMG[`${k}-${l}-peca`]=im;IMG[`${k}-${l}-cabide`]=null;im.onload=()=>{im.fk=claridade(im);listarMockups();pintarEditor()}}
+  listarMockups();atualizarTudo();toast('Mockup guardado')});
+
 // ---------- cores ----------
+const FAMS=[['AM','AMARELO'],['AZ','AZUL'],['BG','BEGE'],['BO','BORDÔ'],['CH','CHUMBO'],['CL','CORAL'],['CQ','CAQUI'],['CZ','CINZA'],['LJ','LARANJA'],['LS','LILÁS'],['MR','MARROM'],['RS','ROSA'],['RX','ROXO'],['VD','VERDE'],['VM','VERMELHO']];
+function partesCor(tipo,c){if(c.nome!=null)return c;const tk=String(c.n).split(/\s+/);let fam='';if(tipo==='ting'&&FAMS.some(([f])=>f===tk[0])){fam=tk.shift()}
+  let i=tk.length;while(i>0&&(/\d/.test(tk[i-1])||tk[i-1]==='/'))i--;const cods=tk.slice(i).join(' ').split('/').map(t=>t.trim()).filter(Boolean);
+  return {fam,nome:tk.slice(0,i).join(' '),pan:tipo==='ting'?(cods[0]||''):'',cod:tipo==='ting'?(cods[1]||''):(cods.join(' ')),obs:c.obs||''}}
+function comporCor(tipo){const fam=$('#dc-fam').value,nome=$('#dc-nome').value.trim().toUpperCase(),pan=$('#dc-pan').value.trim().toUpperCase(),cod=$('#dc-cod').value.trim().toUpperCase();
+  if(tipo==='pant')return nomeCor('pant',nome,cod);return [fam,nome,[pan,cod].filter(Boolean).join(' / ')].filter(Boolean).join(' ')}
+['#dc-fam','#dc-nome','#dc-pan','#dc-cod'].forEach(id=>$(id).addEventListener('input',()=>{if(editando)$('#dc-final').textContent=comporCor(editando.tipo)}));
+$('#dc-fam').innerHTML='<option value="">—</option>'+FAMS.map(([f,n])=>`<option value="${f}">${f} — ${n}</option>`).join('');
 function listarCores(){const q=semAcento($('#c-busca').value||'');
-  for(const t of['ting','pant'])$('#c-'+t).innerHTML=cores[t].map((c,i)=>semAcento(c.n).includes(q)?`<button class="cor" data-ed="${t}|${i}"><i style="background:${esc(c.h)}"></i>${esc(c.n)}</button>`:'').join('');
+  for(const t of['ting','pant'])$('#c-'+t).innerHTML=cores[t].map((c,i)=>semAcento(c.n).includes(q)?`<button class="cor" data-ed="${t}|${i}"><i style="background:${esc(c.h)}"></i>${esc(c.n)}${c.obs?` <small style="opacity:.6">· ${esc(c.obs)}</small>`:''}</button>`:'').join('');
 }
 $('#c-busca').addEventListener('input',listarCores);
 function nomeCor(tipo,nome,cod){nome=nome.trim().toUpperCase();cod=cod.trim().toUpperCase();
@@ -910,7 +1024,9 @@ let editando=null,hsv=[0,0,.5];
 function abrirCor(tipo,i,sel,nomeSugerido){
   editando={tipo,i,sel};const c=i!=null?cores[tipo][i]:{n:nomeSugerido||'',h:'#888888'};
   $('#dc-tit').textContent=(i!=null?'Editar cor':'Nova cor')+(tipo==='ting'?' de tingimento':' de estampa (Pantone)');
-  $('#dc-nome').value=c.n;$('#dc-cod').value='';$('#dc-del').style.display=i!=null?'':'none';
+  const pc=partesCor(tipo,c);$('#dc-fam').value=pc.fam||'';$('#dc-nome').value=pc.nome||'';$('#dc-pan').value=pc.pan||'';$('#dc-cod').value=pc.cod||'';$('#dc-obs').value=c.obs||'';
+  $('#dc-fam-l').hidden=$('#dc-pan-l').hidden=tipo!=='ting';$('#dc-cod-l').firstChild.textContent=tipo==='ting'?'Código interno':'Código Pantone';$('#dc-final').textContent=comporCor(tipo)||c.n;
+  $('#dc-del').style.display=i!=null?'':'none';
   $('#dc-dica').textContent=tipo==='pant'?'O código Pantone sai com U no final (ex.: 2945 → 2945U).':'';
   $('#cartela').innerHTML=tipo==='ting'?CARTELA.map(n=>`<option value="${esc(n.toUpperCase())}">`).join(''):'';
   hsv=rgb2hsv(...hex2rgb(c.h));$('#dlg-cor').showModal();pintarSel();
@@ -933,9 +1049,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-nova],[dat
   if(b.dataset.nova)abrirCor(b.dataset.nova);else{const[t,i]=b.dataset.ed.split('|');abrirCor(t,+i)}});
 $('#dlg-cor').addEventListener('close',()=>{
   const v=$('#dlg-cor').returnValue,{tipo,i,sel}=editando||{};if(!tipo)return;editando=null;
-  const n=nomeCor(tipo,$('#dc-nome').value,$('#dc-cod').value),h=hsv2hex(...hsv);let feito=null;
-  if(v==='ok'&&n){if(i!=null){const velho=cores[tipo][i].n;cores[tipo][i]={n,h};trocarNomeCor(tipo,velho,n)}else{const j=cores[tipo].findIndex(c=>c.n===n);if(j>=0)cores[tipo][j].h=h;else cores[tipo].push({n,h})}feito=n}
-  if(v==='del'&&i!=null)cores[tipo].splice(i,1);
+  const n=comporCor(tipo),h=hsv2hex(...hsv),obs=$('#dc-obs').value.trim().toUpperCase();let feito=null;
+  if(v==='ok'&&n){if(i!=null){const velho=cores[tipo][i].n;cores[tipo][i]={n,h,obs};trocarNomeCor(tipo,velho,n)}else{const j=cores[tipo].findIndex(c=>c.n===n);if(j>=0){cores[tipo][j].h=h;cores[tipo][j].obs=obs}else cores[tipo].push({n,h,obs})}feito=n}
+  if(v==='del'&&i!=null){if(!confirm('Apagar a cor '+cores[tipo][i].n+'?'))return;cores[tipo].splice(i,1)}
   gravar('cores2',cores);for(const k in cacheURL)delete cacheURL[k];
   if(sel&&feito){garantirOpcao(sel,feito);sel.value=feito;sel.dispatchEvent(new Event('change',{bubbles:true}))}
   atualizarTudo();
@@ -955,7 +1071,7 @@ $('#du-arq').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new Fil
   if(!$('#du-nome').value)$('#du-nome').value=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').toUpperCase()};im.src=r.result};r.readAsDataURL(f);e.target.value=''};
 $('#dlg-up').addEventListener('close',()=>{const {sel,car}=subindo||{};subindo=null;if($('#dlg-up').returnValue!=='ok'||!upImg){if(sel)sel.dispatchEvent(new Event('voltar'));return}
   const nome=($('#du-nome').value||'ESTAMPA').toUpperCase(),w=+$('#du-larg').value||10,h=w*upImg.height/upImg.width,k='up:'+Date.now(),src=upImg.toDataURL('image/png');
-  const u={k,nome:`${nome} (${fmtCm([w,h])})`,w,h,src,car:car?1:0};UPS.push(u);try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS.pop();toast('Arquivo grande demais para guardar neste aparelho');return}
+  const u={k,nome,w,h,src,car:car?1:0};UPS.push(u);try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS.pop();toast('Arquivo grande demais para guardar neste aparelho');return}
   EST[k]={nome:u.nome,w,h,car:u.car,up:1};IMG['e-'+k]=upImg;
   if(sel){garantirOpcao(sel,k);sel.querySelector(`option[value="${k}"]`).textContent=u.nome;sel.value=k;sel.dispatchEvent(new Event('change',{bubbles:true}))}
   atualizarTudo();if($('#t-estampas').classList.contains('on')){listarEst();abrirEst(k)}else toast('Arquivo guardado')});
@@ -1234,7 +1350,25 @@ function abrirZoom(lado,q=P){
   $('#z-img').src=desenhar(q,lado,3).toDataURL('image/png');$('#z-lado').textContent=lado==='frente'?'FRENTE':'COSTAS';
   zNivel=1;$('#z-img').style.width='100%';$('#zoom').hidden=false;
 }
-$('#cv-frente').onclick=()=>abrirZoom('frente');$('#cv-costas').onclick=()=>abrirZoom('costas');
+for(const lado of['frente','costas']){const cv=$('#cv-'+lado);let ar=null,raf=0;
+  const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height,cv.width/r.width]};
+  cv.addEventListener('pointerdown',e=>{const[x,y,k]=pt(e);const es=posicoes(P,lado).filter(q=>q.papel!=='barra');const m=14*k;
+    const hit=es.reverse().find(q=>x>=q.x-m&&x<=q.x+q.w+m&&y>=q.y-m&&y<=q.y+q.h+m);
+    ar={x0:e.clientX,y0:e.clientY,k,hit,moveu:false,res:hit&&x>q2(hit).x2-Math.max(28*k,hit.w*.25)&&y>q2(hit).y2-Math.max(28*k,hit.h*.35)};
+    if(hit){const A=ART[P.artigo];const alvo=hit.papel==='frente'?P.fr:hit.papel==='costas'?P.co:P.extras[+hit.papel.slice(5)];
+      ar.alvo=alvo;ar.dist0=+alvo.dist||0;ar.dx0=+alvo.dx||0;ar.dy0=+alvo.dy||0;ar.w0=hit.w;ar.cmW=hit.cm[0];ar.esc=A.esc}
+    cv.setPointerCapture(e.pointerId)});
+  const q2=h=>({x2:h.x+h.w,y2:h.y+h.h});
+  cv.addEventListener('pointermove',e=>{if(!ar||!ar.hit)return;const dx=(e.clientX-ar.x0)*ar.k,dy=(e.clientY-ar.y0)*ar.k;if(!ar.moveu&&Math.hypot(dx,dy)<6*ar.k)return;
+    if(!ar.moveu){ar.moveu=true;marcarDesfazer()}const r1=v=>Math.round(v*2)/2;
+    if(ar.res){const nw=Math.max(ar.w0*.2,ar.w0+dx);ar.alvo.larg=String(Math.max(.5,Math.round(ar.cmW*nw/ar.w0*10)/10))}
+    else if(ar.hit.papel.startsWith('extra')){ar.alvo.dx=r1(ar.dx0+dx/ar.esc);ar.alvo.dy=r1(ar.dy0+dy/ar.esc)}
+    else ar.alvo.dist=String(Math.max(0,r1(ar.dist0+dy/ar.esc)));
+    if(!raf)raf=requestAnimationFrame(()=>{raf=0;const src=desenhar(P,lado);cv.getContext('2d').clearRect(0,0,cv.width,cv.height);cv.getContext('2d').drawImage(src,0,0)})});
+  const fim=e=>{if(!ar)return;const a=ar;ar=null;if(a.moveu){if(a.alvo===P.fr||a.alvo===P.co){P.ov=P.ov||{};const k=a.alvo===P.fr?'fr':'co';delete P.ov[k+'.'+(a.res?'tam':'loc')]}
+      guardarP();preencher();desenharExtras();pintarEditor();toast(a.res?'Tamanho mudado':'Posição mudada')}
+    else if(e.type==='pointerup')abrirZoom(lado)};
+  cv.addEventListener('pointerup',fim);cv.addEventListener('pointercancel',fim)}
 $('#zoom').addEventListener('click',e=>{const b=e.target.closest('[data-z]');if(!b)return;const d=+b.dataset.z;
   if(!d){$('#zoom').hidden=true;$('#z-img').removeAttribute('src');return}
   const a=$('.zarea'),cx=(a.scrollLeft+a.clientWidth/2)/a.scrollWidth,cy=(a.scrollTop+a.clientHeight/2)/a.scrollHeight;
