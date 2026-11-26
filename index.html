@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611262200";</script>
+<script>var VERSAO="202611262300";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -24,6 +24,14 @@ header .marca{display:flex;align-items:center;gap:8px;font-weight:500;letter-spa
 header .marca img{height:28px;filter:invert(1)}
 .acoes{display:flex;gap:6px}.acoes button{background:#ffffff1a;border:1px solid #ffffff40;color:#fff;border-radius:999px;padding:8px 14px;min-height:44px;cursor:pointer;font-size:15px}
 .subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.subnav button{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 16px;min-height:44px;cursor:pointer;font-size:15px;color:var(--ink)}.subnav button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tiles{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tile{width:92px;min-height:104px;border:1.5px solid var(--line);border-radius:12px;background:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;cursor:pointer;font:inherit;color:var(--ink)}
+.tile.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink) inset}
+.tile .ti{width:76px;height:50px;display:grid;place-items:center;background:#faf8f5;border-radius:8px;overflow:hidden}.tile .ti img{max-width:70px;max-height:44px}
+.tile b{font-size:12px;font-weight:600;line-height:1.1;text-align:center}.tile small{font-size:10px;color:var(--mute);line-height:1.1;text-align:center;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile.mais{justify-content:center;font-size:30px;font-weight:300}
+.pest{display:none}.pest.on{display:block}
+#extras-todas .extra{display:none}#extras-todas .extra.on{display:block}
 .padrao{background:#fffbe8;border:1px solid #f0d98a;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45;margin-bottom:12px}
 #cv-frente,#cv-costas{touch-action:none;cursor:pointer}
 #salvo{font-size:12px;background:#2e7d32;color:#fff;border-radius:999px;padding:3px 10px;opacity:0;transition:opacity .3s}
@@ -248,47 +256,54 @@ dialog::backdrop{background:#0006}
       <div class="linha"><label>Artigo<select id="f-artigo"></select></label></div>
       <div class="linha" style="margin-top:10px"><label>Tingimento<select id="f-ting" class="selting"></select></label></div>
     </div>
-    <div class="bloco">
-      <h3>Estampa da frente</h3>
-      <div class="linha">
-        <label>Estampa<select id="f-fr-est" class="selest"></select></label>
+    <div class="bloco" id="b-est">
+      <h3>Estampas</h3>
+      <div class="tiles" id="tiles"></div>
+      <div class="pest" data-p="fr">
+       <div class="linha">
+        <label>Estampa da frente<select id="f-fr-est" class="selest"></select></label>
         <label>Ou escreva com o alfabeto<input type="text" id="f-fr-txt" placeholder="EX.: ITAPUÁ"></label>
         <label>Onde<select id="f-fr-pos"><option value="frontal">Frontal (peito)</option><option value="mini">Mini (lado do peito)</option></select></label>
-        <label>Cor (Pantone)<select id="f-fr-cor" class="selpant"></select></label>
         <label id="l-fr-dist">Distância da gola (cm)<input type="number" step="0.5" id="f-fr-dist"></label>
-        <label>Tipo<select id="f-fr-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
         <label>Tamanho no desenho (cm)<input type="number" step="0.5" min="0.5" id="f-fr-larg"></label>
+        <label>Tipo<select id="f-fr-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
+        <label>Cor só desta estampa<select id="f-fr-cor" class="selpant"></select></label>
+       </div>
       </div>
-      <h4 class="sub">Barra</h4>
-      <div class="linha">
+      <div class="pest" data-p="barra">
+       <div class="linha">
         <label>Na barra<select id="f-barra" class="selest"></select></label>
-        <label>Cor (Pantone)<select id="f-barra-cor" class="selpant"></select></label>
-        <label>Tipo<select id="f-barra-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
         <label>Tamanho no desenho (cm)<input type="number" step="0.1" min="0.5" id="f-barra-larg"></label>
+        <label>Tipo<select id="f-barra-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
+        <label>Cor só desta estampa<select id="f-barra-cor" class="selpant"></select></label>
+       </div>
       </div>
-      <div id="extras-frente"></div>
-      <button type="button" class="btn claro" data-extra="frente">+ Mais uma estampa na frente</button>
-    </div>
-    <div class="bloco">
-      <h3>Estampa das costas</h3>
-      <div class="linha">
-        <label>Estampa<select id="f-co-est" class="selest"></select></label>
+      <div class="pest" data-p="co">
+       <div class="linha">
+        <label>Estampa das costas<select id="f-co-est" class="selest"></select></label>
         <label>Ou escreva com o alfabeto<input type="text" id="f-co-txt" placeholder="EX.: GAROPABA"></label>
         <label>Onde<select id="f-co-pos"><option value="nuca">Nuca</option><option value="costas">Costas (grande)</option></select></label>
-        <label>Cor (Pantone)<select id="f-co-cor" class="selpant"></select></label>
         <label>Distância da gola (cm)<input type="number" step="0.5" id="f-co-dist"></label>
-        <label>Tipo<select id="f-co-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
         <label>Tamanho no desenho (cm)<input type="number" step="0.5" min="0.5" id="f-co-larg"></label>
+        <label>Tipo<select id="f-co-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
+        <label>Cor só desta estampa<select id="f-co-cor" class="selpant"></select></label>
+       </div>
       </div>
-      <div id="extras-costas"></div>
-      <button type="button" class="btn claro" data-extra="costas">+ Mais uma estampa nas costas</button>
-    </div>
-    <div class="bloco">
-      <h3>Carimbo interno</h3>
-      <div class="linha">
-        <label>Carimbo<select id="f-carimbo" class="selcar"></select></label>
-        <label>Cor do carimbo<select id="f-carimbo-cor" class="selpant"></select></label>
+      <div class="pest" data-p="car">
+       <div class="linha">
+        <label>Carimbo interno<select id="f-carimbo" class="selcar"></select></label>
         <label>Tipo<select id="f-carimbo-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
+        <label>Cor só deste carimbo<select id="f-carimbo-cor" class="selpant"></select></label>
+       </div>
+       <p class="aviso" style="margin:6px 0 0">No desenho da frente o carimbo aparece por dentro, na nuca (só para dar a ideia).</p>
+      </div>
+      <div class="pest" data-p="x"><div id="extras-todas"></div></div>
+      <h4 class="sub">Cor das estampas — muda todas juntas</h4>
+      <div class="linha">
+        <label>Cor<select id="f-cor-todas" class="selpant"></select></label>
+        <label>Tipo de cor<select id="f-cor-modo"><option value="">Cor única</option><option value="deg">Degradê</option></select></label>
+        <label id="l-cor2">Segunda cor do degradê<select id="f-cor2" class="selpant"></select></label>
+        <label id="l-cor-dir">Direção do degradê<select id="f-cor-dir"><option value="v">De cima para baixo</option><option value="h">Da esquerda para a direita</option></select></label>
       </div>
     </div>
     <details class="bloco">
@@ -376,7 +391,7 @@ dialog::backdrop{background:#0006}
 </section>
 <!-- ================= CORES ================= -->
 <section class="tela" id="t-cores">
-  <div class="padrao naoimprime"><b>Padrão de nomes.</b> Tingimento: COR + CÓDIGO DA LAVANDERIA / CÓDIGO DA ESTAMPARIA RUDIMAR (ex.: AZ CÉU 1449P / 11068). Quando tiver os dois códigos, os dois aparecem na ficha; se só tiver um, vai só ele. Estampa (Pantone): NOME + CÓDIGO com U (ex.: AZUL 631U). O site monta o nome sozinho pelos campos.</div>
+  <div class="padrao naoimprime"><b>Padrão de nomes.</b> Tingimento: COR + CÓDIGO DA LAVANDERIA / CÓDIGO DA ESTAMPARIA RUDIMAR (ex.: AZUL 1449P / 11068), sem nome fantasia. Quando tiver os dois códigos, os dois aparecem na ficha; se só tiver um, vai só ele. Estampa: COR + CÓDIGO PANTONE com U (ex.: AZUL 631U). O site monta o nome sozinho pelos campos.</div>
   <div class="bloco" style="margin-bottom:12px"><label>Pesquisar cor<input type="search" id="c-busca" placeholder="NOME OU CÓDIGO"></label></div>
   <div class="bloco" style="margin-bottom:12px">
     <h3>Cores de tingimento</h3>
@@ -396,14 +411,14 @@ dialog::backdrop{background:#0006}
   <form method="dialog" id="form-cor">
     <h3 id="dc-tit" style="margin-top:0">Nova cor</h3>
     <div class="linha">
-      <label id="dc-fam-l">Família<select id="dc-fam"><option value="">—</option></select></label>
-      <label>Nome<input type="text" id="dc-nome" list="cartela" placeholder="EX.: PACÍFICO"></label>
+      <label id="dc-fam-l">Cor<select id="dc-fam"><option value="">—</option></select></label>
+      <label>Complemento (só se não tiver código)<input type="text" id="dc-nome" placeholder="EX.: MARMORIZADO"></label>
     </div>
     <div class="linha" style="margin-top:10px">
       <label id="dc-pan-l">Código da lavanderia (tom)<input type="text" id="dc-pan" placeholder="EX.: 1449P"></label>
       <label id="dc-cod-l">Código<input type="text" id="dc-cod" placeholder="EX.: 11068"></label>
     </div>
-    <label style="margin-top:10px">Observações (fornecedor, base, lavagem…)<input type="text" id="dc-obs"></label>
+    <input type="hidden" id="dc-obs">
     <p class="aviso" style="margin:6px 0 0">Nome que vai ficar: <b id="dc-final"></b></p>
     <p class="aviso" id="dc-dica" style="margin:6px 0"></p>
     <div class="seletor">
@@ -597,9 +612,11 @@ const hexDe0=(tipo,n)=>(cores[tipo].find(c=>c.n===n)||cores[tipo].find(c=>c.n.to
 const hexDe=(tipo,n)=>hexDe0(tipo,n);
 
 // ---------- desenhar a peça ----------
-function tingir(img,hex,w,h){
+function tingir(img,hex,w,h,hex2,dir){
   const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
-  x.drawImage(img,0,0,w,h);x.globalCompositeOperation='source-in';x.fillStyle=hex;x.fillRect(0,0,w,h);return c;
+  x.drawImage(img,0,0,w,h);x.globalCompositeOperation='source-in';
+  if(hex2){const g=dir==='h'?x.createLinearGradient(0,0,w,0):x.createLinearGradient(0,0,0,h);g.addColorStop(0,hex);g.addColorStop(1,hex2);x.fillStyle=g}else x.fillStyle=hex;
+  x.fillRect(0,0,w,h);return c;
 }
 // ---------- alfabeto Santacosta: escrever estampas ----------
 let ALF=null;
@@ -637,6 +654,7 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
       else por(f.est,f.cor,A.fr.cx,A.fr.gola+(+f.dist||0)*A.esc+aj,'topo','frente',1,f.larg,f.vz)}
     const bar=p.barra===undefined?(p.sereia===false?'':'sereia'):p.barra;
     if(bar)por(bar,p.barraCor||p.sereiaCor||'BRANCO',A.fr.lado-3.5*A.esc,A.fr.barra-3.5*A.esc,'barra','barra',0,p.barraLarg,p.barraVz);
+    if(p.carimbo&&EST[p.carimbo]){const g=A.fr.gola-A.fr.ombro,topo=A.fr.ombro+g*.22;por(p.carimbo,p.carimboCor||'BRANCO',A.fr.cx,topo,'topo','carimbo',0,Math.min(4.5,g*.75/A.esc));const e=out[out.length-1];if(e)e.clip=A.fr.gola-.4*A.esc}
   }else{const f=p.co;if(f.est)por(f.est,f.cor,A.co.cx,A.co.gola+(+f.dist||0)*A.esc,'topo','costas',1,f.larg,f.vz)}
   (p.extras||[]).forEach((x,i)=>{if(x.lado!==lado||!x.est)return;const pt=(A.lugares[lado]||{})[x.onde]||Object.values(A.lugares[lado])[0];if(!pt)return;
     por(x.est,x.cor,pt[0]+(+x.dx||0)*A.esc,pt[1]+(+x.dy||0)*A.esc,'centro','extra'+i,8,x.larg,x.vz)});
@@ -652,7 +670,8 @@ function desenhar(p,lado,k=1){
   const L=document.createElement('canvas');L.width=W;L.height=H;const y=L.getContext('2d');
   for(const e of posicoes(p,lado)){const im=IMG['e-'+e.chave];if(!im)continue;
     const w=Math.max(1,Math.round(e.w*k)),h=Math.max(1,Math.round(e.h*k));
-    y.drawImage(/ILUSTRAD|ORIGINAL/.test(String(e.cor).toUpperCase())?im:tingir(im,hexDe('pant',e.cor),w,h),e.x*k,e.y*k,w,h)}
+    const dg=p.deg&&p.deg.on?p.deg:null;if(e.clip){y.save();y.beginPath();y.rect(0,0,W,e.clip*k);y.clip()}
+    y.drawImage(/ILUSTRAD|ORIGINAL/.test(String(e.cor).toUpperCase())?im:tingir(im,hexDe('pant',e.cor),w,h,dg?hexDe('pant',dg.c2):null,dg&&dg.dir),e.x*k,e.y*k,w,h);if(e.clip)y.restore()}
   const T=document.createElement('canvas');T.width=W;T.height=H;const t=T.getContext('2d');
   t.drawImage(L,0,0);t.globalCompositeOperation='multiply';t.filter='brightness(1.1)';t.drawImage(base,0,0,W,H);t.filter='none';
   t.globalCompositeOperation='destination-in';t.drawImage(L,0,0);
@@ -694,6 +713,11 @@ function preencher(){
   $('#f-modelo').placeholder=ART[P.artigo].nome;$('#f-tingTexto').placeholder=P.ting.toUpperCase();
   $('#b-volta-pedido').hidden=!(pedido&&pedido.ids&&pedido.ids.includes(P.id));
   $$('.cbx').forEach(c=>c.sync());
+  $('#f-cor-todas').value=P.corTodas||P.fr.cor||'BRANCO';const dg=P.deg||{};$('#f-cor-modo').value=dg.on?'deg':'';garantirOpcao($('#f-cor2'),dg.c2||'BRANCO');$('#f-cor2').value=dg.c2||'BRANCO';$('#f-cor-dir').value=dg.dir||'v';
+  $('#l-cor2').hidden=$('#l-cor-dir').hidden=!dg.on;
+  if(!ART[P.artigo][painelSel==='co'?'co':'fr']&&(painelSel==='fr'||painelSel==='barra'||painelSel==='co'))painelSel=ART[P.artigo].fr?'fr':'co';
+  if(painelSel[0]==='x'&&!(P.extras||[])[+painelSel.slice(1)])painelSel='fr';
+  tilesEst();mostrarPainel();
   $$('#f-grade input').forEach(i=>i.value=P.grade[i.dataset.g]||'');somar();
 }
 function somar(){
@@ -720,7 +744,10 @@ function ler_form(e){
   $$('#f-grade input').forEach(i=>{const v=i.value.replace(/\D/g,'');if(v)P.grade[i.dataset.g]=v;else delete P.grade[i.dataset.g]});
   guardarP();
 }
-$('#t-peca').addEventListener('change',e=>{if(e.target.closest('.grade'))return;if(mudouExtra(e)){if(e.target.dataset.k==='txt')novaEstampaTalvez(P.extras[+e.target.dataset.x].est);return}ler_form(e);{const m=(e.target.id||'').match(/^f-(fr|co)-txt$/);if(m)setTimeout(()=>novaEstampaTalvez(P[m[1]].est),50)}preencher();if(e.target.id==='f-artigo'){(P.extras||[]).forEach(x=>{const L=ART[P.artigo].lugares[x.lado]||{};if(!L[x.onde])x.onde=Object.keys(L)[0]});desenharExtras()}pintarEditor()});
+$('#t-peca').addEventListener('change',e=>{if(e.target.closest('.grade'))return;
+  if(['f-cor-todas','f-cor-modo','f-cor2','f-cor-dir'].includes(e.target.id)){if(e.target.value&&e.target.value.startsWith('__'))return;const c=$('#f-cor-todas').value;
+    if(e.target.id==='f-cor-todas'){P.corTodas=c;P.fr.cor=P.co.cor=P.barraCor=P.carimboCor=c;(P.extras||[]).forEach(x=>x.cor=c);P.ov=P.ov||{};for(const k in P.ov)if(k.endsWith('.cor'))delete P.ov[k]}
+    P.deg={on:$('#f-cor-modo').value==='deg',c2:$('#f-cor2').value,dir:$('#f-cor-dir').value};guardarP();desenharExtras();preencher();pintarEditor();return}if(mudouExtra(e)){if(e.target.dataset.k==='txt')novaEstampaTalvez(P.extras[+e.target.dataset.x].est);return}ler_form(e);{const m=(e.target.id||'').match(/^f-(fr|co)-txt$/);if(m)setTimeout(()=>novaEstampaTalvez(P[m[1]].est),50)}preencher();if(e.target.id==='f-artigo'){(P.extras||[]).forEach(x=>{const L=ART[P.artigo].lugares[x.lado]||{};if(!L[x.onde])x.onde=Object.keys(L)[0]});desenharExtras()}pintarEditor()});
 $('#t-peca').addEventListener('input',e=>{if(e.target.dataset.x!=null){mudouExtra(e);return}if(e.target.matches('#f-grade input')){ler_form(e);somar()}else if(e.target.matches('input[type=text],textarea')&&!/-txt$/.test(e.target.id))ler_form(e)});
 
 // ---------- textos da ficha ----------
@@ -788,7 +815,7 @@ function fichaHTML(p){
     const tt=String(O(it.id,'tam','')),nt=tt.includes('\n')?tt.split('\n').length:1;
     const hh=(it.titulo?30:0)+ih+(2+nt)*14+14+(lt?linhasDe(lt,cpl)*13+8:12);
     const html=ab(x,top,w,null,'cx',`${it.titulo?`<div class="vm" style="padding:3px 2px 0">${esc(it.titulo)}</div>`:''}<div class="im" style="height:${ih}px"><img src="${pretoURL(it.chave)}" alt=""></div>
-      <div class="dd"><div>COR: ${ed(`b:${it.id}.cor`,O(it.id,'cor',String(it.cor).toUpperCase()))}</div><div>TIPO: ${ed(`b:${it.id}.tipo`,it.tipo||'ESTAMPA')}</div><div>TAMANHO: ${ed(`b:${it.id}.tam`,O(it.id,'tam',it.tam||(it.cm?fmtCm(it.cm):tamTxt(it.chave))))}</div></div><div class="vm lc ed" contenteditable="true" data-c="b:${it.id}.loc">${esc(O(it.id,'loc',it.loc||''))}</div>`);
+      <div class="dd"><div>COR: ${ed(`b:${it.id}.cor`,O(it.id,'cor',p.deg&&p.deg.on?`DEGRADÊ ${String(it.cor).toUpperCase()} > ${String(p.deg.c2).toUpperCase()}`:String(it.cor).toUpperCase()))}</div><div>TIPO: ${ed(`b:${it.id}.tipo`,it.tipo||'ESTAMPA')}</div><div>TAMANHO: ${ed(`b:${it.id}.tam`,O(it.id,'tam',it.tam||(it.cm?fmtCm(it.cm):tamTxt(it.chave))))}</div></div><div class="vm lc ed" contenteditable="true" data-c="b:${it.id}.loc">${esc(O(it.id,'loc',it.loc||''))}</div>`);
     return {html,hh};
   };
   const coluna=(x,w,itens,lado,limite=772)=>{let fim=205,ih=58;const total=k=>itens.reduce((a,it)=>a+caixa(x,0,w,it,k).hh+10,0);
@@ -799,7 +826,7 @@ function fichaHTML(p){
     itens.forEach((it,i)=>{h+=cs[i].html.replace('top:0px',`top:${tops[i]}px`);
       const al=alvoDe('b'+it.id,it.alvo);if(al)ponto([lado==='frente'?x:x+w,tops[i]+(it.titulo?30:0)+30],al,'#e3201b','b'+it.id)})};
   const meio=e=>[e.x+e.w/2,e.y+e.h/2];
-  const itF=posicoes(p,'frente').filter(e=>!e.papel.startsWith('extra')).map(e=>e.papel==='frente'
+  const itF=posicoes(p,'frente').filter(e=>!e.papel.startsWith('extra')&&e.papel!=='carimbo').map(e=>e.papel==='frente'
     ?{id:'fr',chave:e.chave,cor:e.cor,tipo:p.fr.tipo,cm:e.cm,loc:textoFrente(p),alvo:pf(...meio(e))}
     :{id:'barra',chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.barraTipo||p.sereiaTipo,loc:'3,5CM DA COSTURA LATERAL\n3,5CM DA COSTURA DA BARRA\nESTAMPADA DO ESQUERDO\nDE QUEM VESTE',alvo:pf(...meio(e))});
   const extra=(lado,ordem,pp)=>posicoes(p,lado).filter(e=>e.papel.startsWith('extra')).map(e=>{const x=p.extras[+e.papel.slice(5)];
@@ -1084,13 +1111,15 @@ $('#dlg-art').addEventListener('close',()=>{const k=artAberto,v=$('#dlg-art').re
 
 // ---------- cores ----------
 const FAMS=[['AM','AMARELO'],['AZ','AZUL'],['BG','BEGE'],['BO','BORDÔ'],['CH','CHUMBO'],['CL','CORAL'],['CQ','CAQUI'],['CZ','CINZA'],['LJ','LARANJA'],['LS','LILÁS'],['MR','MARROM'],['RS','ROSA'],['RX','ROXO'],['VD','VERDE'],['VM','VERMELHO']];
-function partesCor(tipo,c){if(c.nome!=null)return c;const tk=String(c.n).split(/\s+/);let fam='';if(tipo==='ting'&&FAMS.some(([f])=>f===tk[0])){fam=tk.shift()}
+const CORES_BASE=['AMARELO','AZUL','BEGE','BORDÔ','BRANCO','CAQUI','CHUMBO','CINZA','CORAL','LARANJA','LILÁS','MARROM','OFF WHITE','PRETO','ROSA','ROXO','VERDE','VERMELHO'];
+function partesCor(tipo,c){if(c.nome!=null)return c;const tk=String(c.n).split(/\s+/);let fam='';
+  if(tk[0]+' '+tk[1]==='OFF WHITE'){fam='OFF WHITE';tk.splice(0,2)}else if(CORES_BASE.includes(tk[0]))fam=tk.shift();else{const f=FAMS.find(([a])=>a===tk[0]);if(f){fam=f[1];tk.shift()}}
   let i=tk.length;while(i>0&&(/\d/.test(tk[i-1])||tk[i-1]==='/'))i--;const cods=tk.slice(i).join(' ').split('/').map(t=>t.trim()).filter(Boolean);
   return {fam,nome:tk.slice(0,i).join(' '),pan:tipo==='ting'?(cods[0]||''):'',cod:tipo==='ting'?(cods[1]||''):(cods.join(' ')),obs:c.obs||''}}
 function comporCor(tipo){const fam=$('#dc-fam').value,nome=$('#dc-nome').value.trim().toUpperCase(),pan=$('#dc-pan').value.trim().toUpperCase(),cod=$('#dc-cod').value.trim().toUpperCase();
   if(tipo==='pant')return nomeCor('pant',nome,cod);return [fam,nome,[pan,cod].filter(Boolean).join(' / ')].filter(Boolean).join(' ')}
 ['#dc-fam','#dc-nome','#dc-pan','#dc-cod'].forEach(id=>$(id).addEventListener('input',()=>{if(editando)$('#dc-final').textContent=comporCor(editando.tipo)}));
-$('#dc-fam').innerHTML='<option value="">—</option>'+FAMS.map(([f,n])=>`<option value="${f}">${f} — ${n}</option>`).join('');
+$('#dc-fam').innerHTML='<option value="">—</option>'+CORES_BASE.map(n=>`<option>${n}</option>`).join('');
 function listarCores(){const q=semAcento($('#c-busca').value||'');
   for(const t of['ting','pant'])$('#c-'+t).innerHTML=cores[t].map((c,i)=>semAcento(c.n).includes(q)?`<button class="cor" data-ed="${t}|${i}"><i style="background:${esc(c.h)}"></i>${esc(c.n)}${c.obs?` <small style="opacity:.6">· ${esc(c.obs)}</small>`:''}</button>`:'').join('');
 }
@@ -1104,7 +1133,7 @@ function abrirCor(tipo,i,sel,nomeSugerido){
   editando={tipo,i,sel};const c=i!=null?cores[tipo][i]:{n:nomeSugerido||'',h:'#888888'};
   $('#dc-tit').textContent=(i!=null?'Editar cor':'Nova cor')+(tipo==='ting'?' de tingimento':' de estampa (Pantone)');
   const pc=partesCor(tipo,c);$('#dc-fam').value=pc.fam||'';$('#dc-nome').value=pc.nome||'';$('#dc-pan').value=pc.pan||'';$('#dc-cod').value=pc.cod||'';$('#dc-obs').value=c.obs||'';
-  $('#dc-fam-l').hidden=$('#dc-pan-l').hidden=tipo!=='ting';$('#dc-cod-l').firstChild.textContent=tipo==='ting'?'Código da estamparia Rudimar':'Código Pantone';$('#dc-final').textContent=comporCor(tipo)||c.n;
+  $('#dc-pan-l').hidden=tipo!=='ting';$('#dc-cod-l').firstChild.textContent=tipo==='ting'?'Código da estamparia Rudimar':'Código Pantone';$('#dc-final').textContent=comporCor(tipo)||c.n;
   $('#dc-del').style.display=i!=null?'':'none';
   $('#dc-dica').textContent=tipo==='pant'?'O código Pantone sai com U no final (ex.: 2945 → 2945U).':'';
   $('#cartela').innerHTML=tipo==='ting'?CARTELA.map(n=>`<option value="${esc(n.toUpperCase())}">`).join(''):'';
@@ -1183,32 +1212,48 @@ $('#dlg-up').addEventListener('close',()=>{const {sel,car}=subindo||{};subindo=n
 function desenharExtras(){
   const A=ART[P.artigo];P.extras=P.extras||[];
   const op=(lista,v)=>{if(v&&!lista.some(([k])=>k===v))lista=[[v,v.startsWith('txt:')?v.slice(4).toUpperCase()+' (ALFABETO)':v],...lista];return lista.map(([k,t])=>`<option value="${esc(k)}"${k===v?' selected':''}>${esc(t)}</option>`).join('')};
-  for(const lado of['frente','costas']){
-    $('#extras-'+lado).innerHTML=P.extras.map((x,i)=>x.lado!==lado?'':(()=>{const lug=Object.keys(A.lugares[x.lado]||{}).map(k=>[k,k.toUpperCase()]);
-     return `<div class="extra"><div class="topo">Estampa a mais<button type="button" class="btn perigo" data-rx="${i}">Tirar</button></div>
+  {
+    $('#extras-todas').innerHTML=P.extras.map((x,i)=>(()=>{const lug=Object.keys((A.lugares||{})[x.lado]||{}).map(k=>[k,k.toUpperCase()]);
+     return `<div class="extra${painelSel==='x'+i?' on':''}" data-i="${i}"><div class="topo">Estampa a mais ${i+1}<button type="button" class="btn perigo" data-rx="${i}">Tirar</button></div>
      <div class="linha">
+      <label>Lado<select data-x="${i}" data-k="lado">${op([['frente','Frente'],['costas','Costas']],x.lado)}</select></label>
       <label>Onde<select data-x="${i}" data-k="onde">${op(lug,x.onde)}</select></label>
       <label>Estampa<select data-x="${i}" data-k="est" class="selest">${op(listaEst(),x.est)}</select></label>
       <label>Ou escreva com o alfabeto<input type="text" data-x="${i}" data-k="txt" value="${esc(x.est&&x.est.startsWith('txt:')?x.est.slice(4).toUpperCase():'')}"></label>
-      <label>Cor (Pantone)<select data-x="${i}" data-k="cor" class="selpant">${op(listaCor('pant'),x.cor)}</select></label>
+      <label>Cor só desta estampa<select data-x="${i}" data-k="cor" class="selpant">${op(listaCor('pant'),x.cor)}</select></label>
       <label>Tipo<select data-x="${i}" data-k="tipo">${op([['ESTAMPA','Estampa'],['BORDADO','Bordado']],x.tipo)}</select></label>
       <label>Quadro na ficha<select data-x="${i}" data-k="ordem">${op([['antes','Em cima das outras'],['depois','Embaixo das outras']],x.ordem)}</select></label>
      </div>
      <label style="margin-top:10px">Localização (texto vermelho da ficha)<input type="text" data-x="${i}" data-k="loc" value="${esc(x.loc||'')}" placeholder="EX.: 5CM ABAIXO DA COSTURA DO OMBRO, CENTRALIZADA NA MANGA"></label>
      <label style="margin-top:10px">Tamanho no desenho (cm)<input type="number" step="0.5" min="0.5" data-x="${i}" data-k="larg" value="${esc(x.larg||'')}" placeholder="${esc(String(Math.round(((EST[x.est]||{}).w||0)*10)/10).replace('.',','))}"></label>
      </div>`})()).join('')}
-  ligarBuscas();
+  ligarBuscas();tilesEst();
 }
 function fmtCm(c){const f=v=>(Math.round(v*10)/10).toString().replace('.',',');return `${f(c[0])} × ${f(c[1])} CM`}
 function tamTxt(k){garantirTexto(k);const E=EST[k];return E?fmtCm([E.w,E.h]):''}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-extra]');if(!b)return;const lado=b.dataset.extra,A=ART[P.artigo];P.extras=P.extras||[];
-  P.extras.push({lado,onde:Object.keys(A.lugares[lado]||{})[lado==='frente'?1:0]||'',est:'sereia',cor:'BRANCO',tipo:'ESTAMPA',ordem:'antes',loc:'',tam:''});
-  guardarP();desenharExtras();pintarEditor()});
-document.addEventListener('click',e=>{const b=e.target.closest('[data-rx]');if(!b)return;P.extras.splice(+b.dataset.rx,1);guardarP();desenharExtras();pintarEditor()});
+  P.extras.push({lado,onde:Object.keys(A.lugares[lado]||{})[lado==='frente'?1:0]||'',est:'sereia',cor:P.corTodas||'BRANCO',tipo:'ESTAMPA',ordem:'antes',loc:'',tam:''});
+  painelSel='x'+(P.extras.length-1);guardarP();desenharExtras();mostrarPainel();pintarEditor()});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-rx]');if(!b)return;P.extras.splice(+b.dataset.rx,1);painelSel='fr';guardarP();desenharExtras();mostrarPainel();pintarEditor()});
+// ---------- quadradinhos das estampas ----------
+let painelSel='fr';
+function tilesEst(){const t=(k,nome,est,sub)=>`<button type="button" class="tile${painelSel===k?' on':''}" data-tile="${k}"><span class="ti">${est&&IMG['e-'+est]!==undefined||est&&est.startsWith('txt:')?`<img src="${pretoURL(est)}" alt="">`:'<small>—</small>'}</span><b>${nome}</b><small>${esc(sub||'')}</small></button>`;
+  const A=ART[P.artigo];let h='';
+  if(A.fr)h+=t('fr','Frente',P.fr.est,P.fr.est?nomeEst(P.fr.est):'sem estampa');
+  if(A.fr)h+=t('barra','Barra',P.barra,P.barra?nomeEst(P.barra):'nada');
+  if(A.co)h+=t('co','Costas',P.co.est,P.co.est?nomeEst(P.co.est):'sem estampa');
+  h+=t('car','Carimbo',P.carimbo,P.carimbo?nomeEst(P.carimbo):'sem carimbo');
+  (P.extras||[]).forEach((x,i)=>h+=t('x'+i,'Mais '+(i+1),x.est,(x.onde||'').toUpperCase()));
+  h+=`<button type="button" class="tile mais" data-extra="${A.fr?'frente':'costas'}" title="Mais uma estampa">+<small style="font-size:10px">mais estampa</small></button>`;
+  $('#tiles').innerHTML=h}
+function mostrarPainel(){const p=painelSel[0]==='x'?'x':painelSel;$$('#b-est .pest').forEach(d=>d.classList.toggle('on',d.dataset.p===p));
+  $$('#extras-todas .extra').forEach(d=>d.classList.toggle('on','x'+d.dataset.i===painelSel));$$('#tiles .tile').forEach(b=>b.classList.toggle('on',b.dataset.tile===painelSel))}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-tile]');if(!b)return;painelSel=b.dataset.tile;mostrarPainel()});
 function mudouExtra(e){const t=e.target;if(t.dataset.x==null||!t.closest('#t-peca'))return false;if(t.value&&t.value.startsWith('__'))return true;const x=P.extras[+t.dataset.x];
   if(t.dataset.k==='txt'){if(e.type!=='change')return true;const v=t.value.trim();x.est=v?'txt:'+v.toLowerCase():'';}
-  else{x[t.dataset.k]=['loc','tam'].includes(t.dataset.k)?t.value.toUpperCase():t.value;if(t.dataset.k==='larg')x.tam=''}
-  guardarP();if(e.type==='change'&&['est','txt'].includes(t.dataset.k))desenharExtras();if(e.type==='change'||t.dataset.k==='larg')pintarEditor();return true}
+  else{x[t.dataset.k]=['loc','tam'].includes(t.dataset.k)?t.value.toUpperCase():t.value;if(t.dataset.k==='larg')x.tam='';
+    if(t.dataset.k==='lado'){const L=(ART[P.artigo].lugares||{})[x.lado]||{};x.onde=Object.keys(L).find(k=>/manga/i.test(k))||Object.keys(L)[0]||'';x.dx=x.dy=0;if(e.type==='change'){guardarP();desenharExtras();pintarEditor()}return true}}
+  guardarP();if(e.type==='change'&&['est','txt','cor'].includes(t.dataset.k))desenharExtras();if(e.type==='change'||t.dataset.k==='larg')pintarEditor();return true}
 
 // ---------- ler planilha (.xlsx sem biblioteca de fora) ----------
 async function lerXLSX(buf){
@@ -1309,7 +1354,7 @@ function acharCor(tipo,t){
   let c=cs.find(c=>N(c.n)===x);if(c)return {n:c.n,certo:true};
   const cod=codigos(t);if(cod.length){c=cs.find(c=>codigos(c.n).some(k=>cod.includes(k)));if(c)return {n:c.n,certo:true}}
   const ps=palavras(t);let melhor=null,pts=0;
-  for(const c of cs){const pc=palavras(c.n);const v=ps.filter(w=>pc.some(q=>perto(w,q))).length;if(v>pts){pts=v;melhor=c}}
+  for(const c of cs){const pc=palavras(c.n+' '+(c.al||''));const v=ps.filter(w=>pc.some(q=>perto(w,q))).length;if(v>pts){pts=v;melhor=c}}
   if(melhor&&pts>=1&&!(ps.length===1&&/^(AZUL|VERDE|ROSA|VERMELHO|LARANJA|AMARELO|CINZA|ROXO|BEGE|MARROM)$/.test(ps[0])))return {n:melhor.n,certo:false};
   return null}
 function acharEstampa(t){const x=N(t);if(!x)return null;return Object.keys(EST).find(k=>N(EST[k].nome).split(' (')[0]===x||N(k).replace(/-/g,' ')===x)||null}
@@ -1456,7 +1501,7 @@ function abrirZoom(lado,q=P){
 }
 for(const lado of['frente','costas']){const cv=$('#cv-'+lado);let ar=null,raf=0;
   const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height,cv.width/r.width]};
-  cv.addEventListener('pointerdown',e=>{const[x,y,k]=pt(e);const es=posicoes(P,lado);const m=14*k;
+  cv.addEventListener('pointerdown',e=>{const[x,y,k]=pt(e);const es=posicoes(P,lado).filter(q=>q.papel!=='carimbo');const m=14*k;
     const hit=es.reverse().find(q=>x>=q.x-m&&x<=q.x+q.w+m&&y>=q.y-m&&y<=q.y+q.h+m);
     ar={x0:e.clientX,y0:e.clientY,k,hit,moveu:false,res:hit&&x>q2(hit).x2-Math.max(28*k,hit.w*.25)&&y>q2(hit).y2-Math.max(28*k,hit.h*.35)};
     if(hit&&hit.papel==='barra'){ar.barra=true;ar.res=true;ar.vz0=+P.barraVz||1;ar.w0=hit.w;ar.cmW=hit.cm[0];ar.cx=hit.x+hit.w;ar.cy=hit.y+hit.h;ar.d0=Math.max(Math.hypot(hit.w,hit.h)*.6,Math.hypot(ar.cx-x,ar.cy-y))}
@@ -1491,6 +1536,13 @@ function migrar(q){if(!q)return q;const up=v=>v?String(v).toUpperCase():v;
   ['fr','co'].forEach(k=>{if(q[k])q[k].cor=up(q[k].cor)});q.sereiaCor=up(q.sereiaCor);q.carimboCor=up(q.carimboCor);(q.extras||[]).forEach(x=>x.cor=up(x.cor));
   if(q.ting&&!cores.ting.some(c=>c.n===q.ting)){const c=acharCor('ting',q.ting);q.ting=c?c.n:up(q.ting)}return q}
 P=migrar(P);pecas.forEach(migrar);
+if(!localStorage.getItem('sc_corMig1')){ // cores de tingimento: só COR + CÓDIGOS (sem nome fantasia)
+  const usados=new Set(cores.ting.map(c=>c.n));
+  for(const c of cores.ting){const tk=String(c.n).split(/\s+/);const f=FAMS.find(([a])=>a===tk[0]);if(!f)continue;tk.shift();
+    let i=tk.length;while(i>0&&(/\d/.test(tk[i-1])||tk[i-1]==='/'))i--;const cod=tk.slice(i).join(' '),fant=tk.slice(0,i).join(' ');
+    let novo=cod?f[1]+' '+cod:f[1]+(fant?' '+fant:'');if(usados.has(novo)&&novo!==c.n)novo=[f[1],fant,cod].filter(Boolean).join(' ');
+    if(novo!==c.n){const velho=c.n;usados.delete(velho);usados.add(novo);c.al=fant;c.n=novo;trocarNomeCor('ting',velho,novo)}}
+  gravar('cores2',cores);localStorage.setItem('sc_corMig1','1')}
 // linhas da ficha: o jeito que ele ajusta vira o padrão daquele artigo
 for(const q of[...pecas,P])if(q&&q.pts&&Object.keys(q.pts).length){LIN[q.artigo]=Object.assign(LIN[q.artigo]||{},q.pts);delete q.pts}
 gravar('linhas',LIN);gravar('atual',P);gravar('pecas',pecas);
