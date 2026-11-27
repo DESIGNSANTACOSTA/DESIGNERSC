@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611271215";</script>
+<script>var VERSAO="36";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -238,7 +238,7 @@ dialog::backdrop{background:#0006}
       <label class="btn" style="flex-direction:row;color:#fff;font-size:16px;align-items:center">Escolher arquivo (.xlsx)<input type="file" id="pd-arq" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>
     </div>
     <p class="aviso" style="margin:14px 0 6px">…ou preencha a planilha aqui (dá para colar várias células de uma vez, como no Excel):</p>
-    <div class="linha"><label>Cliente<input type="text" id="pl-cli"></label><label>Nº do pedido<input type="text" id="pl-num"></label><label>Previsão de entrega<input type="text" id="pl-prev"></label></div>
+    <div class="linha"><label>Cliente<input type="text" id="pl-cli"></label><label>Nº do pedido<input type="text" id="pl-num"></label><input type="hidden" id="pl-prev"></div>
     <div class="scroll" style="margin-top:10px"><table class="grade planilha" id="pl"></table></div>
     <label style="margin-top:10px">Observações<textarea id="pl-obs" placeholder="EX.: VAI TAG · PREÇO ETIQUETA SANTACOSTA"></textarea></label>
     <div class="botoes" style="margin-top:10px"><button class="btn" id="pd-ler">Ler planilha</button><button class="btn claro" id="pl-mais">+ Linha</button><button class="btn claro" id="pl-limpa">Limpar</button></div>
@@ -739,7 +739,7 @@ function listaEst(car){ // [valor, nome] para as caixas de estampa
 const listaCor=t=>[['__nova','+ NOVA COR…'],...cores[t].map(c=>[c.n,c.n])];
 function garantirOpcao(sel,v){if(v&&![...sel.options].some(o=>o.value===v)){garantirTexto(v);sel.add(new Option(v.startsWith('txt:')?v.slice(4).toUpperCase()+' (ALFABETO)':v,v),sel.options[1]||null)}}
 function montarForm(){
-  opcoes($('#f-artigo'),Object.entries(ART).map(([k,a])=>[k,a.nome]));
+  opcoes($('#f-artigo'),Object.entries(ART).map(([k,a])=>[k,a.nome]).sort((a,b)=>a[1].localeCompare(b[1],'pt')));
   opcoes($('#f-fr-est'),listaEst(),'SEM ESTAMPA');opcoes($('#f-co-est'),listaEst(),'SEM ESTAMPA');opcoes($('#f-barra'),listaEst(),'NADA NA BARRA');opcoes($('#f-carimbo'),listaEst(1),'SEM CARIMBO');
   $$('#t-peca .selpant').forEach(s=>opcoes(s,listaCor('pant')));opcoes($('#f-ting'),listaCor('ting'));
   $('#f-grade').innerHTML=`<table class="grade"><tr><th></th>${GRADE.map(g=>`<th>${g}</th>`).join('')}<th>TOTAL</th></tr>${[...LOJAS,'PROJETO'].map(l=>`<tr><th>${l}</th>${GRADE.map(g=>`<td><input inputmode="numeric" data-g="${l}|${g}"></td>`).join('')}<td class="tot" data-tl="${l}"></td></tr>`).join('')}<tr><th>GRADE TOTAL</th>${GRADE.map(g=>`<td class="tot" data-tg="${g}"></td>`).join('')}<td class="tot" data-tt></td></tr></table>`;
@@ -1254,7 +1254,7 @@ $('#md-lista').addEventListener('click',e=>{const b=e.target.closest('[data-mdv]
 // ---------- mockups (artigos) ----------
 function salvarArtx(){try{localStorage.setItem('sc_artx',JSON.stringify(ARTX));gravar('x',0);return true}catch(e){toast('Foto grande demais para guardar neste aparelho');return false}}
 function listarMockups(){
-  $('#mk-lista').innerHTML=Object.entries(ART).map(([k,a])=>{const im=IMG[`${k}-frente-peca`]||IMG[`${k}-costas-peca`];
+  $('#mk-lista').innerHTML=Object.entries(ART).sort((a,b)=>a[1].nome.localeCompare(b[1].nome,'pt')).map(([k,a])=>{const im=IMG[`${k}-frente-peca`]||IMG[`${k}-costas-peca`];
     const q={...novaPeca(),artigo:k,ting:'BRANCO',fr:{est:'',pos:'frontal',cor:'BRANCO',dist:a.frontal},co:{est:'',pos:'nuca',cor:'BRANCO',dist:a.nuca},barra:'',carimbo:''};
     const src=im?desenhar(q,IMG[`${k}-frente-peca`]?'frente':'costas',.35).toDataURL():'';
     return `<button class="cest" data-art="${k}"><div class="im" style="height:150px">${src?`<img src="${src}" style="max-height:140px" alt="">`:'SEM FOTO'}</div><b>${esc(a.nome)}</b>
@@ -1276,7 +1276,20 @@ $('#mk-lista').addEventListener('click',e=>{const b=e.target.closest('[data-art]
 $('#mk-novo').onclick=()=>abrirArt(null);
 // separa a foto: frente (esquerda) e costas (direita); e tira o cabide (madeira/gancho) para uma camada própria
 function cortar(c,x0,x1){const k=document.createElement('canvas');k.width=x1-x0;k.height=c.height;k.getContext('2d').drawImage(c,x0,0,x1-x0,c.height,0,0,x1-x0,c.height);return k}
-function separarFoto(c){const W=c.width,H=c.height,d=c.getContext('2d').getImageData(0,0,W,H).data,op=(i,j)=>d[(j*W+i)*4+3]>30;
+function tirarFundo(c){ // foto com fundo (cinza/branco/colorido): tira o fundo ligado às bordas
+  const W=c.width,H=c.height,x=c.getContext('2d'),im=x.getImageData(0,0,W,H),a=im.data;
+  const cantos=[0,W-1,(H-1)*W,H*W-1];if(cantos.filter(p=>a[p*4+3]<20).length>=3)return c; // já é transparente
+  const fundo=new Uint8Array(W*H),fila=new Int32Array(W*H);let fi=0,ff=0;
+  const ref=cantos.map(p=>[a[p*4],a[p*4+1],a[p*4+2]]);const perto=p=>ref.some(r=>Math.abs(a[p*4]-r[0])+Math.abs(a[p*4+1]-r[1])+Math.abs(a[p*4+2]-r[2])<60);
+  const dif=(p,q)=>Math.abs(a[p*4]-a[q*4])+Math.abs(a[p*4+1]-a[q*4+1])+Math.abs(a[p*4+2]-a[q*4+2]);
+  const vai=(q,p)=>{if(!fundo[q]&&perto(q)&&dif(p,q)<14){fundo[q]=1;fila[ff++]=q}};
+  for(let i=0;i<W;i++)for(const p of[i,(H-1)*W+i])if(!fundo[p]&&perto(p)){fundo[p]=1;fila[ff++]=p}
+  for(let j=0;j<H;j++)for(const p of[j*W,j*W+W-1])if(!fundo[p]&&perto(p)){fundo[p]=1;fila[ff++]=p}
+  while(fi<ff){const p=fila[fi++],px=p%W;if(px>0)vai(p-1,p);if(px<W-1)vai(p+1,p);if(p>=W)vai(p-W,p);if(p<W*(H-1))vai(p+W,p)}
+  for(let p=0;p<W*H;p++)if(fundo[p])a[p*4+3]=0;
+  // sobra: pontinhos soltos do fundo e borda suave
+  x.putImageData(im,0,0);return c}
+function separarFoto(c){c=tirarFundo(c);const W=c.width,H=c.height,d=c.getContext('2d').getImageData(0,0,W,H).data,op=(i,j)=>d[(j*W+i)*4+3]>30;
   if(W<H*1.4)return {frente:c};let melhor=-1,menor=1e9;
   for(let i=Math.round(W*.35);i<Math.round(W*.65);i++){let n=0;for(let j=0;j<H;j+=2)if(op(i,j))n++;if(n<menor||(n===menor&&Math.abs(i-W/2)<Math.abs(melhor-W/2))){menor=n;melhor=i}}
   return {frente:cortar(c,0,melhor),costas:cortar(c,melhor,W)}}
@@ -1507,9 +1520,10 @@ function lerPedido(G){
   for(let r=0;r<G.length&&hr<0;r++){const row=G[r]||[];const i=row.findIndex(x=>N(x)==='PRODUTO');if(i>=0&&row.some(x=>N(x)==='COR')){hr=r;row.forEach((x,c)=>{if(String(x).trim())col[c]=N(x)})}}
   if(hr<0)return {erro:'Não achei a linha com PRODUTO e COR.'};
   const cPor=nome=>+Object.keys(col).find(c=>col[c]===nome);
+  const cRef=+Object.keys(col).find(c=>/^(REF|REFERENCIA|COD|CODIGO)\.?$/.test(col[c]));
   const cProd=cPor('PRODUTO'),cCor=cPor('COR'),cEst=cPor('ESTAMPA'),cCE=cPor('COR ESTAMPA'),cEt=cPor('PRECO ETIQUETA');
   const tam={};for(const c in col){const m=col[c].match(/^(PP|P|M|G|2G|3G|4G)(\s*\/\s*\d+)?$/);if(m)tam[c]=m[1]}
-  const conhecidas=new Set([cProd,cCor,cEst,cCE,cEt,...Object.keys(tam).map(Number)].filter(x=>!isNaN(x)));
+  const conhecidas=new Set([cRef,cProd,cCor,cEst,cCE,cEt,...Object.keys(tam).map(Number)].filter(x=>!isNaN(x)));
   const ignorar=['TOTAL','PRECO FATURAMENTO','FINAL PEDIDO','VALOR FINAL'];
   const linhas=[];let vazias=0;
   for(let r=hr+1;r<G.length;r++){const pr=String(cel(r,cProd)).trim();
@@ -1519,7 +1533,7 @@ function lerPedido(G){
     const notas=[];const et=String(cel(r,cEt)).trim();
     if(et){const n=+et.replace(',','.');notas.push('PREÇO ETIQUETA: '+(isNaN(n)?et:'R$ '+n.toFixed(2).replace('.',',')))}
     (G[r]||[]).forEach((x,c)=>{if(conhecidas.has(c)||!String(x).trim())return;if(col[c]&&ignorar.includes(col[c]))return;if(!col[c]&&/^[\d.,]+$/.test(String(x).trim()))return;notas.push(String(x).trim())});
-    linhas.push({produto:pr,cor:String(cel(r,cCor)).trim(),estampa:String(cel(r,cEst)).trim(),corEst:String(cel(r,cCE)).trim(),grade,notas})}
+    linhas.push({ref:isNaN(cRef)?'':String(cel(r,cRef)).trim(),produto:pr,cor:String(cel(r,cCor)).trim(),estampa:String(cel(r,cEst)).trim(),corEst:String(cel(r,cCE)).trim(),grade,notas})}
   // anotações soltas perto da tabela (ex.: VAI TAG), antes de MOCKUPS / FATURAMENTO
   const soltas=[];let fim=G.length;
   for(let r=hr+1;r<G.length;r++)if((G[r]||[]).some(x=>/MOCKUPS? APROVADOS|DADOS PARA FATURAMENTO/.test(N(x)))){fim=r;break}
@@ -1565,8 +1579,9 @@ function acharCor(tipo,t){
   return null}
 function acharEstampa(t){const x=N(t);if(!x)return null;return Object.keys(EST).find(k=>N(EST[k].nome).split(' (')[0]===x||N(k).replace(/-/g,' ')===x)||null}
 let pedido=ler('pedido',null);
-function revisar(G){
-  const r=lerPedido(G);if(r.erro){$('#pd-rev').innerHTML=`<div class="vazio">${esc(r.erro)} Confira se copiou a planilha inteira.</div>`;return}
+function revisar(G){try{revisar0(G)}catch(err){$('#pd-rev').innerHTML=`<div class="vazio">Não consegui montar as peças (${esc(err.message||err)}). Me manda um print desta mensagem.</div>`;$('#pd-rev').scrollIntoView({behavior:'smooth'})}}
+function revisar0(G){
+  const r=lerPedido(G);if(obsGrade){r.obs=obsGrade;obsGrade=null}if(r.erro){$('#pd-rev').innerHTML=`<div class="vazio">${esc(r.erro)} Confira se copiou a planilha inteira.</div>`;return}
   pedido=r;r.carimbo='';r.carimboCor='GREY 3C';const novasT=[],novasP=[],al={};
   const pcs=r.linhas.map((l,i)=>{
     const a=[];const artigo=acharArtigo(l.produto);if(!artigo)a.push(`Não reconheci o produto “${l.produto}”: usei camiseta unissex. Se não for, troque o artigo.`);
@@ -1579,13 +1594,14 @@ function revisar(G){
     const q=pecaDoPedido({...l,artigo:artigo||'camiseta-unissex',ting:ct.n,est,cp:cp?cp.n:'BRANCO'},i);al[q.id]=a;return q});
   novasT.forEach(n=>cores.ting.push({n,h:'#bdbdbd'}));novasP.forEach(n=>cores.pant.push({n,h:'#9e9e9e'}));gravar('cores2',cores);
   r.ids=pcs.map(q=>q.id);r.alertas=al;pecas=[...pcs,...pecas.filter(p=>!p.rascunho||mapa.itens.includes(p.id))];gravar('pecas',pecas);lote=r.ids.slice();gravar('lote',lote);gravar('pedido',{info:r.info,obs:r.obs,ids:r.ids,alertas:al,carimbo:'',carimboCor:'GREY 3C'});
+  $('#pl-cli').value=r.info.cliente||'';$('#pl-num').value=r.info.pedido||'';$('#pl-obs').value=(r.obs||[]).join('\n');
   montarForm();mostrarPedido();setTimeout(()=>$('#pd-rev').scrollIntoView({behavior:'smooth'}),50);
 }
 function pecaDoPedido(l,i){
   const A=ART[l.artigo],q=novaPeca();
   Object.assign(q,{id:'p'+Date.now()+'_'+i,artigo:l.artigo,ting:l.ting,tingTexto:l.cor.toUpperCase(),modelo:'',
     nome:[pedido.info.cliente,l.estampa].filter(Boolean).join(' - ').toUpperCase(),pedido:(pedido.info.pedido||'').toUpperCase(),previsao:(pedido.info.previsao||'').toUpperCase(),
-    colecao:'PROJETO',ref:'',rascunho:1,costura:A.costura,grade:{},produto:l.produto,notas:l.notas,
+    colecao:'PROJETO',ref:(l.ref||'').toUpperCase(),rascunho:1,costura:A.costura,grade:{},produto:l.produto,notas:l.notas,
     obs:[...l.notas,...pedido.obs].join('\n').toUpperCase()});
   q.fr={est:A.fr?(l.est||''):'',pos:'frontal',cor:l.cp,dist:A.frontal,tipo:'ESTAMPA'};
   q.co={est:A.co?'sereia-santacosta':'',pos:'nuca',cor:l.cp,dist:A.nuca,tipo:'ESTAMPA'};
@@ -1598,17 +1614,15 @@ function mostrarPedido(){
   const r=pedido,i=r.info,ps=r.ids.map(pecaPorId).filter(Boolean);
   const op=(l,v)=>l.map(([k,t])=>`<option value="${esc(k)}"${k===v?' selected':''}>${esc(t)}</option>`).join('');
   $('#pd-rev').innerHTML=`<div class="bloco" style="margin-bottom:10px"><h3>Pedido ${esc(i.cliente||'')} — ${ps.length} peça${ps.length>1?'s':''}</h3>
-   <div class="linha"><label>Nº do pedido<input type="text" data-pd="pedido" value="${esc(i.pedido||'')}"></label>
-   <label>Previsão de entrega<input type="text" data-pd="previsao" value="${esc(i.previsao||'')}"></label>
-   <label>Cliente<input type="text" data-pd="cliente" value="${esc(i.cliente||'')}"></label></div>
    <div class="linha" style="margin-top:10px"><label>Carimbo interno (todas as peças)<select id="pd-car" class="selcar">${op([['','ESCOLHER CARIMBO…'],...listaEst(1)],r.carimbo||'')}</select></label>
    <label>Cor do carimbo<select id="pd-carcor" class="selpant">${op(listaCor('pant'),r.carimboCor||'GREY 3C')}</select></label></div>
-   <label style="margin-top:10px">Observações (vão para todas as fichas)<textarea data-pd="obs">${esc(r.obs.join('\n'))}</textarea></label></div>
+   </div>
    <div class="rev">${ps.map(p=>{const a=(r.alertas||{})[p.id]||[];return `<div class="peca pd-peca" data-id="${p.id}">
      <div class="vistinhas"><img data-z1="frente" alt="" src="${desenhar(p,'frente').toDataURL()}"><img data-z1="costas" alt="" src="${desenhar(p,'costas').toDataURL()}"><span class="aviso">toque para ver grande</span></div>
      <div><b>${esc(p.produto||ART[p.artigo].nome)}</b> · <span class="aviso">${esc(Object.entries(p.grade).map(([g,v])=>g.split('|')[1]+' '+v).join(' · '))}</span>
      <div class="linha" style="margin-top:8px">
-      <label>Artigo<select data-pp="artigo">${op(Object.entries(ART).map(([k,x])=>[k,x.nome]),p.artigo)}</select></label>
+      <label>Ref.<input type="text" data-pp="ref" value="${esc(p.ref||'')}" style="max-width:130px"></label>
+      <label>Artigo<select data-pp="artigo">${op(Object.entries(ART).map(([k,x])=>[k,x.nome]).sort((a,b)=>a[1].localeCompare(b[1],'pt')),p.artigo)}</select></label>
       <label>Tingimento<select data-pp="ting" class="selting">${op([[p.ting,p.ting],...listaCor('ting').filter(([k])=>k!==p.ting)],p.ting)}</select></label>
       <label>Estampa da frente<select data-pp="est" class="selest">${op([['','SEM ESTAMPA'],...(p.fr.est&&!listaEst().some(([k])=>k===p.fr.est)?[[p.fr.est,p.fr.est.startsWith('txt:')?p.fr.est.slice(4).toUpperCase()+' (ALFABETO)':p.fr.est]]:[]),...listaEst()],p.fr.est)}</select></label>
       <label>Ou escreva (só nesta peça)<input type="text" data-pp="txt" value="${esc(p.fr.est&&p.fr.est.startsWith('txt:')&&!txtSalvo(p.fr.est)?p.fr.est.slice(4).toUpperCase():'')}"></label>
@@ -1629,6 +1643,7 @@ $('#pd-rev').addEventListener('change',e=>{const t=e.target;if(!pedido||(t.value
   if(t.id==='pd-car'||t.id==='pd-carcor'){pedido.carimbo=$('#pd-car').value;pedido.carimboCor=$('#pd-carcor').value;emTodas(q=>{q.carimbo=pedido.carimbo;q.carimboCor=pedido.carimboCor});salvarPedido();return}
   const box=t.closest('.pd-peca');if(!box)return;const q=pecaPorId(box.dataset.id),k=t.dataset.pp;if(!q)return;
   if(k==='artigo'){const A=ART[t.value];q.artigo=t.value;q.fr.dist=A.frontal;q.co.dist=A.nuca;q.costura=A.costura;if(!A.fr){q.fr.est='';q.barra=''}if(!A.co)q.co.est='';pedido.alertas[q.id]=(pedido.alertas[q.id]||[]).filter(x=>!x.startsWith('Não reconheci'))}
+  if(k==='ref')q.ref=t.value.trim().toUpperCase();
   if(k==='ting'){q.ting=t.value;q.tingTexto=t.value;pedido.alertas[q.id]=(pedido.alertas[q.id]||[]).filter(x=>!x.startsWith('Cor “'))}
   if(k==='est'){q.fr.est=t.value;setTimeout(()=>novaEstampaTalvez(q.fr.est),50)}
   if(k==='txt'){const v=t.value.trim();q.fr.est=v?'txt:'+v.toLowerCase():''}
@@ -1643,7 +1658,7 @@ $('#pd-arq').onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.
   if(/\.xls$/i.test(f.name)){$('#pd-rev').innerHTML='<div class="vazio">Esse arquivo é do Excel antigo (.xls). Abra no Excel e salve como .xlsx, ou copie as células e cole na planilha abaixo.</div>';return}
   $('#pd-rev').innerHTML='<div class="vazio">Lendo a planilha…</div>';
   try{revisar(await lerXLSX(await f.arrayBuffer()))}catch(er){$('#pd-rev').innerHTML=`<div class="vazio">Não consegui ler esse arquivo (${esc(er.message||er)}). Copie as células da planilha e cole na tabela abaixo, ou me mande o arquivo.</div>`}};
-const PLC=['PRODUTO','COR','ESTAMPA','COR ESTAMPA','PP','P','M','G','2G','3G','4G','OBS'];
+const PLC=['REF','PRODUTO','COR','ESTAMPA','COR ESTAMPA','PP','P','M','G','2G','3G','4G','OBS'];
 function plMontar(n){const t=$('#pl');const antes=[...t.querySelectorAll('tr.d')].map(tr=>[...tr.querySelectorAll('input')].map(i=>i.value));
   t.innerHTML=`<tr>${PLC.map(c=>`<th>${c}</th>`).join('')}</tr>`+Array.from({length:n},(_,r)=>`<tr class="d">${PLC.map((c,k)=>`<td><input data-r="${r}" data-c="${k}" value="${esc((antes[r]||[])[k]||'')}"></td>`).join('')}</tr>`).join('')}
 plMontar(6);
@@ -1655,11 +1670,16 @@ $('#t-pedido').addEventListener('paste',e=>{const t=(e.clipboardData||window.cli
   const i=e.target.closest('#pl input');if(!i)return;const r0=+i.dataset.r,c0=+i.dataset.c;
   if($$('#pl tr.d').length<r0+G.length)plMontar(r0+G.length);
   G.forEach((row,dr)=>row.forEach((v,dc)=>{const el=$(`#pl input[data-r="${r0+dr}"][data-c="${c0+dc}"]`);if(el)el.value=v.trim()}))});
+for(const[id,k]of[['pl-cli','cliente'],['pl-num','pedido'],['pl-obs','obs']])$('#'+id).addEventListener('change',()=>{if(!pedido||!pedido.ids)return;const v=$('#'+id).value.toUpperCase();
+  if(k==='obs'){pedido.obs=v.split('\n').filter(x=>x.trim());emTodas(q=>q.obs=[...(q.notas||[]),...pedido.obs].join('\n').toUpperCase())}
+  else{pedido.info[k]=v;emTodas(q=>{if(k==='cliente')q.nome=[v,String(q.nome||'').split(' - ').slice(1).join(' - ')].filter(Boolean).join(' - ');else q[k]=v})}
+  salvarPedido();mostrarPedido()});
+let obsGrade=null;
 $('#pd-ler').onclick=()=>{
-  const G=[['CLIENTE:',$('#pl-cli').value],['NUMERO PEDIDO FABRICA',$('#pl-num').value],['PREVISÃO ENTREGA:',$('#pl-prev').value],PLC];
-  $$('#pl tr.d').forEach(tr=>{const v=[...tr.querySelectorAll('input')].map(i=>i.value.trim());if(v[0])G.push(v)});
-  G.push([]);G.push(['OBSERVAÇÕES:']);$('#pl-obs').value.split('\n').filter(x=>x.trim()).forEach(x=>G.push([x]));
-  if(G.length<6){toast('Preencha pelo menos uma linha com o produto');return}
+  const G=[['CLIENTE:',$('#pl-cli').value],['NUMERO PEDIDO FABRICA',$('#pl-num').value],PLC];
+  $$('#pl tr.d').forEach(tr=>{const v=[...tr.querySelectorAll('input')].map(i=>i.value.trim());if(v[1])G.push(v)});
+  obsGrade=$('#pl-obs').value.split('\n').map(x=>x.trim()).filter(Boolean);
+  if(G.length<4){toast('Preencha pelo menos uma linha com o produto');return}
   revisar(G)};
 let lote=ler('lote',[]);
 function mostrarLote(){const ps=lote.map(id=>pecas.find(p=>p.id===id)).filter(Boolean);
