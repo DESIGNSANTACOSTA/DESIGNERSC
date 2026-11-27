@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611270900";</script>
+<script>var VERSAO="202611270930";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -248,6 +248,7 @@ dialog::backdrop{background:#0006}
 <section class="tela" id="t-lote">
   <div class="botoes naoimprime" style="margin-bottom:12px">
     <button class="btn" id="b-png-lote">Salvar todas em PNG</button>
+    <button class="btn claro" id="b-pdf-lote">Salvar PDF / imprimir todas</button>
     <button class="btn claro" id="b-lote-mapa">Pôr todas no mapa</button>
     <button class="btn claro" data-ir="pedido">Voltar para o pedido</button>
   </div>
@@ -361,6 +362,7 @@ dialog::backdrop{background:#0006}
 <section class="tela" id="t-ficha">
   <div class="botoes naoimprime" style="margin-bottom:12px">
     <button class="btn" id="b-png-ficha">Salvar ficha em PNG</button>
+    <button class="btn claro" id="b-pdf-ficha">Salvar PDF / imprimir</button>
     <button class="btn claro" id="b-nota">+ Nota de costura</button>
     <button class="btn claro" id="b-fx">+ Estampa</button>
     <button class="btn claro" id="b-org">Quadros no lugar padrão</button>
@@ -602,7 +604,7 @@ function toast(t){const e=$('#toast');e.textContent=t;e.style.opacity=1;clearTim
 // ---------- imagens ----------
 const IMG={};
 let UPS=ler('ups',[]); // estampas e carimbos que ele sobe: {k,nome,w,h,src,car}
-UPS.forEach(u=>{EST[u.k]={nome:u.nome,w:u.w,h:u.h,car:u.car,up:1}});
+UPS.forEach(u=>{EST[u.k]={...(EST[u.k]||{}),nome:u.nome,w:u.w,h:u.h,car:u.car,up:1,knock:u.knock}});
 function carregar(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
 async function preparar(){
   const lista=[];
@@ -694,7 +696,7 @@ function desenhar(p,lado,k=1){
   for(const e of posicoes(p,lado)){const im=IMG['e-'+e.chave];if(!im)continue;
     const w=Math.max(1,Math.round(e.w*k)),h=Math.max(1,Math.round(e.h*k));
     const dg=p.deg&&p.deg.on?p.deg:null;if(e.clip){y.save();y.beginPath();y.rect(0,0,W,e.clip*k);y.clip()}
-    y.drawImage(/ILUSTRAD|ORIGINAL/.test(String(e.cor).toUpperCase())?im:tingir(im,hexDe('pant',e.cor),w,h,dg?hexDe('pant',dg.c2):null,dg&&dg.dir),e.x*k,e.y*k,w,h);if(e.clip)y.restore()}
+    y.drawImage(/ILUSTRAD|ORIGINAL/.test(String(e.cor).toUpperCase())?im:tingir(daTinta(e.chave,im),hexDe('pant',e.cor),w,h,dg?hexDe('pant',dg.c2):null,dg&&dg.dir),e.x*k,e.y*k,w,h);if(e.clip)y.restore()}
   const T=document.createElement('canvas');T.width=W;T.height=H;const t=T.getContext('2d');
   t.drawImage(L,0,0);t.globalCompositeOperation='multiply';t.filter='brightness(1.1)';t.drawImage(base,0,0,W,H);t.filter='none';
   t.globalCompositeOperation='destination-in';t.drawImage(L,0,0);
@@ -784,8 +786,11 @@ function textoFrente(p){
   return `${String(f.dist).replace('.',',')}cm ABAIXO DA COSTURA DA GOLA MEDINDO PELA PARTE BAIXA DA ESTAMPA`;
 }
 const cacheURL={};
+function tinta(im){if(im._tinta)return im._tinta;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);
+  const d=x.getImageData(0,0,c.width,c.height),a=d.data;for(let i=0;i<a.length;i+=4){const l=.3*a[i]+.59*a[i+1]+.11*a[i+2];a[i+3]=a[i+3]*(255-l)/255}x.putImageData(d,0,0);return im._tinta=c}
+const daTinta=(chave,im)=>EST[chave]&&EST[chave].knock?tinta(im):im;
 function pretoURL(chave){garantirTexto(chave);if(cacheURL[chave])return cacheURL[chave];const im=IMG['e-'+chave];if(!im)return '';const s=Math.min(1,1400/im.width);
-  return cacheURL[chave]=tingir(im,'#111111',Math.round(im.width*s),Math.round(im.height*s)).toDataURL()} // na ficha a arte vai em preto, como nas fichas da Santacosta
+  return cacheURL[chave]=tingir(daTinta(chave,im),'#111111',Math.round(im.width*s),Math.round(im.height*s)).toDataURL()} // na ficha a arte vai em preto, como nas fichas da Santacosta
 function fichaHTML(p){
   const A=ART[p.artigo],n=k=>+p.grade[k]||0, num=v=>String(v).replace('.',',');
   const ed=(c,v)=>`<span class="ed" contenteditable="true" data-c="${c}">${esc(v==null?'':String(v))}</span>`;
@@ -927,6 +932,7 @@ async function salvarFichaPNG(raiz){if(!raiz)return;if(pecaDe(raiz)===P)salvar(t
   const file=new File([blob],nome,{type:'image/png'});
   if(navigator.canShare&&navigator.canShare({files:[file]})&&matchMedia('(pointer:coarse)').matches){try{await navigator.share({files:[file],title:nome});return}catch(e){if(e.name==='AbortError')return}}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},3000);toast('Ficha salva em PNG')}
+$('#b-pdf-ficha').onclick=()=>{if(pecaDe($('#ficha .fichaA'))===P)salvar(true);imprimir('ficha')};$('#b-pdf-lote').onclick=()=>imprimir('lote');
 $('#b-png-ficha').onclick=()=>salvarFichaPNG($('#ficha .fichaA'));
 
 // ---------- telas ----------
@@ -1285,18 +1291,25 @@ async function lerPDF(f){const pdfjs=await import('./arquivos/pdfjs/pdf.min.mjs'
 function lerImagem(f){return new Promise((ok,erro)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,2400/Math.max(im.width,im.height)),c=document.createElement('canvas');
   c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok({c,cmPorPx:0})};im.onerror=erro;im.src=r.result};r.readAsDataURL(f)})}
 async function processarArquivo(f){const pdf=/pdf$/i.test(f.type)||/\.pdf$/i.test(f.name);const r=pdf?await lerPDF(f):await lerImagem(f);
-  let c=r.c,larg=0;const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),a=d.data;let x0=c.width,x1=-1,y0=c.height,y1=-1;
-  for(let i=0,p=0;i<a.length;i+=4,p++){if(a[i]>242&&a[i+1]>242&&a[i+2]>242)a[i+3]=0; // fundo branco vira transparente
-    if(a[i+3]>10){const px=p%c.width,py=(p/c.width)|0;if(px<x0)x0=px;if(px>x1)x1=px;if(py<y0)y0=py;if(py>y1)y1=py}}
-  x.putImageData(d,0,0);
+  let c=r.c,larg=0;const x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),a=d.data,W=c.width,H=c.height;let x0=W,x1=-1,y0=H,y1=-1;
+  // só o branco que encosta na borda vira transparente (o branco DENTRO da arte, como uma logo branca num círculo preto, fica)
+  const fundo=new Uint8Array(W*H),fila=new Int32Array(W*H);let fi=0,ff=0;const claro=p=>a[p*4+3]<20||(a[p*4]>235&&a[p*4+1]>235&&a[p*4+2]>235);
+  const pus=p=>{if(!fundo[p]&&claro(p)){fundo[p]=1;fila[ff++]=p}};
+  for(let i=0;i<W;i++){pus(i);pus((H-1)*W+i)}for(let j=0;j<H;j++){pus(j*W);pus(j*W+W-1)}
+  while(fi<ff){const p=fila[fi++],px=p%W;if(px>0)pus(p-1);if(px<W-1)pus(p+1);if(p>=W)pus(p-W);if(p<W*(H-1))pus(p+W)}
+  let op=0,cl=0,es=0;
+  for(let p=0;p<W*H;p++){const i=p*4;if(fundo[p])a[i+3]=0;
+    if(a[i+3]>10){const px=p%W,py=(p/W)|0;if(px<x0)x0=px;if(px>x1)x1=px;if(py<y0)y0=py;if(py>y1)y1=py}
+    if(a[i+3]>200){op++;const l=.3*a[i]+.59*a[i+1]+.11*a[i+2];if(l>200)cl++;else if(l<90)es++}}
+  x.putImageData(d,0,0);const knock=op>0&&cl/op>.03&&es/op>.1; // arte com claro e escuro: o claro vira "vazado" quando pinta de uma cor só
   if(x1>=x0){const w=x1-x0+1,h=y1-y0+1,s=Math.min(1,2000/Math.max(w,h)),k=document.createElement('canvas');k.width=Math.round(w*s);k.height=Math.round(h*s); // corta a sobra em volta
     k.getContext('2d').drawImage(c,x0,y0,w,h,0,0,k.width,k.height);if(r.cmPorPx)larg=Math.round(w*r.cmPorPx*10)/10;c=k}
-  return {c,larg,pdf}}
+  return {c,larg,pdf,knock}}
 const miniCanvas=c=>{const v=document.createElement('canvas');v.width=c.width;v.height=c.height;v.getContext('2d').drawImage(c,0,0);v.style.maxHeight='110px';v.style.maxWidth='100%';return v};
 $('#du-arq').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   $('#du-prev').innerHTML='<span class="aviso">Lendo o arquivo…</span>';
   let r;try{r=await processarArquivo(f)}catch(err){$('#du-prev').innerHTML='<span class="aviso">Não consegui abrir este arquivo.</span>';return}
-  upImg=r.c;if(r.larg)$('#du-larg').value=r.larg;$('#du-prev').innerHTML='';$('#du-prev').append(miniCanvas(r.c));
+  upImg=r.c;upImg._knock=r.knock;if(r.larg)$('#du-larg').value=r.larg;$('#du-prev').innerHTML='';$('#du-prev').append(miniCanvas(r.c));
   if(r.pdf)$('#du-prev').insertAdjacentHTML('beforeend','<div class="aviso" style="width:100%;text-align:center">PDF lido em alta qualidade. A largura real veio do arquivo.</div>');
   if(!$('#du-nome').value)$('#du-nome').value=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').toUpperCase()};
 let trocaArq=null;
@@ -1304,13 +1317,13 @@ $('#de-arq').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!
   try{trocaArq=await processarArquivo(f)}catch(err){$('#de-prev').innerHTML='<span class="aviso">Não consegui abrir este arquivo.</span>';return}
   $('#de-prev').innerHTML='';$('#de-prev').append(miniCanvas(trocaArq.c));if(trocaArq.larg)$('#de-larg').value=trocaArq.larg;toast('Arquivo novo pronto. Toque em Guardar.')};
 function aplicarTroca(k){const r=trocaArq;trocaArq=null;if(!r)return;const E=EST[k]||{},w=+String($('#de-larg').value).replace(',','.')||r.larg||E.w||10,h=w*r.c.height/r.c.width;
-  const u={k,nome:(INFO[k]&&INFO[k].nome)||nomeEst(k),w,h,src:r.c.toDataURL('image/png'),car:E.car?1:0};const i=UPS.findIndex(x=>x.k===k);const antes=UPS.slice();if(i>=0)UPS[i]=u;else UPS.push(u);
+  const u={k,nome:(INFO[k]&&INFO[k].nome)||nomeEst(k),w,h,src:r.c.toDataURL('image/png'),car:E.car?1:0,knock:r.knock?1:0};const i=UPS.findIndex(x=>x.k===k);const antes=UPS.slice();if(i>=0)UPS[i]=u;else UPS.push(u);
   try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS=antes;toast('Arquivo grande demais para guardar neste aparelho');return}
-  EST[k]={...E,nome:u.nome,w,h,up:1};IMG['e-'+k]=r.c;delete cacheURL[k];pintarEditor()}
+  EST[k]={...E,nome:u.nome,w,h,up:1,knock:u.knock};IMG['e-'+k]=r.c;delete cacheURL[k];pintarEditor()}
 $('#dlg-up').addEventListener('close',()=>{const {sel,car}=subindo||{};subindo=null;if($('#dlg-up').returnValue!=='ok'||!upImg){if(sel)sel.dispatchEvent(new Event('voltar'));return}
   const nome=($('#du-nome').value||'ESTAMPA').toUpperCase(),w=+$('#du-larg').value||10,h=w*upImg.height/upImg.width,k='up:'+Date.now(),src=upImg.toDataURL('image/png');
-  const u={k,nome,w,h,src,car:car?1:0};UPS.push(u);try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS.pop();toast('Arquivo grande demais para guardar neste aparelho');return}
-  EST[k]={nome:u.nome,w,h,car:u.car,up:1};IMG['e-'+k]=upImg;
+  const u={k,nome,w,h,src,car:car?1:0,knock:upImg._knock?1:0};UPS.push(u);try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS.pop();toast('Arquivo grande demais para guardar neste aparelho');return}
+  EST[k]={nome:u.nome,w,h,car:u.car,up:1,knock:u.knock};IMG['e-'+k]=upImg;
   if(sel){garantirOpcao(sel,k);sel.querySelector(`option[value="${k}"]`).textContent=u.nome;sel.value=k;sel.dispatchEvent(new Event('change',{bubbles:true}))}
   atualizarTudo();if($('#t-estampas').classList.contains('on'))listarEst();abrirEst(k)});
 
