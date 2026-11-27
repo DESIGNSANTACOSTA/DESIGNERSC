@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="41";</script>
+<script>var VERSAO="42";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -62,9 +62,10 @@ header .marca img{height:28px;filter:invert(1)}
 nav{display:flex;gap:4px;flex-wrap:wrap}
 nav button{background:transparent;border:1px solid #ffffff40;color:#fff;border-radius:999px;padding:8px 16px;min-height:44px;cursor:pointer}
 nav button.on{background:#fff;color:var(--ink)}
-main{padding:16px max(16px,env(safe-area-inset-left)) 40px;max-width:1400px;margin:0 auto}
+main{padding:16px max(16px,env(safe-area-inset-left)) 40px;max-width:min(2200px,100%);margin:0 auto}
+@media(min-width:1200px){main{padding-left:28px;padding-right:28px}}
 .tela{display:none}.tela.on{display:block}
-.editor{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.editor{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(360px,1fr);gap:20px;align-items:start}
 @media(max-width:900px){.editor{grid-template-columns:minmax(0,1fr)}}
 .palco{background:var(--card);border-radius:14px;padding:12px;position:sticky;top:76px}
 @media(max-width:900px){.palco{position:static}}
@@ -186,8 +187,9 @@ span.ed:empty,div.ed:empty{display:inline-block;min-width:40px;min-height:1em}
 #zoom[hidden]{display:none}
 .zbar{display:flex;gap:8px;align-items:center;padding:10px max(12px,env(safe-area-inset-left))}
 .zbar .btn{min-width:48px;font-size:18px}
-.zarea{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;text-align:center}
-.zarea img{width:100%;max-width:none;height:auto;background:#fff}
+.zarea{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;align-items:center;justify-content:center;min-height:0}
+.zarea img{max-width:100%;max-height:100%;width:auto;height:auto;background:#fff;object-fit:contain;margin:auto}
+.zarea.z img{max-width:none;max-height:none}
 /* pedido */
 .vistinhas{display:grid;grid-template-columns:1fr 1fr;gap:4px;align-content:start}
 .vistinhas img{width:100%!important;height:120px!important;object-fit:contain;background:#faf8f5;border-radius:8px;cursor:zoom-in}
@@ -278,7 +280,7 @@ dialog::backdrop{background:#0006}
        <div class="linha">
         <label>Estampa da frente<select id="f-fr-est" class="selest"></select></label>
         <label>Ou escreva (só nesta peça)<input type="text" id="f-fr-txt" placeholder="EX.: ITAPOÁ"></label>
-        <label>Onde<select id="f-fr-pos"><option value="frontal">Frontal (peito)</option><option value="mini">Mini (lado do peito)</option></select></label>
+        <label>Onde<select id="f-fr-pos"><option value="frontal">Frontal (peito)</option><option value="mini">Mini — lado esquerdo de quem veste</option><option value="mini-d">Mini — lado direito de quem veste</option></select></label>
         <label id="l-fr-dist" style="display:none">Distância da gola (cm)<input type="number" step="0.5" id="f-fr-dist"></label>
         <label>Tamanho no desenho<input type="number" step="0.1" min="0.1" id="f-fr-larg"></label>
         <label>Tipo<select id="f-fr-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
@@ -320,8 +322,8 @@ dialog::backdrop{background:#0006}
       <div class="pest" data-p="x"><div id="extras-todas"></div></div>
       <h4 class="sub">Cor das estampas — muda todas juntas</h4>
       <div class="linha">
-        <label>Cor<select id="f-cor-todas" class="selpant"></select></label>
-        <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute)">Degradê<div id="dg-w" style="position:relative;color:var(--ink)"><button type="button" class="cbx-b" id="dg-b"></button><div class="cbx-p" id="dg-p" hidden style="left:auto;right:0;width:min(360px,calc(100vw - 32px))"></div></div></div>
+        <div hidden><select id="f-cor-todas" class="selpant"></select></div>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute);flex:1 1 100%">Cor<div id="dg-w" style="position:relative;color:var(--ink)"><button type="button" class="cbx-b" id="dg-b"></button><div class="cbx-p" id="dg-p" hidden style="left:auto;right:0;width:min(360px,calc(100vw - 32px))"></div></div></div>
       </div>
     </div>
     <details class="bloco" style="display:none">
@@ -601,7 +603,7 @@ const nomeEst=k=>String((INFO[k]&&INFO[k].nome)||(k.startsWith('txt:')?k.slice(4
 const rotuloEst=k=>{const E=EST[k],I=INFO[k]||{};const t=I.larg?String(I.larg).replace('.',',')+' CM':(E?String(Math.round(E.w*10)/10).replace('.',',')+' CM':'');return nomeEst(k)+(k.startsWith('txt:')?' (ALFABETO)':'')+(t?' · '+t:'')};
 const GRADE=['PP','P','M','G','2G','3G','4G'], LOJAS=['BRAVA','E-COMM','GUARDA','BALNEÁRIO'];
 const TING0=[["AVELÃ", "#c45226"], ["RAMI", "#c8b294"], ["AM AÇAFRÃO 1006P", "#e1be63"], ["AM MANTEIGA 10390", "#ebd394"], ["LJ LARANJA 1228P / 11315", "#ff6b05"], ["CL PÊSSEGO 1430P", "#f57278"], ["VM JELLY NEW", "#b03740"], ["VM RED BERRY", "#d1434a"], ["RS ROSE 10769", "#eb5282"], ["ROSA ARRANJO 11509", "#ffbcbf"], ["LS UNICÓRNIO", "#d4b6d2"], ["RX MÁGICO", "#85539d"], ["PRINCESS BLUE", "#5c3bab"], ["AZ ASTER 1007P / 1139P", "#2796d8"], ["AZ MIRAGE 11462", "#608a9f"], ["AZ ESTERLINO 10818", "#92a6af"], ["VD AZULADO 1439P", "#59b8b8"], ["VD LIMO 10718", "#8be1bd"], ["VD MILITAR 348P", "#365434"], ["VD ULTRAMARINE 1403P", "#188471"], ["VD ESMERALDA 1135P", "#30682b"], ["VD GRAVINHA 323P", "#868b6c"], ["VD LÍRIO 1425P / 10837", "#daffbe"], ["BRANCO", "#ffffff"], ["OFF WHITE 9780", "#ebe3d0"], ["BG NATURAL CLASSIC", "#d1c7aa"], ["CZ GELO 339P / 11711", "#bbb6b6"], ["CZ CHUMBO 1033P / 9669", "#4b4946"], ["PRETO", "#1c1c1c"], ["AZ MARINHO MARMORIZADO", "#1f2b44"], ["PRETO MARMORIZADO", "#2a2a2a"], ["RX VELUDO 507P / 10721", "#322e57"], ["RX GLIXONIA 344P", "#603f64"], ["RX PRISMA 10590", "#5c439b"], ["RX OPULÊNCIA 9732", "#5a4f94"], ["RX AMETISTA 1489P / 55076", "#5f3752"], ["LS MÍSTICO 1408P", "#575266"], ["LS RAPSÓDIA 11739", "#b093bb"], ["RX NEON 848P / 10510", "#c858c1"], ["BO AMORA 10949", "#703048"], ["RS ENCANTO 10647", "#9e5c6a"], ["RS SMOCKINS 10147", "#9f405e"], ["RS FÚCSIA GR-3181", "#630833"], ["RS PINK 10751", "#ff78d1"], ["CL SALMÃO 1073P", "#ff9f89"], ["CL MELÃO 898P / 10753", "#ed7a66"], ["LJ ROCHE 9107", "#904434"], ["LJ DAMASCO 8652", "#db8248"], ["LJ ARTESÃ 10897", "#e19944"], ["LJ MEL 1507P / 8790", "#eda24c"], ["VM CHILLI 10788", "#ab4032"], ["VM SHARON 10684", "#a83d37"], ["CL RECIFE 1117P / 11562", "#ffa979"], ["CL BEIJINHO 10778", "#ffc2b1"], ["CL ROSA-DO-DESERTO 10811", "#fe8a82"], ["VM AURORA 11170", "#db3333"], ["VM ROCOCÓ 1280P / 11166", "#a82b2b"], ["VM AZALÉIA 1294P / 10988", "#803244"], ["VM XAROPE 17839", "#bd2030"], ["BO CHOCOLATE 2768P / 8428", "#491a1a"], ["BO RUBI 10871", "#80233f"], ["RS CARMINE 10897", "#863c53"], ["RS GOIABA 549P / 10647", "#c4768e"], ["RS CAMELIA 10828", "#ff6f98"], ["RS FLORAL 1091P / 10482", "#e4c0ca"], ["RS IOGURTE 1073P", "#ff9a93"], ["AZ CÉU 1449P / 11068", "#3496df"], ["AZ PARAQUEDAS 1503P / 10986", "#065296"], ["AZ MARINHO 1407P / 10974", "#254f70"], ["AZ MASÓLICA 1011P", "#1a2f40"], ["AZ POÇA 325P / 11174", "#1b2934"], ["AZ ÍNDIGO 1174P", "#0d283d"], ["AZ PACÍFICO 1405P / 11407", "#264054"], ["AZ NÓRDICO 1413P / 10229", "#78acd1"], ["AZ DUSK 9480", "#8eadc4"], ["AZ BEBÊ 1509P / 11519", "#76c1d1"], ["AZ TOPÁZIO 1498P / 10143", "#4ca9bd"], ["AZ BÁLTICO 9888", "#4cbdb3"], ["CH GRAFITE 1184P / 11190", "#54565b"], ["CZ GRIFO 1427P", "#7f878c"], ["CH FUMAÇA 1033P", "#434447"], ["CQ TRIGO 10783", "#ad8f63"], ["CQ AREIA 10502", "#c4b591"], ["CQ LINHO 10973", "#b8af97"], ["MR TAUPE 1059P", "#59392a"], ["MR CÂNHAMO 1502P", "#9d7e55"], ["MR AMÊNDOA 10690", "#9b583b"], ["MR CASTANHO 8441P", "#9d4d2b"], ["AM CANÁRIO 987P / 9386", "#ffdf53"], ["AM CÍTRICO 10830", "#ffe881"], ["AM MOSTARDA 1292P", "#e8a251"], ["AM CARAMELO 11236", "#bb7c34"], ["VD BROTO 1511-P / 10671", "#5a8142"], ["VD LIMA 10674 / 1504-P", "#2e5320"], ["VD VERDE BRONZE 1497-P / 58072", "#3d4132"], ["VD CIPRESTE 11278 / 11356", "#4e5042"], ["VD SÁLVIA 10999", "#686a5d"], ["VD FLUORESCENTE 10741", "#a1d66c"], ["VD MENTA 10911", "#68ad6c"], ["VD TURQUESA 10910 / 1432-P", "#7db298"], ["VD JADE 1138-P", "#237161"], ["VD AQUARELA 1439-P", "#488b93"], ["VD PETRÓLEO 1183-P / 11281", "#0f5e6f"], ["VD EXCÊNTRICO 1403-P", "#3e753b"], ["VD 17173", "#a8bc49"], ["VD FRESH 17176", "#a8bc49"], ["VD CACTO 17180", "#394030"]]; // tons da cartela do Canva (Catálogo Projetos Santacosta)
-const PANT0=[['BRANCO','#ffffff'],['PRETO','#111111'],['OFF WHITE','#efe0c6'],['AZUL 631U','#2bb3d9'],['GREY 3C','#c8c9c7'],['VERMELHO DA CROMIA','#d70707'],['ROXO DA CROMIA','#b021c4']];
+const PANT0=[['BRANCO','#ffffff'],['PRETO','#111111'],['OFF WHITE','#efe0c6'],['AZUL 631U','#2bb3d9'],['GREY 3C','#c8c9c7']];
 const CARTELA="OFF WHITE|AZUL ANIS|PRETO|Avelã|Rami|AM Açafrão 1006P|VM Jelly New|RS Rose 10769|Rosa Arranjo 11509|AM Manteiga 10390|VD Limo 10718|VD Militar 348P|VD Ultramarine 1403P|VD Esmeralda 1135P|VD Gravinha 323P|VD Lírio 1425P / 10837|Branco|Off White 9780|BG Natural Classic|CZ Gelo 339P / 11711|CZ Chumbo 1033P / 9669|AZ Marinho Marmorizado|Preto Marmorizado|LJ Laranja 1228P / 11315|CL Pêssego 1430P|VM Red Berry|LS Unicórnio|RX Mágico|Princess Blue|AZ Aster 1007P / 1139P|AZ Mirage 11462|AZ Esterlino 10818|VD Azulado 1439P|RX Veludo 507P / 10721|RX Glixonia 344P|RX Prisma 10590|RX Opulência 9732|RX Ametista 1489P / 55076|LS Místico 1408P|LS Rapsódia 11739|RX Neon 848P / 10510|BO Amora 10949|RS Encanto 10647|RS Smockins 10147|RS Fúcsia GR-3181|RS Pink 10751|CL Melão 898P / 10753|LJ Roche 9107|LJ Damasco 8652|LJ Artesã 10897|LJ Mel 1507P / 8790|VM Sharon 10684|CL Recife 1117P / 11562|CL Beijinho 10778|CL Rosa-Do-Deserto 10811|CL Salmão 1073P|VM Aurora 11170|VM Rococó 1280P / 11166|VM Azaléia 1294P / 10988|VM Chilli 10788|VM Xarope 17839|BO Chocolate 2768P / 8428|BO Rubi 10871|RS Carmine 10897|RS Goiaba 549P / 10647|AZ Masólica 1011P|AZ Marinho 1407P / 10974|AZ Paraquedas 1503P / 10986|AZ Céu 1449P / 11068|AZ Bebê 1509P / 11519|AZ Topázio 1498P / 10143|AZ Báltico 9888|AZ Poça 325P / 11174|AZ Inoigo 1174P|AZ Pacífico 1405P / 11407|AZ Nórdico 1413P / 10229|AZ Dusk 9480|RS Camelia 10828|RS Floral 1091P / 10482|RS Iogurte 1073P|CH Grafite 1184P / 11190|AM Canário 987P / 9386|AM Cítrico 10830|AM Mostarda 1292P|AM Caramelo 11236|MR Castanho 8441P|CZ Grifo 1427P|CH Fumaça 1033P|CQ Trigo 10783|CQ Areia 10502|CQ Linho 10973|MR Taupe 1059P|MR Cânhamo 1502P|MR Amêndoa 10690|VD Broto 1511-P / 10671|VD Lima 10674 / 1504-P|VD Verde bronze 1497-P / 58072|VD Cipreste 11278 / 11356|VD Sálvia 10999|VD Fluorescente 10741|VD Menta 10911|VD Turquesa 10910 / 1432-P|VD Jade 1138-P|VD Aquarela 1439-P|VD Petróleo 1183-P / 11281|VD Excêntrico 1403-P|VD 17173|VD Fresh 17176|VD Cacto 17180".split('|');
 
 // ---------- guardar no aparelho ----------
@@ -611,6 +613,7 @@ let cores=ler('cores2',null);
 if(!cores){const velhas=ler('cores',null);cores={ting:TING0.map(([n,h])=>({n,h})),pant:PANT0.map(([n,h])=>({n,h}))};
   if(velhas){for(const c of velhas.pant||[]){const n=c.n.toUpperCase();if(!cores.pant.some(x=>x.n===n))cores.pant.push({n,h:c.h})}}
   try{localStorage.setItem('sc_cores2',JSON.stringify(cores))}catch(e){}}
+{const tira=c=>/CROMIA|VINHO|DEGRAD/i.test(c.n);if(cores.pant.some(tira)){cores.pant=cores.pant.filter(c=>!tira(c));try{localStorage.setItem('sc_cores2',JSON.stringify(cores))}catch(e){}}}
 if(!cores.pant.some(c=>/ORIGINAL/.test(c.n)))cores.pant.unshift({n:'ORIGINAL',h:'#7a7a7a'}); // cores do próprio arquivo
 let LIN=ler('linhas',{}),CAR=ler('carPadrao',{dist:2,larg:''}); // pontas das linhas da ficha por artigo
 let pecas=ler('pecas',[]), mapa=ler('mapa',{nome:'',texto:'',lado:'frente',itens:[]});
@@ -656,7 +659,7 @@ const hexDe0=(tipo,n)=>(cores[tipo].find(c=>c.n===n)||cores[tipo].find(c=>c.n.to
 const hexDe=(tipo,n)=>n==='SEM COR'?(tipo==='ting'?'#ffffff':'#cccccc'):hexDe0(tipo,n);
 
 // ---------- desenhar a peça ----------
-const degCores=p=>{const d=p.deg||{};return d.cores&&d.cores.length?d.cores:[p.corTodas||'BRANCO',d.c2||'BRANCO']};
+const degCores=p=>{const d=p.deg||{};return d.cores&&d.cores.length?d.cores:d.c2?[p.corTodas||'BRANCO',d.c2]:['PRETO','BRANCO']};
 const degEstilo=p=>{const d=p.deg||{};return d.estilo||d.dir||'v'};
 function tingir(img,hex,w,h,hex2,dir){
   const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
@@ -697,12 +700,12 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
     const vis=+((INFO[chave]||{}).vis||E.vis||1)*(+vz||1);const w=wc*A.esc*vis,h=hc*A.esc*vis;let X=cx-w/2,Y=top;
     if(ancora==='centro')Y=top-h/2;if(ancora==='barra'){X=cx-w;Y=top-h}out.push({chave,cor,x:X,y:Y,w,h,papel,cm,wd:wc})};
   if(lado==='frente'){const f=p.fr,aj=(A.ajY||0)*A.esc;
-    if(f.est){if(f.pos==='mini')por(f.est,f.cor,A.fr.cx+12*A.esc,A.fr.ombro+(+f.dist||A.mini[0])*A.esc+aj,'centro','frente',0,f.larg,f.vz);
-      else por(f.est,f.cor,A.fr.cx,A.fr.gola+(+f.dist||0)*A.esc+aj,'topo','frente',1,f.larg,f.vz)}
+    if(f.est){if(String(f.pos).startsWith('mini'))por(f.est,f.cor,A.fr.cx+((f.pos==='mini-d'?-12:12)+(+f.dx||0))*A.esc,A.fr.ombro+(+f.dist||A.mini[0])*A.esc+aj,'centro','frente',0,f.larg,f.vz);
+      else por(f.est,f.cor,A.fr.cx+(+f.dx||0)*A.esc,A.fr.gola+(+f.dist||0)*A.esc+aj,'topo','frente',1,f.larg,f.vz)}
     const bar=p.barra===undefined?(p.sereia===false?'':'sereia'):p.barra;
     if(bar)por(bar,p.barraCor||p.sereiaCor||'BRANCO',A.fr.lado-3.5*A.esc,A.fr.barra-3.5*A.esc,'barra','barra',0,p.barraLarg,p.barraVz);
     if(p.carimbo&&EST[p.carimbo]){const g=A.fr.gola-A.fr.ombro,costura=A.fr.ombro+g*.35,topo=costura+(CAR.dist===''||CAR.dist==null?2:+CAR.dist)*A.esc;por(p.carimbo,p.carimboCor||'BRANCO',A.fr.cx,topo,'topo','carimbo',0,CAR.larg);const e=out[out.length-1];if(e&&e.papel==='carimbo')e.clip=A.fr.gola-1*A.esc}
-  }else{const f=p.co;if(f.est)por(f.est,f.cor,A.co.cx,A.co.gola+(+f.dist||0)*A.esc,'topo','costas',1,f.larg,f.vz)}
+  }else{const f=p.co;if(f.est)por(f.est,f.cor,A.co.cx+(+f.dx||0)*A.esc,A.co.gola+(+f.dist||0)*A.esc,'topo','costas',1,f.larg,f.vz)}
   (p.extras||[]).forEach((x,i)=>{if(x.lado!==lado||!x.est)return;const pt=(A.lugares[lado]||{})[x.onde]||Object.values(A.lugares[lado])[0];if(!pt)return;
     por(x.est,x.cor,pt[0]+(+x.dx||0)*A.esc,pt[1]+(+x.dy||0)*A.esc,'centro','extra'+i,8,x.larg,x.vz)});
   return out;
@@ -753,7 +756,7 @@ function preencher(){
     $(`#f-${k}-txt`).value=P[k].est&&P[k].est.startsWith('txt:')&&!PRONTOS.includes(P[k].est.slice(4))&&!txtSalvo(P[k].est)?P[k].est.slice(4).toUpperCase():'';
     se.value=P[k].est;$(`#f-${k}-pos`).value=P[k].pos;garantirOpcao($(`#f-${k}-cor`),P[k].cor);$(`#f-${k}-cor`).value=P[k].cor;$(`#f-${k}-dist`).value=P[k].dist;$(`#f-${k}-tipo`).value=P[k].tipo||'ESTAMPA';$(`#f-${k}-larg`).value=P[k].larg||''}
   for(const[k,l]of[['fr','frente'],['co','costas']]){const e=posicoes(P,l).find(e=>e.papel===l);$(`#f-${k}-larg`).placeholder=e?String(Math.round(e.wd*10)/10).replace('.',','):''}
-  $('#l-fr-dist').firstChild.textContent=P.fr.pos==='mini'?'Distância do ombro, tam. M (cm)':'Distância da gola (cm)';
+  $('#l-fr-dist').firstChild.textContent=String(P.fr.pos).startsWith('mini')?'Distância do ombro, tam. M (cm)':'Distância da gola (cm)';
   garantirOpcao($('#f-barra'),P.barra);$('#f-barra').value=P.barra;garantirOpcao($('#f-barra-cor'),P.barraCor);$('#f-barra-cor').value=P.barraCor;$('#f-barra-tipo').value=P.barraTipo||'ESTAMPA';$('#f-barra-larg').value=P.barraLarg||'';{const e=posicoes(P,'frente').find(e=>e.papel==='barra');$('#f-barra-larg').placeholder=e?String(Math.round(e.wd*10)/10).replace('.',','):''}
   garantirOpcao($('#f-carimbo'),P.carimbo);$('#f-carimbo').value=P.carimbo||'';garantirOpcao($('#f-carimbo-cor'),P.carimboCor);$('#f-carimbo-cor').value=P.carimboCor;$('#f-carimbo-tipo').value=P.carimboTipo||'ESTAMPA';
   for(const k of['ref','pedido','colecao','nome','modelo','tingTexto','obs','costura'])$('#f-'+k).value=P[k]||'';
@@ -782,7 +785,8 @@ function ler_form(e){
     if(id===`f-${k}-est`||id===`f-${k}-txt`){const I=INFO[P[k].est];if(I){if(I.cor){garantirOpcao($(`#f-${k}-cor`),I.cor);$(`#f-${k}-cor`).value=P[k].cor=I.cor}if(I.tipo)$(`#f-${k}-tipo`).value=I.tipo}}P[k].dist=$(`#f-${k}-dist`).value;P[k].tipo=$(`#f-${k}-tipo`).value;
     const d=$(`#f-${k}-dist`).value,lg=$(`#f-${k}-larg`).value;P.ov=P.ov||{};if(String(P[k].dist)!==d)delete P.ov[k+'.loc'];P[k].dist=d;P[k].larg=lg}
   const A=ART[P.artigo];
-  if(id==='f-fr-pos'||id==='f-artigo')P.fr.dist=P.fr.pos==='mini'?A.mini[0]:A.frontal;
+  if(id==='f-fr-pos'||id==='f-artigo'){P.fr.dx=0;P.fr.vz=1;P.fr.dist=String(P.fr.pos).startsWith('mini')?A.mini[0]:A.frontal;if(String(P.fr.pos).startsWith('mini'))usarMiniPadrao()}
+  if(id==='f-co-pos'||id==='f-artigo'){P.co.dx=0}
   if(id==='f-co-pos'||id==='f-artigo')P.co.dist=P.co.pos==='nuca'?A.nuca:A.costas;
   if(id==='f-artigo'&&artigoAntes!==P.artigo&&(!P.costura||P.costura===ART[artigoAntes].costura))P.costura=A.costura;
   P.barra=$('#f-barra').value;P.barraCor=$('#f-barra-cor').value;P.barraTipo=$('#f-barra-tipo').value;{const lg=$('#f-barra-larg').value;P.barraLarg=lg}
@@ -794,19 +798,19 @@ function ler_form(e){
   $$('#f-grade input').forEach(i=>{const v=i.value.replace(/\D/g,'');if(v)P.grade[i.dataset.g]=v;else delete P.grade[i.dataset.g]});
   guardarP();
 }
-$('#t-peca').addEventListener('change',e=>{if(e.target.closest('.grade'))return;
+$('#t-peca').addEventListener('change',e=>{if(e.target.closest('.grade')||e.target.dataset.xr!=null)return;
   if(e.target.id==='f-car-dist'||e.target.id==='f-car-larg'){CAR={dist:$('#f-car-dist').value,larg:$('#f-car-larg').value};gravar('carPadrao',CAR);pintarEditor();return}
   if(e.target.id==='f-cor-todas'||e.target.closest('#dg-w')){if(e.target.closest('#dg-w'))return;if(e.target.value&&e.target.value.startsWith('__'))return;const c=$('#f-cor-todas').value;
     if(e.target.id==='f-cor-todas'){P.corTodas=c;const pt=(o,k)=>{if(!/ORIGINAL/.test(o[k]||''))o[k]=c};pt(P.fr,'cor');pt(P.co,'cor');pt(P,'barraCor');pt(P,'carimboCor');(P.extras||[]).forEach(x=>pt(x,'cor'));P.ov=P.ov||{};for(const k in P.ov)if(k.endsWith('.cor'))delete P.ov[k]}
     guardarP();desenharExtras();preencher();pintarEditor();return}if(mudouExtra(e)){if(['txt','est'].includes(e.target.dataset.k))novaEstampaTalvez(P.extras[+e.target.dataset.x].est);return}ler_form(e);{const m=(e.target.id||'').match(/^f-(fr|co)-(txt|est)$/);if(m)setTimeout(()=>novaEstampaTalvez(P[m[1]].est),50);if(e.target.id==='f-barra')setTimeout(()=>novaEstampaTalvez(P.barra),50)}preencher();if(e.target.id==='f-artigo'){(P.extras||[]).forEach(x=>{const L=ART[P.artigo].lugares[x.lado]||{};if(!L[x.onde])x.onde=Object.keys(L)[0]});desenharExtras()}pintarEditor()});
-$('#t-peca').addEventListener('input',e=>{if(e.target.dataset.x!=null){mudouExtra(e);return}if(e.target.matches('#f-grade input')){ler_form(e);somar()}else if(e.target.matches('input[type=text],textarea')&&!/-txt$/.test(e.target.id))ler_form(e)});
+$('#t-peca').addEventListener('input',e=>{if(e.target.dataset.xr!=null){const i=+e.target.dataset.xr,x=P.extras[i],A=ART[P.artigo];const el=posicoes(P,x.lado).find(q=>q.papel==='extra'+i);if(!el)return;const v=+e.target.value,f=v/(el.w/A.esc);if(f>0&&isFinite(f))x.vz=Math.round((+x.vz||1)*f*1000)/1000;const t=$(`[data-xt="${i}"]`);if(t)t.textContent=String(v).replace('.',',')+' cm';guardarP();pintarEditor();return}if(e.target.dataset.x!=null){mudouExtra(e);return}if(e.target.matches('#f-grade input')){ler_form(e);somar()}else if(e.target.matches('input[type=text],textarea')&&!/-txt$/.test(e.target.id))ler_form(e)});
 
 // ---------- textos da ficha ----------
 function textoFrente(p){
   const A=ART[p.artigo],f=p.fr;
-  if(f.pos==='mini'){const d=(+f.dist||A.mini[0])-A.mini[0];const m=A.mini.map(v=>String(v+d).replace('.',','));
+  if(String(f.pos).startsWith('mini')){const d=(+f.dist||A.mini[0])-A.mini[0];const m=A.mini.map(v=>String(v+d).replace('.',','));
     const G=(A.miniG&&A.miniG.length?A.miniG.map(r=>r[0]):['PP - P - M','G - 2G','3G - 4G']);
-    return G.map((g,i)=>`${g}: ${m[Math.min(i,m.length-1)]}cm`).join('\n')+`\nABAIXO DO PONTO MAIS ALTO DO OMBRO MEDINDO PELO CENTRO DO DESENHO, AO LADO ESQUERDO DE QUEM VESTE`}
+    return G.map((g,i)=>`${g}: ${m[Math.min(i,m.length-1)]}cm`).join('\n')+`\nABAIXO DO PONTO MAIS ALTO DO OMBRO MEDINDO PELO CENTRO DO DESENHO, AO LADO ${f.pos==='mini-d'?'DIREITO':'ESQUERDO'} DE QUEM VESTE`}
   return `${String(f.dist).replace('.',',')}cm ABAIXO DA COSTURA DA GOLA MEDINDO PELA PARTE BAIXA DA ESTAMPA`;
 }
 const cacheURL={};
@@ -1008,8 +1012,8 @@ $('#mg-lista').addEventListener('click',async e=>{const b=e.target.closest('butt
 
 // ---------- telas ----------
 function encaixar(){ // folha A4 cabe na largura da tela
-  $$('.folha-espaco').forEach(w=>{const f=w.firstElementChild;const larg=w.parentElement.clientWidth-24;const s=Math.min(1,larg/1123);
-    f.style.transform=`scale(${s})`;w.style.height=(794*s)+'px';w.style.width=(1123*s)+'px';w.style.margin='0 auto'});
+  $$('.folha-espaco').forEach(w=>{const f=w.firstElementChild;const larg=w.parentElement.clientWidth-24;const s=Math.min(larg/1123,Math.max(1,(innerHeight-100)/794));
+    f.style.margin='0';f.style.transform=`scale(${s})`;w.style.height=(794*s)+'px';w.style.width=(1123*s)+'px';w.style.margin='0 auto'});
 }
 const BIB=[['salvas','Peças salvas'],['fichas','Fichas'],['mapas','Mapas'],['mockups','Mockups'],['medidas','Medidas'],['estampas','Estampas'],['cores','Cores']];
 let telaAtual=null;const pilha=[];
@@ -1459,7 +1463,7 @@ function desenharExtras(){
       <label>Quadro na ficha<select data-x="${i}" data-k="ordem">${op([['antes','Em cima das outras'],['depois','Embaixo das outras']],x.ordem)}</select></label>
      </div>
      <label style="margin-top:10px">Localização (texto vermelho da ficha)<input type="text" data-x="${i}" data-k="loc" value="${esc(x.loc||'')}" placeholder="EX.: 5CM ABAIXO DA COSTURA DO OMBRO, CENTRALIZADA NA MANGA"></label>
-     <label style="margin-top:10px">Tamanho no desenho (cm)<input type="number" step="0.5" min="0.5" data-x="${i}" data-k="larg" value="${esc(x.larg||'')}" placeholder="${esc(String(Math.round(((EST[x.est]||{}).w||0)*10)/10).replace('.',','))}"></label>
+     <label style="margin-top:10px">Tamanho no desenho<input type="range" min="0.2" max="40" step="0.1" data-xr="${i}" value="${(()=>{const el=posicoes(P,x.lado).find(e=>e.papel==='extra'+i);return el?Math.round(el.w/ART[P.artigo].esc*10)/10:5})()}" style="width:100%"><b data-xt="${i}" style="font-size:14px">${(()=>{const el=posicoes(P,x.lado).find(e=>e.papel==='extra'+i);return el?String(Math.round(el.w/ART[P.artigo].esc*10)/10).replace('.',',')+' cm':''})()}</b></label>
      </div>`})()).join('')}
   ligarBuscas();tilesEst();
 }
@@ -1712,36 +1716,45 @@ FAIXAS.forEach(([id,max,papel,lado])=>{const i=$('#'+id);i.style.display='none';
   r.addEventListener('input',e=>{e.stopPropagation();const el=faixaE(papel,lado);if(!el)return;const A=ART[P.artigo],agora=el.w/A.esc,v=+r.value,f=v/agora;if(!(f>0)||!isFinite(f))return;
     if(papel==='frente')P.fr.vz=Math.round((+P.fr.vz||1)*f*1000)/1000;else if(papel==='costas')P.co.vz=Math.round((+P.co.vz||1)*f*1000)/1000;else if(papel==='barra')P.barraVz=Math.round((+P.barraVz||1)*f*1000)/1000;
     else{CAR.larg=Math.round((+String(CAR.larg||'').replace(',','.')||el.wd)*f*100)/100;gravar('carPadrao',CAR)}
-    t.textContent=String(v).replace('.',',')+' cm';guardarP();pintarEditor()});
+    t.textContent=String(v).replace('.',',')+' cm';guardarP();if(papel==='frente')guardarMiniPadrao();pintarEditor()});
   r.addEventListener('change',e=>e.stopPropagation())});
 function syncFaixas(){if(!FAIXAS||!P||!ART[P.artigo])return;FAIXAS.forEach(([id,max,papel,lado])=>{const r=$('#'+id+'-r'),t=$('#'+id+'-t');if(!r)return;const el=faixaE(papel,lado);const v=el?Math.round(el.w/ART[P.artigo].esc*10)/10:0;
   if(document.activeElement!==r)r.value=Math.min(max,v||1);t.textContent=v?String(v).replace('.',',')+' cm':''})}
+// ---------- estampa mini: o último ajuste dele vira o padrão (lugar, altura e tamanho no desenho) ----------
+function guardarMiniPadrao(){try{if(!P||!P.fr||!P.fr.est||!String(P.fr.pos).startsWith('mini'))return;const A=ART[P.artigo];const el=faixaE('frente','frente');if(!el)return;
+  gravar('miniPadrao',{dd:(+P.fr.dist||A.mini[0])-A.mini[0],dx:(P.fr.pos==='mini-d'?-1:1)*(+P.fr.dx||0),w:el.w/A.esc})}catch(e){}}
+function usarMiniPadrao(){const M=ler('miniPadrao',null),A=ART[P.artigo];if(!M||!A)return;P.fr.dist=String(A.mini[0]+M.dd);P.fr.dx=(P.fr.pos==='mini-d'?-1:1)*M.dx;P.fr.vz=1;
+  const el=faixaE('frente','frente');if(el&&el.w)P.fr.vz=Math.round(M.w/(el.w/A.esc)*1000)/1000}
 // ---------- degradê (igual ao do Canva: cores + estilo) ----------
-let dgAtivo=0;
+let dgAtivo=-1;
 var DG_EST=[['v','De cima para baixo','to bottom'],['h','Da esquerda para a direita','to right'],['d','Na diagonal','to bottom right'],['r','Do centro para fora','radial'],['d2','Na diagonal (outro lado)','to bottom left']];
 const dgCss=(cs,e)=>{const L=cs.map(c=>hexDe('pant',c)).join(',');return e==='r'?`radial-gradient(circle,${L})`:`linear-gradient(${(DG_EST.find(x=>x[0]===e)||DG_EST[0])[2]},${L})`};
-function dgBotao(){const d=P.deg||{},b=$('#dg-b');if(!b)return;b.innerHTML=d.on?`<i class="mini" style="border-radius:6px;background:${dgCss(degCores(P),degEstilo(P))}"></i><span>${degCores(P).length} CORES</span>`:'<i class="mini"></i><span>SEM DEGRADÊ</span>'}
+function dgBotao(){const d=P.deg||{},b=$('#dg-b');if(!b)return;const c=P.corTodas||P.fr.cor||'BRANCO';
+  b.innerHTML=d.on?`<i class="mini" style="border-radius:6px;background:${dgCss(degCores(P),degEstilo(P))}"></i><span>DEGRADÊ · ${degCores(P).map(esc).join(' > ')}</span>`:`${miniDe('pant',c)}<span>${esc(c)}</span>`}
 function dgMudou(){guardarP();pintarEditor();dgBotao();dgPainel()}
 function dgPainel(){const d=P.deg||{},cs=degCores(P),pn=$('#dg-p'),q=(pn.querySelector('input')||{}).value||'';
-  const bola=(c,i)=>`<button type="button" data-dgi="${i}" title="${esc(c)}" style="width:44px;height:44px;border-radius:50%;border:${i===dgAtivo?'3px solid #6a4cff':'1px solid var(--line)'};background:${hexDe('pant',c)};position:relative;flex:none">${cs.length>2?`<b data-dgx="${i}" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#111;color:#fff;font-size:12px;line-height:20px">×</b>`:''}</button>`;
-  pn.innerHTML=`<div style="display:flex;border-bottom:1px solid var(--line);margin-bottom:10px">${[['','Cor sólida'],['on','Degradê']].map(([v,n])=>`<button type="button" data-dgon="${v}" style="flex:1;padding:10px;border:0;background:none;font-size:15px;${(!!d.on)===(!!v)?'border-bottom:3px solid #6a4cff;font-weight:600':''}">${n}</button>`).join('')}</div>`+
-   (d.on?`<div style="font-weight:600;margin:4px 0 8px">Cores em degradê <small style="font-weight:400;color:#777">(toque numa bolinha e escolha a cor embaixo)</small></div>
+  const bola=(c,i)=>`<button type="button" data-dgi="${i}" title="${esc(c)}" style="width:44px;height:44px;border-radius:50%;border:${i===dgAtivo?'3px solid #6a4cff':'1px solid #bbb'};background:${hexDe('pant',c)};position:relative;flex:none">${cs.length>2?`<b data-dgx="${i}" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#111;color:#fff;font-size:12px;line-height:20px">×</b>`:''}</button>`;
+  pn.innerHTML=`<div style="border:${d.on?'2px solid #6a4cff':'1px solid var(--line)'};border-radius:10px;padding:8px;margin-bottom:10px">
+    <div style="font-weight:600;margin:0 0 6px">Degradê ${d.on?'<small style="color:#6a4cff">· em uso</small>':''}</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;padding:6px 4px">${cs.map(bola).join('')}${cs.length<5?`<button type="button" data-dgmais="1" style="width:44px;height:44px;border-radius:50%;border:1px dashed #888;background:#fff;font-size:22px;flex:none">+</button>`:''}</div>
-    <div style="font-weight:600;margin:10px 0 8px">Estilo</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${DG_EST.map(([e,n])=>`<button type="button" data-dge="${e}" title="${n}" style="width:56px;height:40px;border-radius:8px;border:${degEstilo(P)===e?'3px solid #6a4cff':'1px solid var(--line)'};background:${dgCss(cs,e)}"></button>`).join('')}</div>
-    <input type="search" placeholder="Pesquisar cor…" autocomplete="off" style="margin-top:12px" value="${esc(q)}"><ul style="max-height:220px;overflow:auto"></ul>`:'<p class="aviso" style="margin:4px">As estampas ficam numa cor só (a de "Cor", ao lado).</p>');
+    <div style="font-weight:600;margin:8px 0 6px">Estilo</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${DG_EST.map(([e,n])=>`<button type="button" data-dge="${e}" title="${n}" style="width:56px;height:40px;border-radius:8px;border:${d.on&&degEstilo(P)===e?'3px solid #6a4cff':'1px solid #bbb'};background:${dgCss(cs,e)}"></button>`).join('')}</div></div>
+    <div style="font-weight:600;margin:4px 0 6px">${dgAtivo>=0?`Escolha a cor da bolinha ${dgAtivo+1} do degradê`:'Cor sólida'}</div>
+    <input type="search" placeholder="Pesquisar cor…" autocomplete="off" value="${esc(q)}"><ul style="max-height:240px;overflow:auto"></ul>`;
   dgLista()}
-function dgLista(){const pn=$('#dg-p'),ul=pn.querySelector('ul'),q=pn.querySelector('input');if(!ul)return;const t=semAcento(q.value);
-  ul.innerHTML=cores.pant.filter(c=>!/ORIGINAL|SEM COR/.test(c.n)&&semAcento(c.n).includes(t)).map(c=>`<li data-dgc="${esc(c.n)}">${miniDe('pant',c.n)}${esc(c.n)}</li>`).join('')||'<li style="color:#888">Nada encontrado</li>'}
-$('#dg-b').onclick=e=>{e.stopPropagation();const pn=$('#dg-p'),abrir=pn.hidden;$$('.cbx-p').forEach(x=>x.hidden=true);if(abrir){pn.hidden=false;dgPainel()}};
+function dgLista(){const pn=$('#dg-p'),ul=pn.querySelector('ul'),q=pn.querySelector('input');if(!ul)return;const t=semAcento(q.value),d=P.deg||{},atual=dgAtivo>=0?degCores(P)[dgAtivo]:(!d.on&&(P.corTodas||P.fr.cor));
+  ul.innerHTML=[['__nova','+ NOVA COR…'],...cores.pant.filter(c=>dgAtivo<0||!/ORIGINAL|SEM COR/.test(c.n)).map(c=>[c.n,c.n]),...(dgAtivo<0?[['SEM COR','SEM COR']]:[])].filter(([v,n])=>v==='__nova'||semAcento(n).includes(t))
+    .map(([v,n])=>`<li data-dgc="${esc(v)}" class="${v===atual?'on':''}">${miniDe('pant',v)}${esc(n)}</li>`).join('')||'<li style="color:#888">Nada encontrado</li>'}
+$('#dg-b').onclick=e=>{e.stopPropagation();const pn=$('#dg-p'),abrir=pn.hidden;$$('.cbx-p').forEach(x=>x.hidden=true);if(abrir){dgAtivo=-1;pn.hidden=false;dgPainel()}};
 $('#dg-p').addEventListener('input',e=>{if(e.target.matches('input[type=search]'))dgLista()});
-$('#dg-p').addEventListener('click',e=>{e.stopPropagation();const d=P.deg=P.deg||{};const t=e.target;let b;
-  if(b=t.closest('[data-dgon]')){d.on=!!b.dataset.dgon;if(d.on&&!(d.cores&&d.cores.length))d.cores=degCores(P).slice();dgAtivo=0;dgMudou();return}
-  if(b=t.closest('[data-dgx]')){d.cores=degCores(P).slice();d.cores.splice(+b.dataset.dgx,1);dgAtivo=0;dgMudou();return}
-  if(b=t.closest('[data-dgi]')){dgAtivo=+b.dataset.dgi;dgPainel();return}
-  if(t.closest('[data-dgmais]')){d.cores=degCores(P).slice();d.cores.push(d.cores[d.cores.length-1]);dgAtivo=d.cores.length-1;dgMudou();return}
-  if(b=t.closest('[data-dge]')){d.estilo=b.dataset.dge;dgMudou();return}
-  if(b=t.closest('[data-dgc]')){d.cores=degCores(P).slice();d.cores[dgAtivo]=b.dataset.dgc;dgMudou();return}});
+$('#dg-p').addEventListener('click',e=>{e.stopPropagation();const d=P.deg=P.deg||{};const t=e.target;let b;const liga=()=>{if(!(d.cores&&d.cores.length))d.cores=degCores(P).slice();d.on=true};
+  if(b=t.closest('[data-dgx]')){liga();d.cores.splice(+b.dataset.dgx,1);dgAtivo=-1;dgMudou();return}
+  if(b=t.closest('[data-dgi]')){const i=+b.dataset.dgi;dgAtivo=dgAtivo===i?-1:i;dgPainel();return}
+  if(t.closest('[data-dgmais]')){liga();d.cores.push(d.cores[d.cores.length-1]==='PRETO'?'BRANCO':'PRETO');dgAtivo=d.cores.length-1;dgMudou();return}
+  if(b=t.closest('[data-dge]')){liga();d.estilo=b.dataset.dge;dgMudou();return}
+  if(b=t.closest('[data-dgc]')){const v=b.dataset.dgc;if(v==='__nova'){$('#dg-p').hidden=true;abrirCor('pant',null,$('#f-cor-todas'));return}
+    if(dgAtivo>=0){liga();d.cores[dgAtivo]=v;dgMudou();return}
+    d.on=false;const sel=$('#f-cor-todas');garantirOpcao(sel,v);sel.value=v;sel.dispatchEvent(new Event('change',{bubbles:true}));$('#dg-p').hidden=true;dgBotao();return}});
 // ---------- caixa de escolha com busca ----------
 const semAcento=t=>String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 function miniDe(tipo,v){if(tipo==='art')return '';if(!v)return '<i class="mini"></i>';
@@ -1780,7 +1793,7 @@ function ligarBuscas(raiz=document){
 let zNivel=1;
 function abrirZoom(lado,q=P){
   $('#z-img').src=desenhar(q,lado,3).toDataURL('image/png');$('#z-lado').textContent=lado==='frente'?'FRENTE':'COSTAS';
-  zNivel=1;$('#z-img').style.width='100%';$('#zoom').hidden=false;
+  zNivel=1;$('#z-img').style.width='';$('#z-img').style.height='';$('.zarea').classList.remove('z');$('#zoom').hidden=false;
 }
 for(const lado of['frente','costas']){const cv=$('#cv-'+lado);let ar=null,raf=0;
   const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height,cv.width/r.width]};
@@ -1797,16 +1810,16 @@ for(const lado of['frente','costas']){const cv=$('#cv-'+lado);let ar=null,raf=0;
     if(ar.barra){const[x,y]=pt(e);const f=Math.max(.3,Math.hypot(ar.cx-x,ar.cy-y)/ar.d0);P.barraVz=Math.round(ar.vz0*f*100)/100}
     else if(ar.res){const nw=Math.max(ar.w0*.2,ar.w0+dx);ar.alvo.vz=Math.round(ar.vz0*nw/ar.w0*100)/100}
     else if(ar.hit.papel.startsWith('extra')){ar.alvo.dx=r1(ar.dx0+dx/ar.esc);ar.alvo.dy=r1(ar.dy0+dy/ar.esc)}
-    else ar.alvo.dist=String(Math.max(0,r1(ar.dist0+dy/ar.esc)));
+    else{ar.alvo.dist=String(Math.max(0,r1(ar.dist0+dy/ar.esc)));ar.alvo.dx=r1(ar.dx0+dx/ar.esc)}
     if(!raf)raf=requestAnimationFrame(()=>{raf=0;const src=desenhar(P,lado);cv.getContext('2d').clearRect(0,0,cv.width,cv.height);cv.getContext('2d').drawImage(src,0,0)})});
   const fim=e=>{if(!ar)return;const a=ar;ar=null;if(a.moveu){if(!a.res&&a.alvo&&(a.alvo===P.fr||a.alvo===P.co)){P.ov=P.ov||{};delete P.ov[(a.alvo===P.fr?'fr':'co')+'.loc']}
-      guardarP();preencher();desenharExtras();pintarEditor();toast(a.res?'Tamanho mudado só no desenho (a ficha mantém a medida real)':'Posição mudada')}
+      guardarP();if(a.alvo===P.fr)guardarMiniPadrao();preencher();desenharExtras();pintarEditor();toast(a.res?'Tamanho mudado só no desenho (a ficha mantém a medida real)':'Posição mudada')}
     else if(e.type==='pointerup')abrirZoom(lado)};
   cv.addEventListener('pointerup',fim);cv.addEventListener('pointercancel',fim)}
 $('#zoom').addEventListener('click',e=>{const b=e.target.closest('[data-z]');if(!b)return;const d=+b.dataset.z;
   if(!d){$('#zoom').hidden=true;$('#z-img').removeAttribute('src');return}
   const a=$('.zarea'),cx=(a.scrollLeft+a.clientWidth/2)/a.scrollWidth,cy=(a.scrollTop+a.clientHeight/2)/a.scrollHeight;
-  zNivel=Math.min(4,Math.max(1,zNivel+d));$('#z-img').style.width=(zNivel*100)+'%';
+  const im=$('#z-img');if(zNivel===1&&d>0){im.dataset.w=im.clientWidth;im.dataset.h=im.clientHeight}zNivel=Math.min(4,Math.max(1,zNivel+d));a.classList.toggle('z',zNivel>1);im.style.width=zNivel>1?(+im.dataset.w*zNivel)+'px':'';im.style.height=zNivel>1?(+im.dataset.h*zNivel)+'px':'';
   a.scrollLeft=cx*a.scrollWidth-a.clientWidth/2;a.scrollTop=cy*a.scrollHeight-a.clientHeight/2;});
 
 // ---------- versão nova ----------
@@ -1830,7 +1843,7 @@ if(!localStorage.getItem('sc_corMig1')){ // cores de tingimento: só COR + CÓDI
 for(const q of[...pecas,P])if(q&&q.pts&&Object.keys(q.pts).length){LIN[q.artigo]=Object.assign(LIN[q.artigo]||{},q.pts);delete q.pts}
 gravar('linhas',LIN);gravar('atual',P);gravar('pecas',pecas);
 montarForm();desenharExtras();preencher();
-preparar().then(()=>{preencher();pintarEditor();ir(location.hash.slice(1)||'peca')});
+preparar().then(()=>{if(!ler('miniPadrao',null))guardarMiniPadrao();preencher();pintarEditor();ir(location.hash.slice(1)||'peca')});
 }
 </script>
 </body>
