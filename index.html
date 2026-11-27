@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611270930";</script>
+<script>var VERSAO="202611270910";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -594,6 +594,7 @@ let cores=ler('cores2',null);
 if(!cores){const velhas=ler('cores',null);cores={ting:TING0.map(([n,h])=>({n,h})),pant:PANT0.map(([n,h])=>({n,h}))};
   if(velhas){for(const c of velhas.pant||[]){const n=c.n.toUpperCase();if(!cores.pant.some(x=>x.n===n))cores.pant.push({n,h:c.h})}}
   try{localStorage.setItem('sc_cores2',JSON.stringify(cores))}catch(e){}}
+if(!cores.pant.some(c=>/ORIGINAL/.test(c.n)))cores.pant.unshift({n:'ORIGINAL',h:'#7a7a7a'}); // cores do próprio arquivo
 let LIN=ler('linhas',{}),CAR=ler('carPadrao',{dist:2,larg:''}); // pontas das linhas da ficha por artigo
 let pecas=ler('pecas',[]), mapa=ler('mapa',{nome:'',texto:'',lado:'frente',itens:[]});
 
@@ -773,7 +774,7 @@ function ler_form(e){
 $('#t-peca').addEventListener('change',e=>{if(e.target.closest('.grade'))return;
   if(e.target.id==='f-car-dist'||e.target.id==='f-car-larg'){CAR={dist:$('#f-car-dist').value,larg:$('#f-car-larg').value};gravar('carPadrao',CAR);pintarEditor();return}
   if(['f-cor-todas','f-cor-modo','f-cor2','f-cor-dir'].includes(e.target.id)){if(e.target.value&&e.target.value.startsWith('__'))return;const c=$('#f-cor-todas').value;
-    if(e.target.id==='f-cor-todas'){P.corTodas=c;P.fr.cor=P.co.cor=P.barraCor=P.carimboCor=c;(P.extras||[]).forEach(x=>x.cor=c);P.ov=P.ov||{};for(const k in P.ov)if(k.endsWith('.cor'))delete P.ov[k]}
+    if(e.target.id==='f-cor-todas'){P.corTodas=c;const pt=(o,k)=>{if(!/ORIGINAL/.test(o[k]||''))o[k]=c};pt(P.fr,'cor');pt(P.co,'cor');pt(P,'barraCor');pt(P,'carimboCor');(P.extras||[]).forEach(x=>pt(x,'cor'));P.ov=P.ov||{};for(const k in P.ov)if(k.endsWith('.cor'))delete P.ov[k]}
     P.deg={on:$('#f-cor-modo').value==='deg',c2:$('#f-cor2').value,dir:$('#f-cor-dir').value};guardarP();desenharExtras();preencher();pintarEditor();return}if(mudouExtra(e)){if(['txt','est'].includes(e.target.dataset.k))novaEstampaTalvez(P.extras[+e.target.dataset.x].est);return}ler_form(e);{const m=(e.target.id||'').match(/^f-(fr|co)-(txt|est)$/);if(m)setTimeout(()=>novaEstampaTalvez(P[m[1]].est),50);if(e.target.id==='f-barra')setTimeout(()=>novaEstampaTalvez(P.barra),50)}preencher();if(e.target.id==='f-artigo'){(P.extras||[]).forEach(x=>{const L=ART[P.artigo].lugares[x.lado]||{};if(!L[x.onde])x.onde=Object.keys(L)[0]});desenharExtras()}pintarEditor()});
 $('#t-peca').addEventListener('input',e=>{if(e.target.dataset.x!=null){mudouExtra(e);return}if(e.target.matches('#f-grade input')){ler_form(e);somar()}else if(e.target.matches('input[type=text],textarea')&&!/-txt$/.test(e.target.id))ler_form(e)});
 
@@ -1316,7 +1317,7 @@ let trocaArq=null;
 $('#de-arq').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;$('#de-prev').innerHTML='<span class="aviso">Lendo o arquivo…</span>';
   try{trocaArq=await processarArquivo(f)}catch(err){$('#de-prev').innerHTML='<span class="aviso">Não consegui abrir este arquivo.</span>';return}
   $('#de-prev').innerHTML='';$('#de-prev').append(miniCanvas(trocaArq.c));if(trocaArq.larg)$('#de-larg').value=trocaArq.larg;toast('Arquivo novo pronto. Toque em Guardar.')};
-function aplicarTroca(k){const r=trocaArq;trocaArq=null;if(!r)return;const E=EST[k]||{},w=+String($('#de-larg').value).replace(',','.')||r.larg||E.w||10,h=w*r.c.height/r.c.width;
+function aplicarTroca(k){const r=trocaArq;trocaArq=null;if(!r)return;if(r.knock&&INFO[k]&&(!INFO[k].cor||INFO[k].cor==='BRANCO')){INFO[k].cor='ORIGINAL';gravar('estinfo',INFO)}const E=EST[k]||{},w=+String($('#de-larg').value).replace(',','.')||r.larg||E.w||10,h=w*r.c.height/r.c.width;
   const u={k,nome:(INFO[k]&&INFO[k].nome)||nomeEst(k),w,h,src:r.c.toDataURL('image/png'),car:E.car?1:0,knock:r.knock?1:0};const i=UPS.findIndex(x=>x.k===k);const antes=UPS.slice();if(i>=0)UPS[i]=u;else UPS.push(u);
   try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS=antes;toast('Arquivo grande demais para guardar neste aparelho');return}
   EST[k]={...E,nome:u.nome,w,h,up:1,knock:u.knock};IMG['e-'+k]=r.c;delete cacheURL[k];pintarEditor()}
@@ -1324,6 +1325,7 @@ $('#dlg-up').addEventListener('close',()=>{const {sel,car}=subindo||{};subindo=n
   const nome=($('#du-nome').value||'ESTAMPA').toUpperCase(),w=+$('#du-larg').value||10,h=w*upImg.height/upImg.width,k='up:'+Date.now(),src=upImg.toDataURL('image/png');
   const u={k,nome,w,h,src,car:car?1:0,knock:upImg._knock?1:0};UPS.push(u);try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){UPS.pop();toast('Arquivo grande demais para guardar neste aparelho');return}
   EST[k]={nome:u.nome,w,h,car:u.car,up:1,knock:u.knock};IMG['e-'+k]=upImg;
+  if(u.knock){INFO[k]={...(INFO[k]||{}),cor:'ORIGINAL'};gravar('estinfo',INFO)}
   if(sel){garantirOpcao(sel,k);sel.querySelector(`option[value="${k}"]`).textContent=u.nome;sel.value=k;sel.dispatchEvent(new Event('change',{bubbles:true}))}
   atualizarTudo();if($('#t-estampas').classList.contains('on'))listarEst();abrirEst(k)});
 
