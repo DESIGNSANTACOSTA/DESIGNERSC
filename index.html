@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="42";</script>
+<script>var VERSAO="43";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -265,7 +265,7 @@ dialog::backdrop{background:#0006}
       <figure><canvas id="cv-frente"></canvas><figcaption>FRENTE</figcaption></figure>
       <figure><canvas id="cv-costas"></canvas><figcaption>COSTAS</figcaption></figure>
     </div>
-    <p class="aviso">Arraste a estampa no desenho para mudar o lugar. Use a barrinha "Tamanho no desenho" para aumentar ou diminuir. A medida real se escreve na ficha técnica.</p>
+    <p class="aviso">Arraste a estampa no desenho para subir ou descer. O tamanho muda só na barrinha "Tamanho no desenho". A medida real se escreve na ficha técnica.</p>
   </div>
   <div class="painel">
     <div class="bloco">
@@ -700,12 +700,12 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
     const vis=+((INFO[chave]||{}).vis||E.vis||1)*(+vz||1);const w=wc*A.esc*vis,h=hc*A.esc*vis;let X=cx-w/2,Y=top;
     if(ancora==='centro')Y=top-h/2;if(ancora==='barra'){X=cx-w;Y=top-h}out.push({chave,cor,x:X,y:Y,w,h,papel,cm,wd:wc})};
   if(lado==='frente'){const f=p.fr,aj=(A.ajY||0)*A.esc;
-    if(f.est){if(String(f.pos).startsWith('mini'))por(f.est,f.cor,A.fr.cx+((f.pos==='mini-d'?-12:12)+(+f.dx||0))*A.esc,A.fr.ombro+(+f.dist||A.mini[0])*A.esc+aj,'centro','frente',0,f.larg,f.vz);
-      else por(f.est,f.cor,A.fr.cx+(+f.dx||0)*A.esc,A.fr.gola+(+f.dist||0)*A.esc+aj,'topo','frente',1,f.larg,f.vz)}
+    if(f.est){if(String(f.pos).startsWith('mini'))por(f.est,f.cor,A.fr.cx+(f.pos==='mini-d'?-12:12)*A.esc,A.fr.ombro+(+f.dist||A.mini[0])*A.esc+aj,'centro','frente',0,f.larg,f.vz);
+      else por(f.est,f.cor,A.fr.cx,A.fr.gola+(+f.dist||0)*A.esc+aj,'topo','frente',1,f.larg,f.vz)}
     const bar=p.barra===undefined?(p.sereia===false?'':'sereia'):p.barra;
-    if(bar)por(bar,p.barraCor||p.sereiaCor||'BRANCO',A.fr.lado-3.5*A.esc,A.fr.barra-3.5*A.esc,'barra','barra',0,p.barraLarg,p.barraVz);
+    if(bar)por(bar,p.barraCor||p.sereiaCor||'BRANCO',A.fr.lado-3.5*A.esc,A.fr.barra-3.5*A.esc+(+p.barraDy||0)*A.esc,'barra','barra',0,p.barraLarg,p.barraVz);
     if(p.carimbo&&EST[p.carimbo]){const g=A.fr.gola-A.fr.ombro,costura=A.fr.ombro+g*.35,topo=costura+(CAR.dist===''||CAR.dist==null?2:+CAR.dist)*A.esc;por(p.carimbo,p.carimboCor||'BRANCO',A.fr.cx,topo,'topo','carimbo',0,CAR.larg);const e=out[out.length-1];if(e&&e.papel==='carimbo')e.clip=A.fr.gola-1*A.esc}
-  }else{const f=p.co;if(f.est)por(f.est,f.cor,A.co.cx+(+f.dx||0)*A.esc,A.co.gola+(+f.dist||0)*A.esc,'topo','costas',1,f.larg,f.vz)}
+  }else{const f=p.co;if(f.est)por(f.est,f.cor,A.co.cx,A.co.gola+(+f.dist||0)*A.esc,'topo','costas',1,f.larg,f.vz)}
   (p.extras||[]).forEach((x,i)=>{if(x.lado!==lado||!x.est)return;const pt=(A.lugares[lado]||{})[x.onde]||Object.values(A.lugares[lado])[0];if(!pt)return;
     por(x.est,x.cor,pt[0]+(+x.dx||0)*A.esc,pt[1]+(+x.dy||0)*A.esc,'centro','extra'+i,8,x.larg,x.vz)});
   return out;
@@ -1722,8 +1722,8 @@ function syncFaixas(){if(!FAIXAS||!P||!ART[P.artigo])return;FAIXAS.forEach(([id,
   if(document.activeElement!==r)r.value=Math.min(max,v||1);t.textContent=v?String(v).replace('.',',')+' cm':''})}
 // ---------- estampa mini: o último ajuste dele vira o padrão (lugar, altura e tamanho no desenho) ----------
 function guardarMiniPadrao(){try{if(!P||!P.fr||!P.fr.est||!String(P.fr.pos).startsWith('mini'))return;const A=ART[P.artigo];const el=faixaE('frente','frente');if(!el)return;
-  gravar('miniPadrao',{dd:(+P.fr.dist||A.mini[0])-A.mini[0],dx:(P.fr.pos==='mini-d'?-1:1)*(+P.fr.dx||0),w:el.w/A.esc})}catch(e){}}
-function usarMiniPadrao(){const M=ler('miniPadrao',null),A=ART[P.artigo];if(!M||!A)return;P.fr.dist=String(A.mini[0]+M.dd);P.fr.dx=(P.fr.pos==='mini-d'?-1:1)*M.dx;P.fr.vz=1;
+  gravar('miniPadrao',{dd:(+P.fr.dist||A.mini[0])-A.mini[0],w:el.w/A.esc})}catch(e){}}
+function usarMiniPadrao(){const M=ler('miniPadrao',null),A=ART[P.artigo];if(!M||!A)return;P.fr.dist=String(A.mini[0]+M.dd);P.fr.vz=1;
   const el=faixaE('frente','frente');if(el&&el.w)P.fr.vz=Math.round(M.w/(el.w/A.esc)*1000)/1000}
 // ---------- degradê (igual ao do Canva: cores + estilo) ----------
 let dgAtivo=-1;
@@ -1734,13 +1734,15 @@ function dgBotao(){const d=P.deg||{},b=$('#dg-b');if(!b)return;const c=P.corToda
 function dgMudou(){guardarP();pintarEditor();dgBotao();dgPainel()}
 function dgPainel(){const d=P.deg||{},cs=degCores(P),pn=$('#dg-p'),q=(pn.querySelector('input')||{}).value||'';
   const bola=(c,i)=>`<button type="button" data-dgi="${i}" title="${esc(c)}" style="width:44px;height:44px;border-radius:50%;border:${i===dgAtivo?'3px solid #6a4cff':'1px solid #bbb'};background:${hexDe('pant',c)};position:relative;flex:none">${cs.length>2?`<b data-dgx="${i}" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#111;color:#fff;font-size:12px;line-height:20px">×</b>`:''}</button>`;
-  pn.innerHTML=`<div style="border:${d.on?'2px solid #6a4cff':'1px solid var(--line)'};border-radius:10px;padding:8px;margin-bottom:10px">
-    <div style="font-weight:600;margin:0 0 6px">Degradê ${d.on?'<small style="color:#6a4cff">· em uso</small>':''}</div>
+  if(d.on&&dgAtivo<0)dgAtivo=0;if(!d.on)dgAtivo=-1;
+  const modo=(v,n)=>`<button type="button" data-dgmodo="${v}" style="flex:1;padding:10px;border-radius:10px;font-size:15px;border:${(v==='d')===!!d.on?'2px solid #6a4cff;background:#f3f0ff;font-weight:600':'1px solid var(--line);background:#fff'}">${n}</button>`;
+  pn.innerHTML=`<div style="display:flex;gap:8px;margin-bottom:10px">${modo('s','Cor sólida')}${modo('d','Degradê')}</div>`+
+   (d.on?`<div style="font-weight:600;margin:0 0 6px">Cores do degradê</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;padding:6px 4px">${cs.map(bola).join('')}${cs.length<5?`<button type="button" data-dgmais="1" style="width:44px;height:44px;border-radius:50%;border:1px dashed #888;background:#fff;font-size:22px;flex:none">+</button>`:''}</div>
     <div style="font-weight:600;margin:8px 0 6px">Estilo</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${DG_EST.map(([e,n])=>`<button type="button" data-dge="${e}" title="${n}" style="width:56px;height:40px;border-radius:8px;border:${d.on&&degEstilo(P)===e?'3px solid #6a4cff':'1px solid #bbb'};background:${dgCss(cs,e)}"></button>`).join('')}</div></div>
-    <div style="font-weight:600;margin:4px 0 6px">${dgAtivo>=0?`Escolha a cor da bolinha ${dgAtivo+1} do degradê`:'Cor sólida'}</div>
-    <input type="search" placeholder="Pesquisar cor…" autocomplete="off" value="${esc(q)}"><ul style="max-height:240px;overflow:auto"></ul>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">${DG_EST.map(([e,n])=>`<button type="button" data-dge="${e}" title="${n}" style="width:56px;height:40px;border-radius:8px;border:${degEstilo(P)===e?'3px solid #6a4cff':'1px solid #bbb'};background:${dgCss(cs,e)}"></button>`).join('')}</div>
+    <div style="font-weight:600;margin:4px 0 6px">Cor da bolinha ${dgAtivo+1}</div>`:`<div style="font-weight:600;margin:4px 0 6px">Escolha a cor</div>`)+
+   `<input type="search" placeholder="Pesquisar cor…" autocomplete="off" value="${esc(q)}"><ul style="max-height:240px;overflow:auto"></ul>`;
   dgLista()}
 function dgLista(){const pn=$('#dg-p'),ul=pn.querySelector('ul'),q=pn.querySelector('input');if(!ul)return;const t=semAcento(q.value),d=P.deg||{},atual=dgAtivo>=0?degCores(P)[dgAtivo]:(!d.on&&(P.corTodas||P.fr.cor));
   ul.innerHTML=[['__nova','+ NOVA COR…'],...cores.pant.filter(c=>dgAtivo<0||!/ORIGINAL|SEM COR/.test(c.n)).map(c=>[c.n,c.n]),...(dgAtivo<0?[['SEM COR','SEM COR']]:[])].filter(([v,n])=>v==='__nova'||semAcento(n).includes(t))
@@ -1749,7 +1751,8 @@ $('#dg-b').onclick=e=>{e.stopPropagation();const pn=$('#dg-p'),abrir=pn.hidden;$
 $('#dg-p').addEventListener('input',e=>{if(e.target.matches('input[type=search]'))dgLista()});
 $('#dg-p').addEventListener('click',e=>{e.stopPropagation();const d=P.deg=P.deg||{};const t=e.target;let b;const liga=()=>{if(!(d.cores&&d.cores.length))d.cores=degCores(P).slice();d.on=true};
   if(b=t.closest('[data-dgx]')){liga();d.cores.splice(+b.dataset.dgx,1);dgAtivo=-1;dgMudou();return}
-  if(b=t.closest('[data-dgi]')){const i=+b.dataset.dgi;dgAtivo=dgAtivo===i?-1:i;dgPainel();return}
+  if(b=t.closest('[data-dgmodo]')){if(b.dataset.dgmodo==='d'){liga();dgAtivo=0}else{d.on=false;dgAtivo=-1}dgMudou();return}
+  if(b=t.closest('[data-dgi]')){dgAtivo=+b.dataset.dgi;dgPainel();return}
   if(t.closest('[data-dgmais]')){liga();d.cores.push(d.cores[d.cores.length-1]==='PRETO'?'BRANCO':'PRETO');dgAtivo=d.cores.length-1;dgMudou();return}
   if(b=t.closest('[data-dge]')){liga();d.estilo=b.dataset.dge;dgMudou();return}
   if(b=t.closest('[data-dgc]')){const v=b.dataset.dgc;if(v==='__nova'){$('#dg-p').hidden=true;abrirCor('pant',null,$('#f-cor-todas'));return}
@@ -1797,23 +1800,20 @@ function abrirZoom(lado,q=P){
 }
 for(const lado of['frente','costas']){const cv=$('#cv-'+lado);let ar=null,raf=0;
   const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height,cv.width/r.width]};
-  cv.addEventListener('pointerdown',e=>{const[x,y,k]=pt(e);const es=posicoes(P,lado).filter(q=>q.papel!=='carimbo');const m=14*k;
+  cv.addEventListener('pointerdown',e=>{const[x,y,k]=pt(e);const es=posicoes(P,lado);const m=14*k; // no desenho só se muda a ALTURA da estampa (o tamanho é na barrinha)
     const hit=es.reverse().find(q=>x>=q.x-m&&x<=q.x+q.w+m&&y>=q.y-m&&y<=q.y+q.h+m);
-    ar={x0:e.clientX,y0:e.clientY,k,hit,moveu:false,res:hit&&x>q2(hit).x2-Math.max(28*k,hit.w*.25)&&y>q2(hit).y2-Math.max(28*k,hit.h*.35)};
-    if(hit&&hit.papel==='barra'){ar.barra=true;ar.res=true;ar.vz0=+P.barraVz||1;ar.w0=hit.w;ar.cmW=hit.cm[0];ar.cx=hit.x+hit.w;ar.cy=hit.y+hit.h;ar.d0=Math.max(Math.hypot(hit.w,hit.h)*.6,Math.hypot(ar.cx-x,ar.cy-y))}
-    else if(hit){const A=ART[P.artigo];const alvo=hit.papel==='frente'?P.fr:hit.papel==='costas'?P.co:P.extras[+hit.papel.slice(5)];
-      ar.alvo=alvo;ar.vz0=+alvo.vz||1;ar.dist0=+alvo.dist||0;ar.dx0=+alvo.dx||0;ar.dy0=+alvo.dy||0;ar.w0=hit.w;ar.cmW=hit.cm[0];ar.esc=A.esc}
+    ar={x0:e.clientX,y0:e.clientY,k,hit,moveu:false,esc:ART[P.artigo].esc};
+    if(hit){const p=hit.papel;
+      if(p==='frente'){ar.alvo=P.fr;ar.v0=+P.fr.dist||0}else if(p==='costas'){ar.alvo=P.co;ar.v0=+P.co.dist||0}
+      else if(p==='barra')ar.v0=+P.barraDy||0;else if(p==='carimbo')ar.v0=CAR.dist===''||CAR.dist==null?2:+CAR.dist;
+      else{ar.alvo=P.extras[+p.slice(5)];ar.v0=+ar.alvo.dy||0}}
     cv.setPointerCapture(e.pointerId)});
-  const q2=h=>({x2:h.x+h.w,y2:h.y+h.h});
   cv.addEventListener('pointermove',e=>{if(!ar||!ar.hit)return;const dx=(e.clientX-ar.x0)*ar.k,dy=(e.clientY-ar.y0)*ar.k;if(!ar.moveu&&Math.hypot(dx,dy)<6*ar.k)return;
-    if(!ar.moveu){ar.moveu=true;marcarDesfazer()}const r1=v=>Math.round(v*2)/2;
-    if(ar.barra){const[x,y]=pt(e);const f=Math.max(.3,Math.hypot(ar.cx-x,ar.cy-y)/ar.d0);P.barraVz=Math.round(ar.vz0*f*100)/100}
-    else if(ar.res){const nw=Math.max(ar.w0*.2,ar.w0+dx);ar.alvo.vz=Math.round(ar.vz0*nw/ar.w0*100)/100}
-    else if(ar.hit.papel.startsWith('extra')){ar.alvo.dx=r1(ar.dx0+dx/ar.esc);ar.alvo.dy=r1(ar.dy0+dy/ar.esc)}
-    else{ar.alvo.dist=String(Math.max(0,r1(ar.dist0+dy/ar.esc)));ar.alvo.dx=r1(ar.dx0+dx/ar.esc)}
+    if(!ar.moveu){ar.moveu=true;marcarDesfazer()}const v=Math.round((ar.v0+dy/ar.esc)*10)/10,p=ar.hit.papel;
+    if(p==='frente'||p==='costas')ar.alvo.dist=String(Math.max(0,v));else if(p==='barra')P.barraDy=v;else if(p==='carimbo')CAR.dist=String(Math.max(0,v));else ar.alvo.dy=v;
     if(!raf)raf=requestAnimationFrame(()=>{raf=0;const src=desenhar(P,lado);cv.getContext('2d').clearRect(0,0,cv.width,cv.height);cv.getContext('2d').drawImage(src,0,0)})});
-  const fim=e=>{if(!ar)return;const a=ar;ar=null;if(a.moveu){if(!a.res&&a.alvo&&(a.alvo===P.fr||a.alvo===P.co)){P.ov=P.ov||{};delete P.ov[(a.alvo===P.fr?'fr':'co')+'.loc']}
-      guardarP();if(a.alvo===P.fr)guardarMiniPadrao();preencher();desenharExtras();pintarEditor();toast(a.res?'Tamanho mudado só no desenho (a ficha mantém a medida real)':'Posição mudada')}
+  const fim=e=>{if(!ar)return;const a=ar;ar=null;if(a.moveu){const p=a.hit.papel;if(p==='frente'||p==='costas'){P.ov=P.ov||{};delete P.ov[(p==='frente'?'fr':'co')+'.loc']}if(p==='carimbo')gravar('carPadrao',CAR);
+      guardarP();if(p==='frente')guardarMiniPadrao();preencher();desenharExtras();pintarEditor();toast('Altura mudada')}
     else if(e.type==='pointerup')abrirZoom(lado)};
   cv.addEventListener('pointerup',fim);cv.addEventListener('pointercancel',fim)}
 $('#zoom').addEventListener('click',e=>{const b=e.target.closest('[data-z]');if(!b)return;const d=+b.dataset.z;
