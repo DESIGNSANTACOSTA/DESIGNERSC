@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="44";</script>
+<script>var VERSAO="45";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -455,11 +455,12 @@ dialog::backdrop{background:#0006}
     <h3 id="dc-tit" style="margin-top:0">Nova cor</h3>
     <div class="linha">
       <label id="dc-fam-l">Cor<select id="dc-fam"><option value="">—</option></select></label>
-      <label>Complemento (só se não tiver código)<input type="text" id="dc-nome" placeholder="EX.: MARMORIZADO"></label>
+      <label>Código Pantone<input type="text" id="dc-ptn" placeholder="EX.: 2945"></label>
+      <input type="hidden" id="dc-nome">
     </div>
-    <div class="linha" style="margin-top:10px">
-      <label id="dc-pan-l">Código da lavanderia (tom)<input type="text" id="dc-pan" placeholder="EX.: 1449P"></label>
-      <label id="dc-cod-l">Código<input type="text" id="dc-cod" placeholder="EX.: 11068"></label>
+    <div class="linha" style="margin-top:10px" id="dc-lav">
+      <label id="dc-pan-l">Código da lavanderia (tom da cor)<input type="text" id="dc-pan" placeholder="EX.: 1449P"></label>
+      <label id="dc-cod-l">Código da lavanderia Rudimar<input type="text" id="dc-cod" placeholder="EX.: 11068"></label>
     </div>
     <input type="hidden" id="dc-obs">
     <p class="aviso" style="margin:6px 0 0">Nome que vai ficar: <b id="dc-final"></b></p>
@@ -662,12 +663,13 @@ const hexDe=(tipo,n)=>n==='SEM COR'?(tipo==='ting'?'#ffffff':'#cccccc'):hexDe0(t
 
 // ---------- desenhar a peça ----------
 const degCores=p=>{const d=p.deg||{};return d.cores&&d.cores.length?d.cores:d.c2?[p.corTodas||'BRANCO',d.c2]:['PRETO','BRANCO']};
+const degPos=p=>{const d=p.deg||{},n=degCores(p).length;const ps=(d.pos||[]).slice(0,n);for(let i=0;i<n;i++)if(ps[i]==null)ps[i]=n>1?Math.round(i*100/(n-1)):0;for(let i=1;i<n;i++)if(ps[i]<ps[i-1])ps[i]=ps[i-1];return ps};
 const degEstilo=p=>{const d=p.deg||{};return d.estilo||d.dir||'v'};
 function tingir(img,hex,w,h,hex2,dir){
   const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
   x.drawImage(img,0,0,w,h);x.globalCompositeOperation='source-in';
-  if(hex2){const L=Array.isArray(hex2)?hex2:[hex,hex2];const g=dir==='h'?x.createLinearGradient(0,0,w,0):dir==='d'?x.createLinearGradient(0,0,w,h):dir==='d2'?x.createLinearGradient(w,0,0,h):dir==='r'?x.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*.6):x.createLinearGradient(0,0,0,h);
-    L.forEach((c,i)=>g.addColorStop(L.length>1?i/(L.length-1):0,c));x.fillStyle=g}else x.fillStyle=hex;
+  if(hex2){const L=Array.isArray(hex2)?hex2:[hex,hex2],PS=tingir.pos;const g=dir==='h'?x.createLinearGradient(0,0,w,0):dir==='d'?x.createLinearGradient(0,0,w,h):dir==='d2'?x.createLinearGradient(w,0,0,h):dir==='r'?x.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*.6):x.createLinearGradient(0,0,0,h);
+    L.forEach((c,i)=>g.addColorStop(PS&&PS[i]!=null?Math.min(1,Math.max(0,PS[i]/100)):(L.length>1?i/(L.length-1):0),c));x.fillStyle=g}else x.fillStyle=hex;
   x.fillRect(0,0,w,h);return c;
 }
 // ---------- alfabeto Santacosta: escrever estampas ----------
@@ -723,7 +725,7 @@ function desenhar(p,lado,k=1){
   for(const e of posicoes(p,lado)){const im=IMG['e-'+e.chave];if(!im)continue;
     const w=Math.max(1,Math.round(e.w*k)),h=Math.max(1,Math.round(e.h*k));
     const dg=p.deg&&p.deg.on?p.deg:null;if(e.clip){y.save();y.beginPath();y.rect(0,0,W,e.clip*k);y.clip()}
-    y.drawImage(/ILUSTRAD|ORIGINAL/.test(String(e.cor).toUpperCase())||(String(e.cor)==='SEM COR'&&!dg)?im:tingir(daTinta(e.chave,im),hexDe('pant',e.cor),w,h,dg?degCores(p).map(c=>hexDe('pant',c)):null,dg&&degEstilo(p)),e.x*k,e.y*k,w,h);if(e.clip)y.restore()}
+    y.drawImage(/ILUSTRAD|ORIGINAL/.test(String(e.cor).toUpperCase())||(String(e.cor)==='SEM COR'&&!dg)?im:(tingir.pos=dg?degPos(p):null,tingir(daTinta(e.chave,im),hexDe('pant',e.cor),w,h,dg?degCores(p).map(c=>hexDe('pant',c)):null,dg&&degEstilo(p))),e.x*k,e.y*k,w,h);if(e.clip)y.restore()}
   const T=document.createElement('canvas');T.width=W;T.height=H;const t=T.getContext('2d');
   t.drawImage(L,0,0);t.globalCompositeOperation='multiply';t.filter='brightness(1.1)';t.drawImage(base,0,0,W,H);t.filter='none';
   t.globalCompositeOperation='destination-in';t.drawImage(L,0,0);
@@ -1353,11 +1355,11 @@ function partesCor(tipo,c){if(c.nome!=null)return c;const tk=String(c.n).split(/
   let i=tk.length;while(i>0&&(/\d/.test(tk[i-1])||tk[i-1]==='/'))i--;const cods=tk.slice(i).join(' ').split('/').map(t=>t.trim()).filter(Boolean);
   return {fam,nome:tk.slice(0,i).join(' '),pan:tipo==='ting'?(cods[0]||''):'',cod:tipo==='ting'?(cods[1]||''):(cods.join(' ')),obs:c.obs||''}}
 function comporCor(tipo){const fam=$('#dc-fam').value,nome=$('#dc-nome').value.trim().toUpperCase(),pan=$('#dc-pan').value.trim().toUpperCase(),cod=$('#dc-cod').value.trim().toUpperCase();
-  if(tipo==='pant')return nomeCor('pant',nome,cod);return [fam,nome,[pan,cod].filter(Boolean).join(' / ')].filter(Boolean).join(' ')}
-['#dc-fam','#dc-nome','#dc-pan','#dc-cod'].forEach(id=>$(id).addEventListener('input',()=>{if(editando)$('#dc-final').textContent=comporCor(editando.tipo)}));
+  const ptn=$('#dc-ptn').value.trim().toUpperCase();if(tipo==='pant')return nomeCor('pant',[fam,nome].filter(Boolean).join(' '),ptn);return [fam,nome,[pan,cod].filter(Boolean).join(' / ')].filter(Boolean).join(' ')}
+['#dc-fam','#dc-nome','#dc-pan','#dc-cod','#dc-ptn'].forEach(id=>$(id).addEventListener('input',()=>{if(editando)$('#dc-final').textContent=comporCor(editando.tipo)}));
 $('#dc-fam').innerHTML='<option value="">—</option>'+CORES_BASE.map(n=>`<option>${n}</option>`).join('');
 function listarCores(){const q=semAcento($('#c-busca').value||'');
-  for(const t of['ting','pant'])$('#c-'+t).innerHTML=cores[t].map((c,i)=>semAcento(c.n).includes(q)?`<button class="cor" data-ed="${t}|${i}"><i style="background:${esc(c.h)}"></i>${esc(c.n)}${c.obs?` <small style="opacity:.6">· ${esc(c.obs)}</small>`:''}</button>`:'').join('');
+  for(const t of['ting','pant'])$('#c-'+t).innerHTML=cores[t].map((c,i)=>semAcento(c.n).includes(q)?`<button class="cor" data-ed="${t}|${i}"><i style="background:${esc(c.h)}"></i>${esc(c.n)}${c.pantone?` <small style="opacity:.6">· PANTONE ${esc(c.pantone)}</small>`:''}${c.obs?` <small style="opacity:.6">· ${esc(c.obs)}</small>`:''}</button>`:'').join('');
 }
 $('#c-busca').addEventListener('input',listarCores);
 function nomeCor(tipo,nome,cod){nome=nome.trim().toUpperCase();cod=cod.trim().toUpperCase();
@@ -1368,8 +1370,8 @@ let editando=null,hsv=[0,0,.5];
 function abrirCor(tipo,i,sel,nomeSugerido){
   editando={tipo,i,sel};const c=i!=null?cores[tipo][i]:{n:nomeSugerido||'',h:'#888888'};
   $('#dc-tit').textContent=(i!=null?'Editar cor':'Nova cor')+(tipo==='ting'?' de tingimento':' de estampa (Pantone)');
-  const pc=partesCor(tipo,c);$('#dc-fam').value=pc.fam||'';$('#dc-nome').value=pc.nome||'';$('#dc-pan').value=pc.pan||'';$('#dc-cod').value=pc.cod||'';$('#dc-obs').value=c.obs||'';
-  $('#dc-pan-l').hidden=tipo!=='ting';$('#dc-cod-l').firstChild.textContent=tipo==='ting'?'Código da estamparia Rudimar':'Código Pantone';$('#dc-final').textContent=comporCor(tipo)||c.n;
+  const pc=partesCor(tipo,c);$('#dc-fam').value=pc.fam||'';$('#dc-nome').value=pc.nome||'';$('#dc-pan').value=pc.pan||'';$('#dc-cod').value=tipo==='ting'?(pc.cod||''):'';$('#dc-ptn').value=tipo==='pant'?String(pc.cod||'').replace(/U$/,''):(c.pantone||'');$('#dc-obs').value=c.obs||'';
+  $('#dc-lav').style.display=tipo==='ting'?'':'none';$('#dc-final').textContent=comporCor(tipo)||c.n;
   $('#dc-del').style.display=i!=null?'':'none';
   $('#dc-dica').textContent=tipo==='pant'?'O código Pantone sai com U no final (ex.: 2945 → 2945U).':'';
   $('#cartela').innerHTML=tipo==='ting'?CARTELA.map(n=>`<option value="${esc(n.toUpperCase())}">`).join(''):'';
@@ -1394,7 +1396,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-nova],[dat
 $('#dlg-cor').addEventListener('close',()=>{
   const v=$('#dlg-cor').returnValue,{tipo,i,sel}=editando||{};if(!tipo)return;editando=null;
   const n=comporCor(tipo),h=hsv2hex(...hsv),obs=$('#dc-obs').value.trim().toUpperCase();let feito=null;
-  if(v==='ok'&&n){if(i!=null){const velho=cores[tipo][i].n;cores[tipo][i]={n,h,obs};trocarNomeCor(tipo,velho,n)}else{const j=cores[tipo].findIndex(c=>c.n===n);if(j>=0){cores[tipo][j].h=h;cores[tipo][j].obs=obs}else cores[tipo].push({n,h,obs})}feito=n}
+  const pantone=tipo==='ting'?$('#dc-ptn').value.trim().toUpperCase():'';if(v==='ok'&&n){if(i!=null){const velho=cores[tipo][i].n;cores[tipo][i]={n,h,obs,pantone};trocarNomeCor(tipo,velho,n)}else{const j=cores[tipo].findIndex(c=>c.n===n);if(j>=0){cores[tipo][j].h=h;cores[tipo][j].obs=obs;cores[tipo][j].pantone=pantone}else cores[tipo].push({n,h,obs,pantone})}feito=n}
   if(v==='del'&&i!=null){if(!confirm('Apagar a cor '+cores[tipo][i].n+'?'))return;cores[tipo].splice(i,1)}
   gravar('cores2',cores);for(const k in cacheURL)delete cacheURL[k];
   if(sel&&feito){garantirOpcao(sel,feito);sel.value=feito;sel.dispatchEvent(new Event('change',{bubbles:true}))}
@@ -1733,7 +1735,7 @@ function usarMiniPadrao(){const M=ler('miniPadrao',null),A=ART[P.artigo];if(!M||
 // ---------- degradê (igual ao do Canva: cores + estilo) ----------
 let dgAtivo=-1;
 var DG_EST=[['v','De cima para baixo','to bottom'],['h','Da esquerda para a direita','to right'],['d','Na diagonal','to bottom right'],['r','Do centro para fora','radial'],['d2','Na diagonal (outro lado)','to bottom left']];
-const dgCss=(cs,e)=>{const L=cs.map(c=>hexDe('pant',c)).join(',');return e==='r'?`radial-gradient(circle,${L})`:`linear-gradient(${(DG_EST.find(x=>x[0]===e)||DG_EST[0])[2]},${L})`};
+const dgCss=(cs,e)=>{const ps=degPos(P);const L=cs.map((c,i)=>hexDe('pant',c)+' '+(ps[i]??0)+'%').join(',');return e==='r'?`radial-gradient(circle,${L})`:`linear-gradient(${(DG_EST.find(x=>x[0]===e)||DG_EST[0])[2]},${L})`};
 function dgBotao(){const d=P.deg||{},b=$('#dg-b');if(!b)return;const c=P.corTodas||P.fr.cor||'BRANCO';
   b.innerHTML=d.on?`<i class="mini" style="border-radius:6px;background:${dgCss(degCores(P),degEstilo(P))}"></i><span>DEGRADÊ · ${degCores(P).map(esc).join(' > ')}</span>`:`${miniDe('pant',c)}<span>${esc(c)}</span>`}
 function dgMudou(){guardarP();pintarEditor();dgBotao();dgPainel()}
@@ -1746,6 +1748,8 @@ function dgPainel(){const d=P.deg||{},cs=degCores(P),pn=$('#dg-p'),q=(pn.querySe
     <div style="display:flex;gap:10px;flex-wrap:wrap;padding:6px 4px">${cs.map(bola).join('')}${cs.length<5?`<button type="button" data-dgmais="1" style="width:44px;height:44px;border-radius:50%;border:1px dashed #888;background:#fff;font-size:22px;flex:none">+</button>`:''}</div>
     <div style="font-weight:600;margin:8px 0 6px">Estilo</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">${DG_EST.map(([e,n])=>`<button type="button" data-dge="${e}" title="${n}" style="width:56px;height:40px;border-radius:8px;border:${degEstilo(P)===e?'3px solid #6a4cff':'1px solid #bbb'};background:${dgCss(cs,e)}"></button>`).join('')}</div>
+    <div style="font-weight:600;margin:4px 0 2px">Até onde vai a cor da bolinha ${dgAtivo+1}</div>
+    <input type="range" id="dg-pos" min="0" max="100" step="1" value="${degPos(P)[dgAtivo]??0}" style="width:100%"><div style="font-size:13px;margin-bottom:8px"><b id="dg-pos-t">${degPos(P)[dgAtivo]??0}%</b> <span style="color:#777">(0% = começo, 100% = fim)</span></div>
     <div style="font-weight:600;margin:4px 0 6px">Cor da bolinha ${dgAtivo+1}</div>`:`<div style="font-weight:600;margin:4px 0 6px">Escolha a cor</div>`)+
    `<input type="search" placeholder="Pesquisar cor…" autocomplete="off" value="${esc(q)}"><ul style="max-height:240px;overflow:auto"></ul>`;
   dgLista()}
@@ -1753,12 +1757,13 @@ function dgLista(){const pn=$('#dg-p'),ul=pn.querySelector('ul'),q=pn.querySelec
   ul.innerHTML=[['__nova','+ NOVA COR…'],...cores.pant.filter(c=>dgAtivo<0||!/ORIGINAL|SEM COR/.test(c.n)).map(c=>[c.n,c.n]),...(dgAtivo<0?[['SEM COR','SEM COR']]:[])].filter(([v,n])=>v==='__nova'||semAcento(n).includes(t))
     .map(([v,n])=>`<li data-dgc="${esc(v)}" class="${v===atual?'on':''}">${miniDe('pant',v)}${esc(n)}</li>`).join('')||'<li style="color:#888">Nada encontrado</li>'}
 $('#dg-b').onclick=e=>{e.stopPropagation();const pn=$('#dg-p'),abrir=pn.hidden;$$('.cbx-p').forEach(x=>x.hidden=true);if(abrir){dgAtivo=-1;pn.hidden=false;dgPainel()}};
-$('#dg-p').addEventListener('input',e=>{if(e.target.matches('input[type=search]'))dgLista()});
+$('#dg-p').addEventListener('change',e=>e.stopPropagation());
+$('#dg-p').addEventListener('input',e=>{e.stopPropagation();if(e.target.matches('input[type=search]'))dgLista();if(e.target.id==='dg-pos'){const d=P.deg;d.pos=degPos(P);const v=+e.target.value;d.pos[dgAtivo]=v;for(let i=0;i<d.pos.length;i++){if(i<dgAtivo&&d.pos[i]>v)d.pos[i]=v;if(i>dgAtivo&&d.pos[i]<v)d.pos[i]=v}$('#dg-pos-t').textContent=v+'%';guardarP();pintarEditor();dgBotao();$$('#dg-p [data-dge]').forEach(b=>b.style.background=dgCss(degCores(P),b.dataset.dge))}});
 $('#dg-p').addEventListener('click',e=>{e.stopPropagation();const d=P.deg=P.deg||{};const t=e.target;let b;const liga=()=>{if(!(d.cores&&d.cores.length))d.cores=degCores(P).slice();d.on=true};
-  if(b=t.closest('[data-dgx]')){liga();d.cores.splice(+b.dataset.dgx,1);dgAtivo=-1;dgMudou();return}
+  if(b=t.closest('[data-dgx]')){liga();d.cores.splice(+b.dataset.dgx,1);delete d.pos;dgAtivo=-1;dgMudou();return}
   if(b=t.closest('[data-dgmodo]')){if(b.dataset.dgmodo==='d'){liga();dgAtivo=0}else{d.on=false;dgAtivo=-1}dgMudou();return}
   if(b=t.closest('[data-dgi]')){dgAtivo=+b.dataset.dgi;dgPainel();return}
-  if(t.closest('[data-dgmais]')){liga();d.cores.push(d.cores[d.cores.length-1]==='PRETO'?'BRANCO':'PRETO');dgAtivo=d.cores.length-1;dgMudou();return}
+  if(t.closest('[data-dgmais]')){liga();delete d.pos;d.cores.push(d.cores[d.cores.length-1]==='PRETO'?'BRANCO':'PRETO');dgAtivo=d.cores.length-1;dgMudou();return}
   if(b=t.closest('[data-dge]')){liga();d.estilo=b.dataset.dge;dgMudou();return}
   if(b=t.closest('[data-dgc]')){const v=b.dataset.dgc;if(v==='__nova'){$('#dg-p').hidden=true;abrirCor('pant',null,$('#f-cor-todas'));return}
     if(dgAtivo>=0){liga();d.cores[dgAtivo]=v;dgMudou();return}
