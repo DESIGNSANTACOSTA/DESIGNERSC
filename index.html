@@ -489,8 +489,7 @@ dialog::backdrop{background:#0006}
 <dialog id="dlg-saida">
   <form method="dialog" style="text-align:center">
     <h3 style="margin-top:0" id="ds-tit">Salvar ficha</h3>
-    <div class="botoes" style="justify-content:center"><button class="btn" value="png">Salvar em PNG</button><button class="btn" value="pdf">Imprimir / PDF</button></div>
-    <div style="text-align:left;margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:12px">
+    <div style="text-align:left;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:12px">
       <b style="font-size:14px">Para imprimir</b>
       <div class="linha" style="margin-top:6px">
         <label>Papel<select id="ds-papel"><option value="A4">A4</option><option value="A3">A3</option><option value="Letter">Carta</option></select></label>
@@ -498,6 +497,7 @@ dialog::backdrop{background:#0006}
       </div>
       <p class="aviso" style="margin:6px 0 0">A folha sempre sai deitada, inteira e centralizada no papel. Na janela de impressão escolha a impressora (ou "Salvar como PDF").</p>
     </div>
+    <div class="botoes" style="justify-content:center"><button class="btn" value="png">Salvar em PNG</button><button class="btn" value="pdf">Imprimir / PDF</button></div>
     <p class="aviso" id="ds-aviso">A ficha também fica guardada em Biblioteca → Fichas, do jeitinho que está agora.</p>
     <button class="btn claro" value="cancel" formnovalidate>Cancelar</button>
   </form>
