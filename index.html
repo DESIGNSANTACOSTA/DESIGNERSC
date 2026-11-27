@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611270210";</script>
+<script>var VERSAO="202611270900";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -276,7 +276,7 @@ dialog::backdrop{background:#0006}
       <div class="pest" data-p="fr">
        <div class="linha">
         <label>Estampa da frente<select id="f-fr-est" class="selest"></select></label>
-        <label style="display:none">Ou escreva com o alfabeto<input type="text" id="f-fr-txt"></label>
+        <label>Ou escreva (só nesta peça)<input type="text" id="f-fr-txt" placeholder="EX.: ITAPUÁ"></label>
         <label>Onde<select id="f-fr-pos"><option value="frontal">Frontal (peito)</option><option value="mini">Mini (lado do peito)</option></select></label>
         <label id="l-fr-dist">Distância da gola (cm)<input type="number" step="0.5" id="f-fr-dist"></label>
         <label>Tamanho no desenho (cm)<input type="number" step="0.5" min="0.5" id="f-fr-larg"></label>
@@ -295,7 +295,7 @@ dialog::backdrop{background:#0006}
       <div class="pest" data-p="co">
        <div class="linha">
         <label>Estampa das costas<select id="f-co-est" class="selest"></select></label>
-        <label style="display:none">Ou escreva com o alfabeto<input type="text" id="f-co-txt"></label>
+        <label>Ou escreva (só nesta peça)<input type="text" id="f-co-txt" placeholder="EX.: GAROPABA"></label>
         <label>Onde<select id="f-co-pos"><option value="nuca">Nuca</option><option value="costas">Costas (grande)</option></select></label>
         <label>Distância da gola (cm)<input type="number" step="0.5" id="f-co-dist"></label>
         <label>Tamanho no desenho (cm)<input type="number" step="0.5" min="0.5" id="f-co-larg"></label>
@@ -710,7 +710,7 @@ function pintarEditor(){
 function opcoes(sel,lista,vazio){sel.innerHTML=(vazio?`<option value="">${vazio}</option>`:'')+lista.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join('')}
 function listaEst(car){ // [valor, nome] para as caixas de estampa
   const vivo=k=>!(INFO[k]&&INFO[k].apagado);
-  const txts=[...new Set([...PRONTOS.map(t=>'txt:'+t),...Object.keys(INFO).filter(k=>k.startsWith('txt:'))])].filter(vivo);
+  const txts=[...new Set([...PRONTOS.map(t=>'txt:'+t),...Object.keys(INFO).filter(k=>k.startsWith('txt:')&&txtSalvo(k))])].filter(vivo);
   const l=car?Object.entries(EST).filter(([k,e])=>vivo(k)&&(e.car||e.up||(INFO[k]||{}).loc==='CARIMBO INTERNO')).map(([k,e])=>[k,rotuloEst(k)])
     :[...txts.map(k=>[k,rotuloEst(k)]),...Object.entries(EST).filter(([k,e])=>vivo(k)&&!e.car&&!k.startsWith('txt:')).map(([k,e])=>[k,rotuloEst(k)])];
   return [['__up','+ SUBIR ARQUIVO…'],...l]}
@@ -726,7 +726,7 @@ function preencher(){
   if(P.barra===undefined){P.barra=P.sereia===false?'':'sereia';P.barraCor=P.sereiaCor||'BRANCO';P.barraTipo=P.sereiaTipo||'ESTAMPA'}
   $('#f-artigo').value=P.artigo;garantirOpcao($('#f-ting'),P.ting);$('#f-ting').value=P.ting;
   for(const k of['fr','co']){const se=$(`#f-${k}-est`);garantirOpcao(se,P[k].est);
-    $(`#f-${k}-txt`).value=P[k].est&&P[k].est.startsWith('txt:')?P[k].est.slice(4).toUpperCase():'';
+    $(`#f-${k}-txt`).value=P[k].est&&P[k].est.startsWith('txt:')&&!PRONTOS.includes(P[k].est.slice(4))&&!txtSalvo(P[k].est)?P[k].est.slice(4).toUpperCase():'';
     se.value=P[k].est;$(`#f-${k}-pos`).value=P[k].pos;garantirOpcao($(`#f-${k}-cor`),P[k].cor);$(`#f-${k}-cor`).value=P[k].cor;$(`#f-${k}-dist`).value=P[k].dist;$(`#f-${k}-tipo`).value=P[k].tipo||'ESTAMPA';$(`#f-${k}-larg`).value=P[k].larg||''}
   for(const[k,l]of[['fr','frente'],['co','costas']]){const e=posicoes(P,l).find(e=>e.papel===l);$(`#f-${k}-larg`).placeholder=e?String(Math.round(e.wd*10)/10).replace('.',','):''}
   $('#l-fr-dist').firstChild.textContent=P.fr.pos==='mini'?'Distância do ombro, tam. M (cm)':'Distância da gola (cm)';
@@ -1077,9 +1077,10 @@ $('#lista-salvas').addEventListener('click',e=>{const b=e.target.closest('button
 });
 
 // ---------- estampas guardadas ----------
-function novaEstampaTalvez(k){if(k&&k.startsWith('txt:')&&!PRONTOS.includes(k.slice(4))&&!INFO[k]){INFO[k]={};gravar('estinfo',INFO);abrirEst(k)}}
+function novaEstampaTalvez(k){} // escrever na peça não salva estampa: só a Biblioteca > Estampas salva
+const txtSalvo=k=>{const I=INFO[k];return !!I&&!I.apagado&&!!(I.salva||I.ref||I.cli||I.larg||I.loc||I.nome)};
 function usosEst(k){const r=[];for(const p of pecas){const ch=[p.fr&&p.fr.est,p.co&&p.co.est,p.barra,p.carimbo,...(p.extras||[]).map(x=>x.est)];if(ch.includes(k))r.push(p.ref||p.nome||'SEM REF.')}return [...new Set(r)]}
-function todasEst(){return [...new Set([...PRONTOS.map(t=>'txt:'+t),...Object.keys(INFO).filter(k=>k.startsWith('txt:')),...Object.keys(EST).filter(k=>!k.startsWith('txt:'))])].filter(k=>!(INFO[k]&&INFO[k].apagado))}
+function todasEst(){return [...new Set([...PRONTOS.map(t=>'txt:'+t),...Object.keys(INFO).filter(k=>k.startsWith('txt:')&&txtSalvo(k)),...Object.keys(EST).filter(k=>!k.startsWith('txt:'))])].filter(k=>!(INFO[k]&&INFO[k].apagado))}
 function listarEst(){const q=semAcento($('#e-busca').value||'').trim();
   const h=todasEst().map(k=>{garantirTexto(k);const I=INFO[k]||{},E=EST[k]||{},us=usosEst(k);
     const tam=I.larg?`${String(I.larg).replace('.',',')} CM DE LARGURA`:(E.w?fmtCm([E.w,E.h]):'');
@@ -1101,7 +1102,7 @@ function abrirEst(k){estAberta=k;trocaArq=null;const I=INFO[k]||{},E=EST[k]||{};
   $('#dlg-est').showModal()}
 $('#e-lista').addEventListener('click',e=>{const b=e.target.closest('[data-est]');if(b)abrirEst(b.dataset.est)});
 $('#dlg-est').addEventListener('close',()=>{const k=estAberta,v=$('#dlg-est').returnValue;estAberta=null;if(!k)return;
-  if(v==='ok'){const I0=INFO[k]||{},up=x=>x.trim().toUpperCase();INFO[k]={nome:up($('#de-nome').value),loc:$('#de-loc').value,tipo:$('#de-tipo').value,larg:$('#de-larg').value.replace(',','.'),cor:$('#de-cor').value,ref:up($('#de-ref').value),cli:up($('#de-cli').value),obs:up($('#de-obs').value)};if(I0.vis)INFO[k].vis=I0.vis;
+  if(v==='ok'){const I0=INFO[k]||{},up=x=>x.trim().toUpperCase();INFO[k]={salva:1,nome:up($('#de-nome').value),loc:$('#de-loc').value,tipo:$('#de-tipo').value,larg:$('#de-larg').value.replace(',','.'),cor:$('#de-cor').value,ref:up($('#de-ref').value),cli:up($('#de-cli').value),obs:up($('#de-obs').value)};if(I0.vis)INFO[k].vis=I0.vis;
     if(!INFO[k].nome)delete INFO[k].nome;gravar('estinfo',INFO);
     if(k.startsWith('up:')){const u=UPS.find(u=>u.k===k);if(u&&INFO[k].nome){u.nome=INFO[k].nome;EST[k].nome=u.nome;try{localStorage.setItem('sc_ups',JSON.stringify(UPS))}catch(e){}}}
     aplicarTroca(k);toast('Estampa guardada')}
@@ -1110,7 +1111,7 @@ $('#dlg-est').addEventListener('close',()=>{const k=estAberta,v=$('#dlg-est').re
     gravar('estinfo',INFO);toast('Estampa excluída')}
   atualizarTudo();listarEst()});
 $('#e-subir').onclick=()=>abrirUp(null,0);
-$('#e-escrever').onclick=()=>{const t=prompt('O que vai ser escrito com o alfabeto?');if(!t||!t.trim())return;const k='txt:'+t.trim().toLowerCase();INFO[k]=INFO[k]&&!INFO[k].apagado?INFO[k]:{};gravar('estinfo',INFO);atualizarTudo();listarEst();abrirEst(k)};
+$('#e-escrever').onclick=()=>{const t=prompt('O que vai ser escrito com o alfabeto?');if(!t||!t.trim())return;const k='txt:'+t.trim().toLowerCase();INFO[k]=INFO[k]&&!INFO[k].apagado?INFO[k]:{};INFO[k].salva=1;gravar('estinfo',INFO);atualizarTudo();listarEst();abrirEst(k)};
 
 const MED0=[{"id": "camiseta-unissex", "g": "CAMISETAS", "nome": "CAMISETA UNISSEX", "fr": 11, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "manga-longa", "g": "CAMISETAS", "nome": "CAMISETA MANGA LONGA", "fr": 11, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "camiseta-over", "g": "CAMISETAS", "nome": "CAMISETA OVERSIZED", "fr": 11, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nota": "[CONFERIR] NÃO ESTÁ NA FICHA DE LOCALIZAÇÃO; MEDIDAS IGUAIS À UNISSEX.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "slim-gola-v", "g": "CAMISETAS", "nome": "CAMISETA SLIM GOLA V", "fr": 9, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nota": "[CONFERIR] NÃO ESTÁ NA FICHA DE LOCALIZAÇÃO.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "lycra-manga-longa", "g": "CAMISETAS", "nome": "LYCRA MANGA LONGA", "fr": null, "mini": [], "ass": [], "nota": "[CONFERIR] NÃO ESTÁ NA FICHA DE LOCALIZAÇÃO. SÓ COSTAS.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "babylook-acinturada", "g": "BABY LOOK", "nome": "BABY LOOK ACINTURADA (MODELAGEM ANTIGA)", "fr": 5, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "babylook-reta", "g": "BABY LOOK", "nome": "BABY LOOK RETA (MODELAGEM NOVA)", "fr": 9, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "cropped-manga", "g": "CROPPEDS", "nome": "CROPPED COM MANGA", "fr": 9, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "cropped-afio", "g": "CROPPEDS", "nome": "CROPPED REGATA A FIO", "fr": 5, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "nota": "[CONFERIR] NA FICHA DE LOCALIZAÇÃO ESTÁ COMO CROPPED NADADOR.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "cropped-ribana", "g": "CROPPEDS", "nome": "CROPPED REGATA RIBANA", "fr": null, "mini": [], "ass": [], "nota": "BORDADO PEITO ABAIXO DO PONTO MAIS ALTO DO OMBRO, MEDINDO PELA PARTE BAIXA: 17CM PARA A REFERÊNCIA A, 3CM PARA A REFERÊNCIA B, 4,5CM PARA A REFERÊNCIA C.\nETIQUETA INTERNA CENTRALIZADA AO MEIO DAS COSTAS, RENTE À COSTURA DA GOLA.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "regata-machao", "g": "REGATAS", "nome": "REGATA MACHÃO", "fr": 9, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "regata-friso", "g": "REGATAS", "nome": "REGATA MASCULINA COM FRISO", "fr": 9, "mini": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "ass": [["PP - P - M", 21], ["G - 2G", 23], ["3G - 4G", 25]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "regata-ribana", "g": "REGATAS", "nome": "REGATA RIBANA", "fr": null, "mini": [], "ass": [], "nota": "BORDADO PEITO ABAIXO DO PONTO MAIS ALTO DO OMBRO, MEDINDO PELA PARTE BAIXA: 17CM PARA A REFERÊNCIA A, 3CM PARA A REFERÊNCIA B, 4,5CM PARA A REFERÊNCIA C.\nETIQUETA INTERNA CENTRALIZADA AO MEIO DAS COSTAS, RENTE À COSTURA DA GOLA.", "nuca": 2, "car": 2, "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-manga", "g": "VESTIDOS", "nome": "VESTIDO COM MANGA", "fr": 6, "mini": [["PP - P - M", 20], ["G - 2G", 21], ["3G - 4G", 22]], "ass": [["PP - P - M", 22], ["G - 2G", 23], ["3G - 4G", 24]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-nadador", "g": "VESTIDOS", "nome": "VESTIDO CURTO NADADOR", "fr": 6.5, "mini": [["PP - P - M", 22], ["G - 2G", 23], ["3G - 4G", 24]], "ass": [["PP - P - M", 22], ["G - 2G", 23], ["3G - 4G", 24]], "nuca": 2, "car": 2, "nota": "", "frG": [], "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-alca-fio", "g": "VESTIDOS", "nome": "VESTIDO ALÇA FIO", "fr": 4.5, "ref": "ABAIXO DA COSTURA DO FRISO", "mini": [["PP - P - M", 8], ["G - 2G", 9]], "ass": [["PP - P - M", 8], ["G - 2G", 9]], "nota": "MINI ABAIXO DA COSTURA DO FRISO.", "nuca": 2, "car": 2, "frG": []}, {"id": "body-baby", "g": "INFANTIL", "nome": "BODY BABY", "fr": null, "frG": [["RN - P - M", 5.5], ["G - 2G", 6]], "mini": [["RN - P - M", 11.5], ["G - 2G", 12]], "ass": [], "nota": "MINI G - 2G: ARTE COM 22CM.", "nuca": 2, "car": 2, "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "camiseta-infantil", "g": "INFANTIL", "nome": "CAMISETA INFANTIL", "fr": null, "frG": [["1 - 2 - 4 (ARTE COM 19CM)", 5.5], ["6 - 8 (ARTE COM 22CM)", 7], ["10 - 12 - 14 (ARTE COM 27CM)", 8]], "mini": [["2 - 4", 15], ["6 - 8", 16], ["10 - 12 - 14", 18]], "ass": [], "nuca": 2, "car": 2, "nota": "", "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "manga-longa-infantil", "g": "INFANTIL", "nome": "CAMISETA MANGA LONGA INFANTIL", "fr": null, "frG": [["1 - 2 - 4 (ARTE COM 19CM)", 5.5], ["6 - 8 (ARTE COM 22CM)", 7], ["10 - 12 - 14 (ARTE COM 27CM)", 8.5]], "mini": [["1 - 2 - 4", 15], ["6 - 8", 16], ["10 - 12 - 14", 18]], "ass": [], "nuca": 2, "car": 2, "nota": "", "ref": "ABAIXO DA COSTURA DA GOLA"}, {"id": "vestido-infantil-manga", "g": "INFANTIL", "nome": "VESTIDO INFANTIL COM MANGA", "fr": null, "frG": [["2 - 4", 4], ["6 - 8", 5], ["10 - 12", 6], ["14", 7]], "mini": [], "ass": [], "nota": "[CONFERIR] OUTRA PÁGINA DA FICHA DIZ: 2 - 4 - 6: 4CM; 8 - 10 - 12 - 14: 5,5CM.", "nuca": 2, "car": 2, "ref": "ABAIXO DA COSTURA DA GOLA"}];
 let MEDX=ler('medidas',{});
@@ -1324,6 +1325,7 @@ function desenharExtras(){
       <label>Lado<select data-x="${i}" data-k="lado">${op([['frente','Frente'],['costas','Costas']],x.lado)}</select></label>
       <label>Onde<select data-x="${i}" data-k="onde">${op(lug,x.onde)}</select></label>
       <label>Estampa<select data-x="${i}" data-k="est" class="selest">${op(listaEst(),x.est)}</select></label>
+      <label>Ou escreva (só nesta peça)<input type="text" data-x="${i}" data-k="txt" value="${esc(x.est&&x.est.startsWith('txt:')&&!txtSalvo(x.est)?x.est.slice(4).toUpperCase():'')}"></label>
       <label>Cor só desta estampa<select data-x="${i}" data-k="cor" class="selpant">${op(listaCor('pant'),x.cor)}</select></label>
       <label>Tipo<select data-x="${i}" data-k="tipo">${op([['ESTAMPA','Estampa'],['BORDADO','Bordado']],x.tipo)}</select></label>
       <label>Quadro na ficha<select data-x="${i}" data-k="ordem">${op([['antes','Em cima das outras'],['depois','Embaixo das outras']],x.ordem)}</select></label>
@@ -1509,6 +1511,7 @@ function mostrarPedido(){
       <label>Artigo<select data-pp="artigo">${op(Object.entries(ART).map(([k,x])=>[k,x.nome]),p.artigo)}</select></label>
       <label>Tingimento<select data-pp="ting" class="selting">${op([[p.ting,p.ting],...listaCor('ting').filter(([k])=>k!==p.ting)],p.ting)}</select></label>
       <label>Estampa da frente<select data-pp="est" class="selest">${op([['','SEM ESTAMPA'],...(p.fr.est&&!listaEst().some(([k])=>k===p.fr.est)?[[p.fr.est,p.fr.est.startsWith('txt:')?p.fr.est.slice(4).toUpperCase()+' (ALFABETO)':p.fr.est]]:[]),...listaEst()],p.fr.est)}</select></label>
+      <label>Ou escreva (só nesta peça)<input type="text" data-pp="txt" value="${esc(p.fr.est&&p.fr.est.startsWith('txt:')&&!txtSalvo(p.fr.est)?p.fr.est.slice(4).toUpperCase():'')}"></label>
       <label>Cor da estampa<select data-pp="cor" class="selpant">${op([[p.fr.cor,p.fr.cor],...listaCor('pant').filter(([k])=>k!==p.fr.cor)],p.fr.cor)}</select></label>
      </div>
      ${a.map(t=>`<div class="alerta">${esc(t)}</div>`).join('')}
@@ -1577,11 +1580,11 @@ function miniDe(tipo,v){if(!v)return '<i class="mini"></i>';
 function buscavel(sel,tipo){
   const w=document.createElement('div');w.className='cbx';sel.after(w);sel.hidden=true;
   w.innerHTML=`<button type="button" class="cbx-b"></button><div class="cbx-p" hidden><input type="search" placeholder="Pesquisar…" autocomplete="off"><ul></ul></div>`;
-  const b=w.querySelector('.cbx-b'),pn=w.querySelector('.cbx-p'),q=w.querySelector('input'),ul=w.querySelector('ul');if(sel.classList.contains('selest'))q.placeholder='Procure ou escreva a estampa…';
+  const b=w.querySelector('.cbx-b'),pn=w.querySelector('.cbx-p'),q=w.querySelector('input'),ul=w.querySelector('ul');if(sel.classList.contains('selest'))q.placeholder='Procure ou escreva…';
   w.sync=()=>{const o=sel.selectedOptions[0];const h=miniDe(tipo,sel.value)+`<span>${esc(o?o.textContent:'')}</span>`;if(b.dataset.h!==h){b.dataset.h=h;b.innerHTML=h}};
   const podeCriar=tipo==='est'&&sel.classList.contains('selest');
   const lista=()=>{const t=semAcento(q.value),tt=q.value.trim();let extra='';
-    if(podeCriar&&tt&&![...sel.options].some(o=>semAcento(o.textContent.replace(/\s*(\(ALFABETO\))?\s*(·.*)?$/,''))===semAcento(tt)))extra=`<li data-v="__txt:${esc(tt)}">${miniDe(tipo,'__')}<b>+ CRIAR “${esc(tt.toUpperCase())}”</b>&nbsp;<small style="color:#888">(escreve com o alfabeto)</small></li>`;
+    if(podeCriar&&tt&&![...sel.options].some(o=>semAcento(o.textContent.replace(/\s*(\(ALFABETO\))?\s*(·.*)?$/,''))===semAcento(tt)))extra=`<li data-v="__txt:${esc(tt)}">${miniDe(tipo,'__')}<b>✎ ESCREVER “${esc(tt.toUpperCase())}”</b>&nbsp;<small style="color:#888">(só nesta peça, não salva)</small></li>`;
     ul.innerHTML=extra+[...sel.options].sort((a,b)=>(b.value.startsWith('__')?1:0)-(a.value.startsWith('__')?1:0)).filter(o=>o.value.startsWith('__')||semAcento(o.textContent+' '+o.value).includes(t))
      .map(o=>`<li data-v="${esc(o.value)}" class="${o.value===sel.value?'on':''}">${miniDe(tipo,o.value)}${esc(o.textContent)}</li>`).join('')||'<li style="cursor:default;color:#888">Nada encontrado</li>'};
   const fechar=()=>{pn.hidden=true};
