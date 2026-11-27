@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611271010";</script>
+<script>var VERSAO="202611271100";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -656,7 +656,7 @@ function novaPeca(){
 let P=ler('atual',null)||novaPeca();
 const desf=[];let ultimoP=null,ultimoT=0;
 function marcarDesfazer(){const j=JSON.stringify(P);if(ultimoP&&ultimoP!==j&&Date.now()-ultimoT>900){desf.push(ultimoP);if(desf.length>40)desf.shift();ultimoT=Date.now()}if(ultimoP!==j)ultimoP=j;const b=document.getElementById('b-desfazer');if(b)b.hidden=!desf.length}
-function guardarP(){marcarDesfazer();gravar('atual',P);const i=pecas.findIndex(p=>p.id===P.id),c=JSON.parse(JSON.stringify(P));if(i>=0){pecas[i]=c;gravar('pecas',pecas)}const t=document.getElementById('pc-nome');if(t)t.textContent=(P.ref||P.nome||'Peça sem referência')+(i>=0?' ✓':' — ainda não salva')}
+function guardarP(){marcarDesfazer();gravar('atual',P);const i=pecas.findIndex(p=>p.id===P.id),c=JSON.parse(JSON.stringify(P));if(i>=0){pecas[i]=c;gravar('pecas',pecas)}const t=document.getElementById('pc-nome');if(t)t.textContent=(P.ref||P.nome||'Peça sem referência')+(i>=0&&!pecas[i].rascunho?' ✓':' — ainda não salva')}
 const hexDe0=(tipo,n)=>(cores[tipo].find(c=>c.n===n)||cores[tipo].find(c=>c.n.toUpperCase()===String(n).toUpperCase())||{h:'#cccccc'}).h;
 const hexDe=(tipo,n)=>hexDe0(tipo,n);
 
@@ -694,7 +694,7 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
   const larg=A.largMax||Math.min(28,.6*2*((A.fr||A.co).lado?(A.fr.lado-A.fr.cx):230)/A.esc);
   const por=(chave,cor,cx,top,ancora,papel,caber,lu,vz)=>{const E=EST[chave];if(!E)return;let wc=E.w,hc=E.h;lu=+String(lu||'').replace(',','.')||+E.larg0||0;
     const lim=caber>1?caber:larg;if(caber&&(chave.startsWith('txt:')||E.up)&&wc>lim){hc*=lim/wc;wc=lim}
-    const IL=+String((INFO[chave]||{}).larg||'').replace(',','.');const cm=IL>0?[IL,hc*IL/wc]:[wc,hc]; // medida real (vai para a ficha); a largura da tela da peça é só para o desenho
+    const IL=+String((INFO[chave]||{}).larg||'').replace(',','.');const real=chave.startsWith('txt:')?[wc,hc]:[E.w,E.h];const cm=IL>0?[IL,real[1]*IL/real[0]]:real; // medida real (vai para a ficha); a largura da tela da peça é só para o desenho
     if(lu>0){hc*=lu/wc;wc=lu}
     const vis=+((INFO[chave]||{}).vis||E.vis||1)*(+vz||1);const w=wc*A.esc*vis,h=hc*A.esc*vis;let X=cx-w/2,Y=top;
     if(ancora==='centro')Y=top-h/2;if(ancora==='barra'){X=cx-w;Y=top-h}out.push({chave,cor,x:X,y:Y,w,h,papel,cm,wd:wc})};
@@ -767,7 +767,7 @@ function preencher(){
   if(!ART[P.artigo][painelSel==='co'?'co':'fr']&&(painelSel==='fr'||painelSel==='barra'||painelSel==='co'))painelSel=ART[P.artigo].fr?'fr':'co';
   if(painelSel[0]==='x'&&!(P.extras||[])[+painelSel.slice(1)])painelSel='fr';
   $('#f-car-dist').value=CAR.dist??2;$('#f-car-larg').value=CAR.larg||'';$('#f-car-larg').placeholder=P.carimbo&&EST[P.carimbo]?String(Math.round(EST[P.carimbo].w*10)/10).replace('.',','):'';
-  tilesEst();mostrarPainel();$('#pc-nome').textContent=(P.ref||P.nome||'Peça sem referência')+(pecas.some(q=>q.id===P.id)?' ✓':' — ainda não salva');
+  tilesEst();mostrarPainel();$('#pc-nome').textContent=(P.ref||P.nome||'Peça sem referência')+(pecas.some(q=>q.id===P.id&&!q.rascunho)?' ✓':' — ainda não salva');
   $$('#f-grade input').forEach(i=>i.value=P.grade[i.dataset.g]||'');somar();
 }
 function somar(){
@@ -778,7 +778,7 @@ function somar(){
 }
 function ler_form(e){
   const id=e&&e.target.id;
-  const artigoAntes=P.artigo;
+  const artigoAntes=P.artigo,estAntes={fr:P.fr.est,co:P.co.est,barra:P.barra,car:P.carimbo};
   P.artigo=$('#f-artigo').value;P.ting=$('#f-ting').value;
   for(const k of['fr','co']){P[k].est=$(`#f-${k}-est`).value;if(id===`f-${k}-txt`){const t=$(`#f-${k}-txt`).value.trim();P[k].est=t?'txt:'+t.toLowerCase():''}
     P[k].pos=$(`#f-${k}-pos`).value;P[k].cor=$(`#f-${k}-cor`).value;
@@ -790,6 +790,9 @@ function ler_form(e){
   if(id==='f-artigo'&&artigoAntes!==P.artigo&&(!P.costura||P.costura===ART[artigoAntes].costura))P.costura=A.costura;
   P.barra=$('#f-barra').value;P.barraCor=$('#f-barra-cor').value;P.barraTipo=$('#f-barra-tipo').value;{const lg=$('#f-barra-larg').value;P.barraLarg=lg}
   P.carimbo=$('#f-carimbo').value;P.carimboCor=$('#f-carimbo-cor').value;P.carimboTipo=$('#f-carimbo-tipo').value;
+  P.ov=P.ov||{};for(const k of['fr','co'])if(P[k].est!==estAntes[k])for(const c of['tam','cor','loc','tipo'])delete P.ov[k+'.'+c];
+  if(P.barra!==estAntes.barra)for(const c of['tam','cor'])delete P.ov['barra.'+c];if(P.carimbo!==estAntes.car)for(const c of['tam','cor'])delete P.ov['car.'+c];
+  if(id==='f-artigo'&&artigoAntes!==P.artigo)for(const k in P.ov)if(k.endsWith('.loc'))delete P.ov[k];
   for(const k of['ref','pedido','colecao','nome','modelo','tingTexto','obs','costura'])P[k]=$('#f-'+k).value.toUpperCase();
   $$('#f-grade input').forEach(i=>{const v=i.value.replace(/\D/g,'');if(v)P.grade[i.dataset.g]=v;else delete P.grade[i.dataset.g]});
   guardarP();
@@ -950,9 +953,12 @@ function fichaPNG(raiz,K=3){
   raiz.querySelectorAll('svg circle').forEach(C=>{x.fillStyle=C.getAttribute('fill');x.beginPath();x.arc(+C.getAttribute('cx'),+C.getAttribute('cy'),+C.getAttribute('r'),0,7);x.fill()});
   return c;
 }
-const nomeFicha=raiz=>{const q=pecaDe(raiz)||P;return (([q.ref,q.nome].filter(Boolean).join(' - '))||'ficha').replace(/[\\/:*?"<>|]+/g,'').trim()+'.png'};
+function descricaoPeca(q){const tg=String(q.ting||'').split('/')[0].trim(),f=q.fr&&q.fr.est?q.fr:(q.co&&q.co.est?q.co:null);
+  const cor=f?(/ORIGINAL|ILUSTRAD/i.test(f.cor||'')?'ILUSTRADA':String(f.cor||'').split('/')[0].trim()):'';
+  return [ART[q.artigo]?ART[q.artigo].nome:'',tg,f?nomeEst(f.est):'',cor].filter(Boolean).join(' ').toUpperCase()}
+const nomeFicha=raiz=>{const q=pecaDe(raiz)||P;return (([q.ref,descricaoPeca(q)].filter(Boolean).join(' - '))||'FICHA').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim()+'.png'};
 async function salvarFichaPNG(raiz,destino){if(!raiz)return;if(pecaDe(raiz)===P)salvar(true);document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
-  const q=pecaDe(raiz)||P,nome=(([q.ref,q.nome].filter(Boolean).join(' - '))||'ficha').replace(/[\\/:*?"<>|]+/g,'').trim()+'.png';
+  const q=pecaDe(raiz)||P,nome=nomeFicha(raiz);
   const c=fichaPNG(raiz);const blob=await new Promise(r=>c.toBlob(r,'image/png'));if(!blob){toast('Não consegui gerar a imagem');return}
   if(destino){try{const fh=destino.kind==='directory'?await destino.getFileHandle(nome,{create:true}):destino;const w=await fh.createWritable();await w.write(blob);await w.close();toast('Ficha salva: '+nome);return}catch(e){toast('Não consegui salvar nessa pasta');return}}
   const file=new File([blob],nome,{type:'image/png'});
@@ -966,7 +972,7 @@ const IDB={p:null,abrir(){return this.p||(this.p=new Promise((ok,er)=>{const r=i
   put(st,v){return this.op(st,'readwrite',s=>s.put(v))},del(st,id){return this.op(st,'readwrite',s=>s.delete(id))},todos(st){return this.op(st,'readonly',s=>s.getAll())}};
 const dataBR=t=>new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
 async function guardarFicha(raiz){const q=pecaDe(raiz)||P;if(!q)return;try{const clone=raiz.cloneNode(true);clone.querySelectorAll('[contenteditable]').forEach(e=>e.removeAttribute('contenteditable'));
-  await IDB.put('fichas',{id:'f'+q.id,pid:q.id,ref:q.ref||'',nome:q.nome||'',artigo:ART[q.artigo]?ART[q.artigo].nome:'',data:Date.now(),html:clone.outerHTML,thumb:fichaPNG(raiz,.4).toDataURL('image/jpeg',.75)})}catch(e){toast('Não consegui guardar a ficha na biblioteca')}}
+  await IDB.put('fichas',{id:'f'+q.id,pid:q.id,ref:q.ref||'',nome:descricaoPeca(q),artigo:ART[q.artigo]?ART[q.artigo].nome:'',data:Date.now(),html:clone.outerHTML,thumb:fichaPNG(raiz,.4).toDataURL('image/jpeg',.75)})}catch(e){toast('Não consegui guardar a ficha na biblioteca')}}
 let saidaAlvo=null;
 function saida(raizes,tela,guardar=true){saidaAlvo={raizes,tela,guardar};$('#dlg-saida').showModal()}
 $('#dlg-saida').addEventListener('close',async()=>{const a=saidaAlvo,v=$('#dlg-saida').returnValue;saidaAlvo=null;if(!a||(v!=='png'&&v!=='pdf'))return;
@@ -974,8 +980,8 @@ $('#dlg-saida').addEventListener('close',async()=>{const a=saidaAlvo,v=$('#dlg-s
     try{if(a.raizes.length>1&&window.showDirectoryPicker)destino=await showDirectoryPicker({mode:'readwrite'});
       else if(a.raizes.length===1&&window.showSaveFilePicker)destino=await showSaveFilePicker({suggestedName:nomeFicha(a.raizes[0]),types:[{description:'Imagem PNG',accept:{'image/png':['.png']}}]})}catch(e){if(e.name==='AbortError')return}
     for(const r of a.raizes){await salvarFichaPNG(r,destino);if(a.raizes.length>1&&!destino)await new Promise(ok=>setTimeout(ok,700))}
-    if(a.guardar)for(const r of a.raizes){if(pecaDe(r)===P)salvar(true);await guardarFicha(r)}}
-  else if(a.guardar)for(const r of a.raizes){if(pecaDe(r)===P)salvar(true);await guardarFicha(r)}
+    if(a.guardar)for(const r of a.raizes){{const q=pecaDe(r);if(q===P)salvar(true);else if(q&&q.rascunho){delete q.rascunho;gravar('pecas',pecas)}}await guardarFicha(r)}}
+  else if(a.guardar)for(const r of a.raizes){{const q=pecaDe(r);if(q===P)salvar(true);else if(q&&q.rascunho){delete q.rascunho;gravar('pecas',pecas)}}await guardarFicha(r)}
   if(v==='pdf'){
   imprimir(a.tela)}});
 $('#b-saida-ficha').onclick=()=>saida([$('#ficha .fichaA')],'ficha');
@@ -1038,7 +1044,7 @@ addEventListener('popstate',()=>{const t=pilha.pop();if(t)ir(t,true);else $('#b-
 let larguraAntes=innerWidth;addEventListener('resize',()=>{if(innerWidth!==larguraAntes){larguraAntes=innerWidth;encaixar()}});
 
 function salvar(silencio){
-  ler_form();const i=pecas.findIndex(p=>p.id===P.id);const copia=JSON.parse(JSON.stringify(P));
+  ler_form();delete P.rascunho;const i=pecas.findIndex(p=>p.id===P.id);const copia=JSON.parse(JSON.stringify(P));
   if(i>=0)pecas[i]=copia;else pecas.unshift(copia);gravar('pecas',pecas);if(!silencio)toast('Peça salva');
 }
 $('#b-salvar').onclick=()=>salvar();
@@ -1047,7 +1053,7 @@ $('#b-mapa').onclick=()=>{salvar(true);if(!mapa.itens.includes(P.id))mapa.itens.
 $('#b-salvar-topo').onclick=()=>{salvar();$('#pc-nome').textContent=(P.ref||P.nome||'Peça sem referência')+' ✓'};
 $('#b-nova-topo').onclick=()=>$('#b-nova').click();
 $('#b-dup-atual').onclick=()=>{salvar(true);const c=JSON.parse(JSON.stringify(P));c.id='p'+Date.now();c.ref=(P.ref?P.ref+' ':'')+'(CÓPIA)';P=c;salvar(true);desenharExtras();preencher();pintarEditor();toast('Cópia criada — é ela que está aberta agora (a outra continua salva)')};
-$('#b-nova').onclick=()=>{if(!pecas.some(q=>q.id===P.id)&&confirm('Esta peça ainda não foi salva na Biblioteca. Salvar antes de começar outra?'))salvar(true);const ant=P;P=novaPeca();Object.assign(P,{pedido:ant.pedido,colecao:ant.colecao,nome:ant.nome});guardarP();desenharExtras();preencher();pintarEditor();toast('Nova peça (a anterior foi salva)')};
+$('#b-nova').onclick=()=>{if(!pecas.some(q=>q.id===P.id&&!q.rascunho)&&confirm('Esta peça ainda não foi salva na Biblioteca. Salvar antes de começar outra?'))salvar(true);const ant=P;P=novaPeca();Object.assign(P,{pedido:ant.pedido,colecao:ant.colecao,nome:ant.nome});guardarP();desenharExtras();preencher();pintarEditor();toast('Nova peça (a anterior foi salva)')};
 $('#b-png').onclick=()=>{
   const a=desenhar(P,'frente'),b=desenhar(P,'costas'),c=document.createElement('canvas');c.width=a.width+b.width+40;c.height=Math.max(a.height,b.height);
   const x=c.getContext('2d');x.drawImage(a,0,0);x.drawImage(b,a.width+40,0);
@@ -1058,9 +1064,9 @@ $('#b-pdf-mapa').onclick=()=>{guardarMapa();imprimir('mapa')};$('#b-guarda-mapa'
 $('#t-mapa').addEventListener('input',e=>{mapa.nome=$('#m-nome').value;mapa.texto=$('#m-texto').value;mapa.lado=$('#m-lado').value;gravar('mapa',mapa);clearTimeout(ir.t);ir.t=setTimeout(()=>{$('#mapa').innerHTML=mapaHTML();encaixar()},400)});
 $('#b-limpa-mapa').onclick=()=>{if(!mapa.itens.length)return;mapa.itens=[];gravar('mapa',mapa);atualizarMapa();toast('Mapa vazio')};
 $('#b-arrumar-mapa').onclick=()=>{mapa.pos={};gravar('mapa',mapa);atualizarMapa();toast('Mapa arrumado em grade')};
-$('#b-todas-mapa').onclick=()=>{pecas.forEach(p=>{if(!mapa.itens.includes(p.id))mapa.itens.push(p.id)});gravar('mapa',mapa);atualizarMapa()};
+$('#b-todas-mapa').onclick=()=>{pecas.filter(p=>!p.rascunho).forEach(p=>{if(!mapa.itens.includes(p.id))mapa.itens.push(p.id)});gravar('mapa',mapa);atualizarMapa()};
 const miniaturas={};
-function listarMapa(){const no=mapa.itens.map(id=>pecas.find(p=>p.id===id)).filter(Boolean),fora=pecas.filter(p=>!mapa.itens.includes(p.id));
+function listarMapa(){const no=mapa.itens.map(id=>pecas.find(p=>p.id===id)).filter(Boolean),fora=pecas.filter(p=>!p.rascunho&&!mapa.itens.includes(p.id));
   const mi=p=>{const k=p.id+JSON.stringify(p).length;return miniaturas[k]||(miniaturas[k]=desenhar(p,'frente',.12).toDataURL())};
   const nome=p=>esc([p.ref,ART[p.artigo].nome,p.ting].filter(Boolean).join(' · '));
   $('#m-lista').innerHTML=(no.map((p,i)=>`<div class="it on"><img src="${mi(p)}" alt=""><span>${i+1}. ${nome(p)}</span><button class="btn claro" data-mv="${p.id}|-1" aria-label="Antes">↑</button><button class="btn claro" data-mv="${p.id}|1" aria-label="Depois">↓</button><button class="btn perigo" data-mout="${p.id}" aria-label="Tirar">×</button></div>`).join('')
@@ -1136,7 +1142,7 @@ $('#dlg-fx').addEventListener('close',()=>{if($('#dlg-fx').returnValue!=='ok')re
   guardarP();novaEstampaTalvez(P.extras[P.extras.length-1].est);desenharExtras();pintarEditor();$('#ficha').innerHTML=fichaHTML(P);encaixar();toast('Estampa colocada na ficha')});
 
 function listar(){const q=semAcento($('#s-busca').value||'').trim();
-  const ps=pecas.filter(p=>!q||semAcento([p.ref,p.nome,p.pedido,p.colecao,p.ting,ART[p.artigo].nome,p.obs].join(' ')).includes(q));
+  const ps=pecas.filter(p=>!p.rascunho).filter(p=>!q||semAcento([p.ref,p.nome,p.pedido,p.colecao,p.ting,ART[p.artigo].nome,p.obs].join(' ')).includes(q));
   $('#lista-salvas').innerHTML=!pecas.length?'<div class="vazio">Nenhuma peça salva ainda.</div>':!ps.length?'<div class="vazio">Nenhuma peça encontrada.</div>':`<div class="lista">${ps.map(p=>`<div class="cartao"><img src="${desenhar(p,'frente').toDataURL('image/png')}" alt=""><b>${esc(p.ref||'Sem referência')}</b><span>${esc(ART[p.artigo].nome)} · ${esc(p.ting)}</span><span>${esc(p.nome)}</span>
    <div class="botoes"><button class="btn" data-abrir="${p.id}">Abrir</button><button class="btn claro" data-dup="${p.id}">Duplicar</button><button class="btn claro" data-pmapa="${p.id}">${mapa.itens.includes(p.id)?'No mapa ✓':'Pôr no mapa'}</button><button class="btn perigo" data-apagar="${p.id}">Apagar</button></div></div>`).join('')}</div>`;
 }
@@ -1437,6 +1443,7 @@ function mostrarPainel(){const p=painelSel[0]==='x'?'x':painelSel;$$('#b-est .pe
   $$('#extras-todas .extra').forEach(d=>d.classList.toggle('on','x'+d.dataset.i===painelSel));$$('#tiles .tile').forEach(b=>b.classList.toggle('on',b.dataset.tile===painelSel))}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-tile]');if(!b)return;painelSel=b.dataset.tile;mostrarPainel()});
 function mudouExtra(e){const t=e.target;if(t.dataset.x==null||!t.closest('#t-peca'))return false;if(t.value&&t.value.startsWith('__'))return true;const x=P.extras[+t.dataset.x];
+  if(['est','txt'].includes(t.dataset.k)&&P.ov){const i=t.dataset.x;for(const c of['tam','cor','loc'])delete P.ov['x'+i+'.'+c]}
   if(t.dataset.k==='txt'){if(e.type!=='change')return true;const v=t.value.trim();x.est=v?'txt:'+v.toLowerCase():'';}
   else{x[t.dataset.k]=['loc','tam'].includes(t.dataset.k)?t.value.toUpperCase():t.value;if(t.dataset.k==='larg')x.tam='';
     if(t.dataset.k==='lado'){const L=(ART[P.artigo].lugares||{})[x.lado]||{};x.onde=Object.keys(L).find(k=>/manga/i.test(k))||Object.keys(L)[0]||'';x.dx=x.dy=0;if(e.type==='change'){guardarP();desenharExtras();pintarEditor()}return true}}
@@ -1559,14 +1566,14 @@ function revisar(G){
     let cp=acharCor('pant',l.corEst);if(!cp&&l.corEst){const nome=nomeCor('pant',l.corEst,'');if(!cores.pant.some(c=>c.n===nome)&&!novasP.includes(nome))novasP.push(nome);cp={n:nome};a.push(`Cor da estampa “${l.corEst}” é nova: toque nela para escolher o tom.`)}
     const q=pecaDoPedido({...l,artigo:artigo||'camiseta-unissex',ting:ct.n,est,cp:cp?cp.n:'BRANCO'},i);al[q.id]=a;return q});
   novasT.forEach(n=>cores.ting.push({n,h:'#bdbdbd'}));novasP.forEach(n=>cores.pant.push({n,h:'#9e9e9e'}));gravar('cores2',cores);
-  r.ids=pcs.map(q=>q.id);r.alertas=al;pecas=[...pcs,...pecas];gravar('pecas',pecas);lote=r.ids.slice();gravar('lote',lote);gravar('pedido',{info:r.info,obs:r.obs,ids:r.ids,alertas:al,carimbo:'',carimboCor:'GREY 3C'});
+  r.ids=pcs.map(q=>q.id);r.alertas=al;pecas=[...pcs,...pecas.filter(p=>!p.rascunho||mapa.itens.includes(p.id))];gravar('pecas',pecas);lote=r.ids.slice();gravar('lote',lote);gravar('pedido',{info:r.info,obs:r.obs,ids:r.ids,alertas:al,carimbo:'',carimboCor:'GREY 3C'});
   montarForm();mostrarPedido();setTimeout(()=>$('#pd-rev').scrollIntoView({behavior:'smooth'}),50);
 }
 function pecaDoPedido(l,i){
   const A=ART[l.artigo],q=novaPeca();
   Object.assign(q,{id:'p'+Date.now()+'_'+i,artigo:l.artigo,ting:l.ting,tingTexto:l.cor.toUpperCase(),modelo:'',
     nome:[pedido.info.cliente,l.estampa].filter(Boolean).join(' - ').toUpperCase(),pedido:(pedido.info.pedido||'').toUpperCase(),previsao:(pedido.info.previsao||'').toUpperCase(),
-    colecao:'PROJETO',ref:'',costura:A.costura,grade:{},produto:l.produto,notas:l.notas,
+    colecao:'PROJETO',ref:'',rascunho:1,costura:A.costura,grade:{},produto:l.produto,notas:l.notas,
     obs:[...l.notas,...pedido.obs].join('\n').toUpperCase()});
   q.fr={est:A.fr?(l.est||''):'',pos:'frontal',cor:l.cp,dist:A.frontal,tipo:'ESTAMPA'};
   q.co={est:A.co?'sereia-santacosta':'',pos:'nuca',cor:l.cp,dist:A.nuca,tipo:'ESTAMPA'};
