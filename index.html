@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="47";</script>
+<script>var VERSAO="48";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -377,8 +377,7 @@ dialog::backdrop{background:#0006}
     </div>
     <label style="margin-top:10px">Texto do mapa (opcional)<textarea id="m-texto" placeholder="Texto da coleção, que aparece num quadro do mapa"></textarea></label>
     <div class="botoes" style="margin-top:10px">
-      <button class="btn" id="b-pdf-mapa">Salvar PDF / imprimir</button>
-      <button class="btn claro" id="b-guarda-mapa">Salvar mapa</button>
+      <button class="btn" id="b-pdf-mapa">Salvar mapa em PNG / imprimir</button>
       <button class="btn claro" id="b-todas-mapa">Pôr todas as peças</button>
       <button class="btn claro" id="b-arrumar-mapa">Arrumar sozinho</button>
       <button class="btn perigo" id="b-limpa-mapa">Esvaziar mapa</button>
@@ -489,9 +488,17 @@ dialog::backdrop{background:#0006}
 </dialog>
 <dialog id="dlg-saida">
   <form method="dialog" style="text-align:center">
-    <h3 style="margin-top:0">Salvar ficha</h3>
+    <h3 style="margin-top:0" id="ds-tit">Salvar ficha</h3>
     <div class="botoes" style="justify-content:center"><button class="btn" value="png">Salvar em PNG</button><button class="btn" value="pdf">Imprimir / PDF</button></div>
-    <p class="aviso">A ficha também fica guardada em Biblioteca → Fichas, do jeitinho que está agora.</p>
+    <div style="text-align:left;margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:12px">
+      <b style="font-size:14px">Para imprimir</b>
+      <div class="linha" style="margin-top:6px">
+        <label>Papel<select id="ds-papel"><option value="A4">A4</option><option value="A3">A3</option><option value="Letter">Carta</option></select></label>
+        <label>Margem<select id="ds-margem"><option value="0">Sem margem</option><option value="5">Pequena (0,5 cm)</option><option value="10">Normal (1 cm)</option></select></label>
+      </div>
+      <p class="aviso" style="margin:6px 0 0">A folha sempre sai deitada, inteira e centralizada no papel. Na janela de impressão escolha a impressora (ou "Salvar como PDF").</p>
+    </div>
+    <p class="aviso" id="ds-aviso">A ficha também fica guardada em Biblioteca → Fichas, do jeitinho que está agora.</p>
     <button class="btn claro" value="cancel" formnovalidate>Cancelar</button>
   </form>
 </dialog>
@@ -963,7 +970,7 @@ function fichaPNG(raiz,K=3){
 function descricaoPeca(q){const tg=String(q.ting||'').split('/')[0].trim(),f=q.fr&&q.fr.est?q.fr:(q.co&&q.co.est?q.co:null);
   const cor=f?(/ORIGINAL|ILUSTRAD/i.test(f.cor||'')?'ILUSTRADA':String(f.cor||'').split('/')[0].trim()):'';
   return [ART[q.artigo]?ART[q.artigo].nome:'',tg,f?nomeEst(f.est):'',cor].filter(Boolean).join(' ').toUpperCase()}
-const nomeFicha=raiz=>{const q=pecaDe(raiz)||P;return (([q.ref,descricaoPeca(q)].filter(Boolean).join(' - '))||'FICHA').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim()+'.png'};
+const nomeFicha=raiz=>{if(raiz&&raiz.id==='mapa')return ('MAPA - '+(mapa.nome||'SEM NOME')).toUpperCase().replace(/[\\/:*?"<>|]+/g,' ').trim()+'.png';const q=pecaDe(raiz)||P;return (([q.ref,descricaoPeca(q)].filter(Boolean).join(' - '))||'FICHA').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim()+'.png'};
 async function salvarFichaPNG(raiz,destino){if(!raiz)return;if(pecaDe(raiz)===P)salvar(true);document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
   const q=pecaDe(raiz)||P,nome=nomeFicha(raiz);
   const c=fichaPNG(raiz);const blob=await new Promise(r=>c.toBlob(r,'image/png'));if(!blob){toast('Não consegui gerar a imagem');return}
@@ -981,8 +988,11 @@ const dataBR=t=>new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit
 async function guardarFicha(raiz){const q=pecaDe(raiz)||P;if(!q)return;try{const clone=raiz.cloneNode(true);clone.querySelectorAll('[contenteditable]').forEach(e=>e.removeAttribute('contenteditable'));
   await IDB.put('fichas',{id:'f'+q.id,pid:q.id,ref:q.ref||'',nome:descricaoPeca(q),artigo:ART[q.artigo]?ART[q.artigo].nome:'',data:Date.now(),html:clone.outerHTML,thumb:fichaPNG(raiz,.4).toDataURL('image/jpeg',.75)})}catch(e){toast('Não consegui guardar a ficha na biblioteca')}}
 let saidaAlvo=null;
-function saida(raizes,tela,guardar=true){saidaAlvo={raizes,tela,guardar};$('#dlg-saida').showModal()}
-$('#dlg-saida').addEventListener('close',async()=>{const a=saidaAlvo,v=$('#dlg-saida').returnValue;saidaAlvo=null;if(!a||(v!=='png'&&v!=='pdf'))return;
+function saida(raizes,tela,guardar=true){saidaAlvo={raizes,tela,guardar};const m=tela==='mapa';$('#ds-tit').textContent=m?'Salvar mapa':'Salvar ficha';
+  $('#ds-aviso').textContent=m?'O mapa também fica guardado em Biblioteca → Mapas.':'A ficha também fica guardada em Biblioteca → Fichas, do jeitinho que está agora.';
+  const cf=ler('impressao',{papel:'A4',margem:'5'});$('#ds-papel').value=cf.papel;$('#ds-margem').value=cf.margem;$('#dlg-saida').showModal()}
+$('#dlg-saida').addEventListener('close',async()=>{const a=saidaAlvo,v=$('#dlg-saida').returnValue;saidaAlvo=null;if(!a||(v!=='png'&&v!=='pdf'))return;gravar('impressao',{papel:$('#ds-papel').value,margem:$('#ds-margem').value});
+  if(a.tela==='mapa'){guardarMapa();if(v==='png'){let d=null;try{if(window.showSaveFilePicker)d=await showSaveFilePicker({suggestedName:nomeFicha($('#mapa')),types:[{description:'Imagem PNG',accept:{'image/png':['.png']}}]})}catch(e){if(e.name==='AbortError')return}await salvarFichaPNG($('#mapa'),d)}else imprimir('mapa');return}
   if(v==='png'){let destino=null; // escolher onde salvar (pasta do cliente) — no computador abre a janela do Windows; no iPad abre o compartilhar (Salvar em Arquivos)
     try{if(a.raizes.length>1&&window.showDirectoryPicker)destino=await showDirectoryPicker({mode:'readwrite'});
       else if(a.raizes.length===1&&window.showSaveFilePicker)destino=await showSaveFilePicker({suggestedName:nomeFicha(a.raizes[0]),types:[{description:'Imagem PNG',accept:{'image/png':['.png']}}]})}catch(e){if(e.name==='AbortError')return}
@@ -1066,8 +1076,18 @@ $('#b-png').onclick=()=>{
   const x=c.getContext('2d');x.drawImage(a,0,0);x.drawImage(b,a.width+40,0);
   c.toBlob(bl=>{const l=document.createElement('a');l.href=URL.createObjectURL(bl);l.download=`${P.ref||'mockup'}_${P.ting}.png`.replace(/[^\w.\-]+/g,'_');document.body.appendChild(l);l.click();setTimeout(()=>{URL.revokeObjectURL(l.href);l.remove()},2000)},'image/png');
 };
-function imprimir(tela){$('#t-'+tela).classList.add('imprimir');setTimeout(()=>{window.print();$('#t-'+tela).classList.remove('imprimir')},50)}
-$('#b-pdf-mapa').onclick=()=>{guardarMapa();imprimir('mapa')};$('#b-guarda-mapa').onclick=()=>guardarMapa(true);
+function imprimir(tela){const cf=ler('impressao',{papel:'A4',margem:'5'}),P0={A4:[297,210],A3:[420,297],Letter:[279.4,215.9]}[cf.papel]||[297,210],m=+cf.margem||0;
+  const aw=P0[0]-2*m,ah=P0[1]-2*m,s=Math.min(aw/297,ah/210),fw=297*s,fh=210*s;let st=$('#css-impressao');if(!st){st=document.createElement('style');st.id='css-impressao';document.head.append(st)}
+  st.textContent=`@media print{@page{size:${cf.papel==='Letter'?'letter':cf.papel} landscape;margin:${m}mm}
+    html,body{margin:0!important;padding:0!important;background:#fff!important}
+    .tela.imprimir>*:not(.folha-wrap):not(#lote){display:none!important}
+    .tela.imprimir .folha-wrap{display:block!important;padding:0!important;margin:0!important;background:none!important;border-radius:0!important;overflow:visible!important}
+    .tela.imprimir .folha-espaco{width:${aw}mm!important;height:${ah-0.5}mm!important;margin:0!important;position:relative!important;overflow:hidden!important;break-inside:avoid;page-break-inside:avoid}
+    .tela.imprimir .folha{position:absolute!important;left:${(aw-fw)/2}mm!important;top:${(ah-fh)/2}mm!important;width:1123px!important;height:794px!important;margin:0!important;transform-origin:top left!important;transform:scale(${(fw/(1123*25.4/96)).toFixed(4)})!important}
+    .tela.imprimir .lote-f{break-after:page;page-break-after:always}.tela.imprimir .lote-f:last-child{break-after:auto;page-break-after:auto}
+    .tela.imprimir .lote-f>*:not(.folha-wrap){display:none!important}}`;
+  $('#t-'+tela).classList.add('imprimir');setTimeout(()=>{window.print();$('#t-'+tela).classList.remove('imprimir')},80)}
+$('#b-pdf-mapa').onclick=()=>saida([$('#mapa')],'mapa',false);
 $('#t-mapa').addEventListener('input',e=>{mapa.nome=$('#m-nome').value;mapa.texto=$('#m-texto').value;mapa.lado=$('#m-lado').value;gravar('mapa',mapa);clearTimeout(ir.t);ir.t=setTimeout(()=>{$('#mapa').innerHTML=mapaHTML();encaixar()},400)});
 $('#b-limpa-mapa').onclick=()=>{if(!mapa.itens.length)return;mapa.itens=[];gravar('mapa',mapa);atualizarMapa();toast('Mapa vazio')};
 $('#b-arrumar-mapa').onclick=()=>{mapa.pos={};gravar('mapa',mapa);atualizarMapa();toast('Mapa arrumado em grade')};
