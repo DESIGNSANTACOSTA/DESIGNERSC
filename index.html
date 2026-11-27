@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="46";</script>
+<script>var VERSAO="47";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -265,7 +265,7 @@ dialog::backdrop{background:#0006}
       <figure><canvas id="cv-frente"></canvas><figcaption>FRENTE</figcaption></figure>
       <figure><canvas id="cv-costas"></canvas><figcaption>COSTAS</figcaption></figure>
     </div>
-    <p class="aviso">Arraste a estampa no desenho para subir ou descer. O tamanho muda só na barrinha "Tamanho no desenho". A medida real se escreve na ficha técnica.</p>
+    <p class="aviso">Arraste a estampa no desenho para subir ou descer. O tamanho muda só na barrinha "Tamanho no desenho". Isso é só o desenho: a ficha técnica segue as medidas da Biblioteca. A medida real se escreve na ficha técnica.</p>
   </div>
   <div class="painel">
     <div class="bloco">
@@ -812,10 +812,10 @@ $('#t-peca').addEventListener('input',e=>{if(e.target.dataset.xr!=null){const i=
 // ---------- textos da ficha ----------
 function textoFrente(p){
   const A=ART[p.artigo],f=p.fr;
-  if(String(f.pos).startsWith('mini')){const d=(+f.dist||A.mini[0])-A.mini[0];const m=A.mini.map(v=>String(v+d).replace('.',','));
+  if(String(f.pos).startsWith('mini')){const d=0; // a ficha segue as Medidas da Biblioteca, não o lugar arrastado no desenhoconst m=A.mini.map(v=>String(v+d).replace('.',','));
     const G=(A.miniG&&A.miniG.length?A.miniG.map(r=>r[0]):['PP - P - M','G - 2G','3G - 4G']);
     return G.map((g,i)=>`${g}: ${m[Math.min(i,m.length-1)]}cm`).join('\n')+`\nABAIXO DO PONTO MAIS ALTO DO OMBRO MEDINDO PELO CENTRO DO DESENHO, AO LADO ${f.pos==='mini-d'?'DIREITO':'ESQUERDO'} DE QUEM VESTE`}
-  return `${String(f.dist).replace('.',',')}cm ABAIXO DA COSTURA DA GOLA MEDINDO PELA PARTE BAIXA DA ESTAMPA`;
+  return `${String(A.frontal).replace('.',',')}cm ABAIXO DA COSTURA DA GOLA MEDINDO PELA PARTE BAIXA DA ESTAMPA`;
 }
 const cacheURL={};
 function tinta(im){if(im._tinta)return im._tinta;const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);
@@ -899,7 +899,7 @@ function fichaHTML(p){
      return x.ordem===ordem?{id:'x'+e.papel.slice(5),chave:e.chave,cor:e.cor,cm:e.cm,tipo:x.tipo,tam:x.tam,loc:(x.loc||'').toUpperCase(),alvo:pp(...meio(e))}:null}).filter(Boolean);
   itF.splice(0,0,...extra('frente','antes',pf));itF.push(...extra('frente','depois',pf));
   coluna(426,172,itF,'frente');
-  const itC=posicoes(p,'costas').filter(e=>!e.papel.startsWith('extra')).map(e=>({id:'co',chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.co.tipo,loc:`${num(p.co.dist)}cm DA COSTURA DA GOLA`,alvo:pc(...meio(e))}));
+  const itC=posicoes(p,'costas').filter(e=>!e.papel.startsWith('extra')).map(e=>({id:'co',chave:e.chave,cor:e.cor,cm:e.cm,tipo:p.co.tipo,loc:`${num(p.co.pos==='costas'?A.costas:A.nuca)}cm DA COSTURA DA GOLA`,alvo:pc(...meio(e))}));
   if(p.carimbo)itC.push({id:'car',chave:p.carimbo,cor:p.carimboCor,tipo:p.carimboTipo,titulo:'CARIMBO INTERNO',loc:`${String(A.carimboCm||2).replace('.',',')}cm ABAIXO DA COSTURA DA GOLA`,alvo:(()=>{const e=posicoes(p,'frente').find(e=>e.papel==='carimbo');return e?pf(e.x+e.w/2,Math.min(e.y+e.h/2,e.clip?e.y+(e.clip-e.y)/2:e.y+e.h/2)):pc(A.co?A.co.cx:0,A.co?A.co.gola+2*A.esc:0)})()});
   itC.splice(0,0,...extra('costas','antes',pc));itC.push(...extra('costas','depois',pc));
   coluna(612,170,itC,'costas');
@@ -1822,8 +1822,8 @@ for(const lado of['frente','costas']){const cv=$('#cv-'+lado);let ar=null,raf=0;
     if(!ar.moveu){ar.moveu=true;marcarDesfazer()}const v=Math.round((ar.v0+dy/ar.esc)*10)/10,p=ar.hit.papel;
     if(p==='frente'||p==='costas')ar.alvo.dist=String(Math.max(0,v));else if(p==='barra')P.barraDy=v;else if(p==='carimbo')CAR.dist=String(Math.max(0,v));else ar.alvo.dy=v;
     if(!raf)raf=requestAnimationFrame(()=>{raf=0;const src=desenhar(P,lado);cv.getContext('2d').clearRect(0,0,cv.width,cv.height);cv.getContext('2d').drawImage(src,0,0)})});
-  const fim=e=>{if(!ar)return;const a=ar;ar=null;if(a.moveu){const p=a.hit.papel;if(p==='frente'||p==='costas'){P.ov=P.ov||{};delete P.ov[(p==='frente'?'fr':'co')+'.loc']}if(p==='carimbo')gravar('carPadrao',CAR);
-      guardarP();if(p==='frente')guardarMiniPadrao();preencher();desenharExtras();pintarEditor();toast('Altura mudada')}
+  const fim=e=>{if(!ar)return;const a=ar;ar=null;if(a.moveu){const p=a.hit.papel;if(p==='carimbo')gravar('carPadrao',CAR);
+      guardarP();if(p==='frente')guardarMiniPadrao();preencher();desenharExtras();pintarEditor();toast('Altura mudada só no desenho (a ficha não muda)')}
     else if(e.type==='pointerup')abrirZoom(lado)};
   cv.addEventListener('pointerup',fim);cv.addEventListener('pointercancel',fim)}
 $('#zoom').addEventListener('click',e=>{const b=e.target.closest('[data-z]');if(!b)return;const d=+b.dataset.z;
