@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="36";</script>
+<script>var VERSAO="37";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -633,7 +633,7 @@ async function preparar(){
   for(const k in ARTX)for(const l of['frente','costas']){const src=(ARTX[k].img||{})[l];if(src){lista.push([`${k}-${l}-peca`,src]);if(ARTX[k].semCabide||ART[k]&&ART[k].novo)IMG[`${k}-${l}-cabide`]=null}}
   await Promise.all(lista.map(async([k,src])=>IMG[k]=await carregar(src.startsWith('data:')?src:src+'?v='+VERSAO)));
   for(const k in ARTX)if((ARTX[k].img||{}).frente||(ARTX[k].img||{}).costas)for(const l of['frente','costas'])if((ARTX[k].img||{})[l])IMG[`${k}-${l}-cabide`]=null;
-  for(const k in ARTX){const z=ARTX[k].idb||{};for(const l of['frente','costas'])if(z[l]){try{const p=await IDB.get('imgs',`${k}-${l}-peca`);if(p)IMG[`${k}-${l}-peca`]=await carregar(p.src);const c=z[l+'Cab']?await IDB.get('imgs',`${k}-${l}-cabide`):null;IMG[`${k}-${l}-cabide`]=c?await carregar(c.src):null}catch(e){}}}
+  for(const k in ARTX){const z=ARTX[k].idb||{};for(const l of['frente','costas'])if(z[l]){try{const p=await IDB.get('imgs',`${k}-${l}-peca`);if(p){let im=await carregar(p.src);const cv=consertarFundo(im,k,l);if(cv){cv.fk=claridade(cv);im=cv}IMG[`${k}-${l}-peca`]=im}const c=z[l+'Cab']?await IDB.get('imgs',`${k}-${l}-cabide`):null;IMG[`${k}-${l}-cabide`]=c?await carregar(c.src):null}catch(e){}}}
   try{ALF=await (await fetch('arquivos/alfabeto.json?v='+VERSAO)).json();ALF.img=await carregar('arquivos/alfabeto.png?v='+VERSAO)}catch(e){ALF=null}
   for(const k in IMG)if(k.endsWith('-peca')&&IMG[k])IMG[k].fk=claridade(IMG[k]);
 }
@@ -652,7 +652,7 @@ function novaPeca(){
 let P=ler('atual',null)||novaPeca();
 const desf=[];let ultimoP=null,ultimoT=0;
 function marcarDesfazer(){const j=JSON.stringify(P);if(ultimoP&&ultimoP!==j&&Date.now()-ultimoT>900){desf.push(ultimoP);if(desf.length>40)desf.shift();ultimoT=Date.now()}if(ultimoP!==j)ultimoP=j;const b=document.getElementById('b-desfazer');if(b)b.hidden=!desf.length}
-function guardarP(){marcarDesfazer();gravar('atual',P);const i=pecas.findIndex(p=>p.id===P.id),c=JSON.parse(JSON.stringify(P));if(i>=0){pecas[i]=c;gravar('pecas',pecas)}const t=document.getElementById('pc-nome');if(t)t.textContent=(P.ref||P.nome||'Peça sem referência')+(i>=0&&!pecas[i].rascunho?' ✓':' — ainda não salva')}
+function guardarP(){marcarDesfazer();gravar('atual',P);const i=pecas.findIndex(p=>p.id===P.id),c=JSON.parse(JSON.stringify(P));const salva=i>=0&&!pecas[i].rascunho;if(i>=0&&!salva){pecas[i]=c;gravar('pecas',pecas)}const t=document.getElementById('pc-nome');if(t)t.textContent=(P.ref||P.nome||'Peça sem referência')+(salva?(JSON.stringify(pecas[i])===JSON.stringify(c)?' ✓':' — mudanças ainda não salvas'):' — ainda não salva')}
 const hexDe0=(tipo,n)=>(cores[tipo].find(c=>c.n===n)||cores[tipo].find(c=>c.n.toUpperCase()===String(n).toUpperCase())||{h:'#cccccc'}).h;
 const hexDe=(tipo,n)=>hexDe0(tipo,n);
 
@@ -1048,7 +1048,7 @@ $('#b-ficha').onclick=()=>ir('ficha');
 $('#b-mapa').onclick=()=>{salvar(true);if(!mapa.itens.includes(P.id))mapa.itens.push(P.id);gravar('mapa',mapa);toast('Peça no mapa ('+mapa.itens.length+')')};
 $('#b-salvar-topo').onclick=()=>{salvar();$('#pc-nome').textContent=(P.ref||P.nome||'Peça sem referência')+' ✓'};
 $('#b-nova-topo').onclick=()=>$('#b-nova').click();
-$('#b-dup-atual').onclick=()=>{salvar(true);const c=JSON.parse(JSON.stringify(P));c.id='p'+Date.now();c.ref=(P.ref?P.ref+' ':'')+'(CÓPIA)';P=c;salvar(true);desenharExtras();preencher();pintarEditor();toast('Cópia criada — é ela que está aberta agora (a outra continua salva)')};
+$('#b-dup-atual').onclick=()=>{const c=JSON.parse(JSON.stringify(P));c.id='p'+Date.now();c.ref=(P.ref?P.ref+' ':'')+'(CÓPIA)';delete c.rascunho;P=c;gravar('atual',P);desenharExtras();preencher();pintarEditor();guardarP();toast('Cópia aberta — ela só vai para a biblioteca quando você clicar em Salvar')};
 $('#b-nova').onclick=()=>{if(!pecas.some(q=>q.id===P.id&&!q.rascunho)&&confirm('Esta peça ainda não foi salva na Biblioteca. Salvar antes de começar outra?'))salvar(true);const ant=P;P=novaPeca();Object.assign(P,{pedido:ant.pedido,colecao:ant.colecao,nome:ant.nome});guardarP();desenharExtras();preencher();pintarEditor();toast('Nova peça (a anterior foi salva)')};
 $('#b-png').onclick=()=>{
   const a=desenhar(P,'frente'),b=desenhar(P,'costas'),c=document.createElement('canvas');c.width=a.width+b.width+40;c.height=Math.max(a.height,b.height);
@@ -1276,6 +1276,12 @@ $('#mk-lista').addEventListener('click',e=>{const b=e.target.closest('[data-art]
 $('#mk-novo').onclick=()=>abrirArt(null);
 // separa a foto: frente (esquerda) e costas (direita); e tira o cabide (madeira/gancho) para uma camada própria
 function cortar(c,x0,x1){const k=document.createElement('canvas');k.width=x1-x0;k.height=c.height;k.getContext('2d').drawImage(c,x0,0,x1-x0,c.height,0,0,x1-x0,c.height);return k}
+function consertarFundo(im,k,l){ // mockup guardado com fundo (não transparente): tira o fundo uma vez e guarda de novo
+  const W=im.naturalWidth||im.width,H=im.naturalHeight||im.height;if(!W||!H)return null;const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.drawImage(im,0,0);
+  const a=x.getImageData(0,0,W,H).data,cs=[0,W-1,(H-1)*W,H*W-1];if(cs.filter(p=>a[p*4+3]<20).length>=3)return null;
+  tirarFundo(c);const g=medirPNG(c,50),X=ARTX[k];
+  if(l==='frente'){X.esc=g.esc;X.geoFr={cx:g.cx,gola:g.gola,ombro:g.ombro,lado:g.lado,barra:g.barra}}else X.geoCo={cx:g.cx,gola:g.gola};
+  IDB.put('imgs',{id:`${k}-${l}-peca`,src:c.toDataURL('image/png')});salvarArtx();try{aplicarArtx()}catch(e){}return c}
 function tirarFundo(c){ // foto com fundo (cinza/branco/colorido): tira o fundo ligado às bordas
   const W=c.width,H=c.height,x=c.getContext('2d'),im=x.getImageData(0,0,W,H),a=im.data;
   const cantos=[0,W-1,(H-1)*W,H*W-1];if(cantos.filter(p=>a[p*4+3]<20).length>=3)return c; // já é transparente
