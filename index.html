@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="37";</script>
+<script>var VERSAO="38";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -515,6 +515,7 @@ dialog::backdrop{background:#0006}
     <input type="hidden" id="da-peito"><input type="hidden" id="da-frontal"><input type="hidden" id="da-nuca"><input type="hidden" id="da-larg">
     <p class="aviso" style="margin:6px 0 0">As alturas das estampas ficam em Biblioteca → Medidas.</p>
     <label style="margin-top:10px">Notas de costura padrão (uma por linha)<textarea id="da-cost"></textarea></label>
+    <label style="margin-top:10px;flex-direction:row;align-items:center;gap:8px;display:flex"><input type="checkbox" id="da-med" style="width:22px;height:22px;flex:none"> Usar medidas padrão de estampa (frontal, mini, nuca)</label>
     <div class="botoes" style="margin-top:12px"><button class="btn" value="ok">Guardar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button><button class="btn perigo" value="del" id="da-del" formnovalidate>Excluir</button></div>
   </form>
 </dialog>
@@ -633,7 +634,7 @@ async function preparar(){
   for(const k in ARTX)for(const l of['frente','costas']){const src=(ARTX[k].img||{})[l];if(src){lista.push([`${k}-${l}-peca`,src]);if(ARTX[k].semCabide||ART[k]&&ART[k].novo)IMG[`${k}-${l}-cabide`]=null}}
   await Promise.all(lista.map(async([k,src])=>IMG[k]=await carregar(src.startsWith('data:')?src:src+'?v='+VERSAO)));
   for(const k in ARTX)if((ARTX[k].img||{}).frente||(ARTX[k].img||{}).costas)for(const l of['frente','costas'])if((ARTX[k].img||{})[l])IMG[`${k}-${l}-cabide`]=null;
-  for(const k in ARTX){const z=ARTX[k].idb||{};for(const l of['frente','costas'])if(z[l]){try{const p=await IDB.get('imgs',`${k}-${l}-peca`);if(p){let im=await carregar(p.src);const cv=consertarFundo(im,k,l);if(cv){cv.fk=claridade(cv);im=cv}IMG[`${k}-${l}-peca`]=im}const c=z[l+'Cab']?await IDB.get('imgs',`${k}-${l}-cabide`):null;IMG[`${k}-${l}-cabide`]=c?await carregar(c.src):null}catch(e){}}}
+  for(const k in ARTX){const z=ARTX[k].idb||{};for(const l of['frente','costas'])if(z[l]){try{const p=await IDB.get('imgs',`${k}-${l}-peca`);const c=z[l+'Cab']?await IDB.get('imgs',`${k}-${l}-cabide`):null;IMG[`${k}-${l}-cabide`]=c?await carregar(c.src):null;if(p){let im=await carregar(p.src);const cv=consertarFundo(im,IMG[`${k}-${l}-cabide`],k,l);if(cv){cv.c.fk=claridade(cv.c);im=cv.c;if(cv.cb)IMG[`${k}-${l}-cabide`]=cv.cb}IMG[`${k}-${l}-peca`]=im}}catch(e){}}}
   try{ALF=await (await fetch('arquivos/alfabeto.json?v='+VERSAO)).json();ALF.img=await carregar('arquivos/alfabeto.png?v='+VERSAO)}catch(e){ALF=null}
   for(const k in IMG)if(k.endsWith('-peca')&&IMG[k])IMG[k].fk=claridade(IMG[k]);
 }
@@ -1231,7 +1232,7 @@ function figsMed(id,m){const A=ART[id];if(!A)return '';const f=[],fig=(src,cap)=
 function listarMedidas(){const q=semAcento($('#md-busca').value||'').trim();let g0='',h='';
   const num=v=>v==null?'':String(v).replace('.',',');
   const todas=[...MED0.filter(m0=>ART[m0.id]),...Object.keys(ART).filter(k=>!MED0.some(m0=>m0.id===k)).map(k=>medDe(k)),...MED0.filter(m0=>!ART[m0.id]&&!(ARTX[m0.id]&&ARTX[m0.id].apagado))];let semTit=false;
-  for(const m0 of todas){const m=medDe(m0.id);if(q&&!semAcento(m.nome+' '+m.g).includes(q))continue;if(!ART[m0.id]&&!semTit){semTit=true;g0='';h+=`<div class="md-g" style="margin-top:28px">SEM MOCKUP NO SITE AINDA — SÓ CONSULTA (QUANDO VOCÊ CRIAR O MOCKUP COM ESSE NOME, AS MEDIDAS VÃO JUNTO)</div>`}
+  for(const m0 of todas){if(ARTX[m0.id]&&ARTX[m0.id].semMed)continue;const m=medDe(m0.id);if(q&&!semAcento(m.nome+' '+m.g).includes(q))continue;if(!ART[m0.id]&&!semTit){semTit=true;g0='';h+=`<div class="md-g" style="margin-top:28px">SEM MOCKUP NO SITE AINDA — SÓ CONSULTA (QUANDO VOCÊ CRIAR O MOCKUP COM ESSE NOME, AS MEDIDAS VÃO JUNTO)</div>`}
     if(m.g!==g0){g0=m.g;h+=`<div class="md-g">${esc(g0)}</div>`}
     const linhas=(campo,arr)=>arr.map((r,i)=>`<div class="md-l"><input type="text" data-md="${m0.id}|${campo}|${i}|0" value="${esc(r[0])}"><input type="text" inputmode="decimal" data-md="${m0.id}|${campo}|${i}|1" value="${num(r[1])}"></div>`).join('');
     h+=`<div class="md-card"><h4>${esc(m.nome)}</h4><div class="sub2">${ART[m0.id]?'Mockup no site ✓ — vale para as próximas peças':'Ainda sem mockup no site (só consulta)'}</div>${figsMed(m0.id,m)}
@@ -1270,32 +1271,39 @@ function lerFoto(f,max=1000){return new Promise(r=>{const fr=new FileReader();fr
 function prevArt(){const k=artAberto,v=l=>artImgs[l]?(()=>{const c=document.createElement('canvas');c.width=artImgs[l].width;c.height=artImgs[l].height;const x=c.getContext('2d');x.drawImage(artImgs[l],0,0);if(artImgs[l+'Cab'])x.drawImage(artImgs[l+'Cab'],0,0);return c.toDataURL()})():(IMG[`${k}-${l}-peca`]?IMG[`${k}-${l}-peca`].src:'');
   $('#da-prev').innerHTML=['frente','costas'].map(l=>v(l)?`<figure style="margin:0;text-align:center;font-size:11px"><img src="${v(l)}" style="height:90px;background:#ccc;border-radius:6px" alt=""><br>${l.toUpperCase()}</figure>`:'').join('')||'<span class="aviso">Sem foto ainda</span>'}
 function abrirArt(k){const novo=!k;if(novo)k='art'+Date.now();artAberto=k;artImgs={};const a=ART[k]||{nome:'',frontal:9,nuca:2,costura:''};
-  $('#da-tit').textContent=novo?'Novo mockup':'Mockup';$('#da-nome').value=a.nome||'';$('#da-frontal').value=a.frontal??'';$('#da-nuca').value=a.nuca??'';$('#da-larg').value=a.largMax||'';$('#da-cost').value=a.costura||'';
+  $('#da-med').checked=novo?true:!(ARTX[k]&&ARTX[k].semMed);$('#da-tit').textContent=novo?'Novo mockup':'Mockup';$('#da-nome').value=a.nome||'';$('#da-frontal').value=a.frontal??'';$('#da-nuca').value=a.nuca??'';$('#da-larg').value=a.largMax||'';$('#da-cost').value=a.costura||'';
   $('#da-peito').value=a.fr&&a.esc?Math.round(2*(a.fr.lado-a.fr.cx)/a.esc*2)/2:50;$('#da-del').style.display=novo?'none':'';$('#dlg-art').dataset.novo=novo?1:'';prevArt();$('#dlg-art').showModal()}
 $('#mk-lista').addEventListener('click',e=>{const b=e.target.closest('[data-art]');if(b)abrirArt(b.dataset.art)});
 $('#mk-novo').onclick=()=>abrirArt(null);
 // separa a foto: frente (esquerda) e costas (direita); e tira o cabide (madeira/gancho) para uma camada própria
 function cortar(c,x0,x1){const k=document.createElement('canvas');k.width=x1-x0;k.height=c.height;k.getContext('2d').drawImage(c,x0,0,x1-x0,c.height,0,0,x1-x0,c.height);return k}
-function consertarFundo(im,k,l){ // mockup guardado com fundo (não transparente): tira o fundo uma vez e guarda de novo
-  const W=im.naturalWidth||im.width,H=im.naturalHeight||im.height;if(!W||!H)return null;const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.drawImage(im,0,0);
-  const a=x.getImageData(0,0,W,H).data,cs=[0,W-1,(H-1)*W,H*W-1];if(cs.filter(p=>a[p*4+3]<20).length>=3)return null;
-  tirarFundo(c);const g=medirPNG(c,50),X=ARTX[k];
+function consertarFundo(im,cab,k,l){ // mockup guardado com fundo: tira o fundo uma vez, separa o cabide de novo e guarda
+  const W=im.naturalWidth||im.width,H=im.naturalHeight||im.height;if(!W||!H)return null;const c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(im,0,0);
+  if(!tirarFundo(c))return null;const novo=tirarCabide(c);const g=medirPNG(c,50),X=ARTX[k];
+  let cb=null;if(cab||novo){cb=document.createElement('canvas');cb.width=W;cb.height=H;const z=cb.getContext('2d');if(cab)z.drawImage(cab,0,0,W,H);if(novo)z.drawImage(novo,0,0);X.idb[l+'Cab']=1;IDB.put('imgs',{id:`${k}-${l}-cabide`,src:cb.toDataURL('image/png')})}
   if(l==='frente'){X.esc=g.esc;X.geoFr={cx:g.cx,gola:g.gola,ombro:g.ombro,lado:g.lado,barra:g.barra}}else X.geoCo={cx:g.cx,gola:g.gola};
-  IDB.put('imgs',{id:`${k}-${l}-peca`,src:c.toDataURL('image/png')});salvarArtx();try{aplicarArtx()}catch(e){}return c}
-function tirarFundo(c){ // foto com fundo (cinza/branco/colorido): tira o fundo ligado às bordas
-  const W=c.width,H=c.height,x=c.getContext('2d'),im=x.getImageData(0,0,W,H),a=im.data;
-  const cantos=[0,W-1,(H-1)*W,H*W-1];if(cantos.filter(p=>a[p*4+3]<20).length>=3)return c; // já é transparente
-  const fundo=new Uint8Array(W*H),fila=new Int32Array(W*H);let fi=0,ff=0;
-  const ref=cantos.map(p=>[a[p*4],a[p*4+1],a[p*4+2]]);const perto=p=>ref.some(r=>Math.abs(a[p*4]-r[0])+Math.abs(a[p*4+1]-r[1])+Math.abs(a[p*4+2]-r[2])<60);
+  IDB.put('imgs',{id:`${k}-${l}-peca`,src:c.toDataURL('image/png')});salvarArtx();try{aplicarArtx()}catch(e){}return {c,cb}}
+function tirarFundo(c){ // foto com fundo (branco/cinza/colorido), inteira ou colada num fundo transparente: tira o fundo
+  const W=c.width,H=c.height,x=c.getContext('2d'),im=x.getImageData(0,0,W,H),a=im.data,op=p=>a[p*4+3]>20;
+  let x0=W,x1=-1,y0=H,y1=-1;for(let j=0;j<H;j++)for(let i=0;i<W;i++)if(op(j*W+i)){if(i<x0)x0=i;if(i>x1)x1=i;if(j<y0)y0=j;if(j>y1)y1=j}
+  if(x1<0)return false;
+  // a foto tem fundo quando a borda da parte visível é quase toda cheia (um retângulo); peça recortada não é
+  const lados=[[],[],[],[]];for(let i=x0;i<=x1;i++){lados[0].push(y0*W+i);lados[1].push(y1*W+i)}for(let j=y0;j<=y1;j++){lados[2].push(j*W+x0);lados[3].push(j*W+x1)}
+  const cheios=lados.filter(l=>l.filter(op).length>l.length*.9);if(cheios.length<3)return false;
+  const borda=cheios.flat().filter(op);const med=k=>{const v=borda.map(p=>a[p*4+k]).sort((m,n)=>m-n);return v[v.length>>1]};const ref=[med(0),med(1),med(2)];
+  const dRef=p=>Math.abs(a[p*4]-ref[0])+Math.abs(a[p*4+1]-ref[1])+Math.abs(a[p*4+2]-ref[2]);const dv=borda.map(dRef).sort((m,n)=>m-n),tol=Math.max(6,Math.min(45,dv[Math.floor(dv.length*.9)]*1.5+5));
+  const perto=p=>dRef(p)<tol;
   const dif=(p,q)=>Math.abs(a[p*4]-a[q*4])+Math.abs(a[p*4+1]-a[q*4+1])+Math.abs(a[p*4+2]-a[q*4+2]);
-  const vai=(q,p)=>{if(!fundo[q]&&perto(q)&&dif(p,q)<14){fundo[q]=1;fila[ff++]=q}};
-  for(let i=0;i<W;i++)for(const p of[i,(H-1)*W+i])if(!fundo[p]&&perto(p)){fundo[p]=1;fila[ff++]=p}
-  for(let j=0;j<H;j++)for(const p of[j*W,j*W+W-1])if(!fundo[p]&&perto(p)){fundo[p]=1;fila[ff++]=p}
+  const fundo=new Uint8Array(W*H),fila=new Int32Array(W*H);let fi=0,ff=0;
+  for(const p of borda)if(perto(p)&&!fundo[p]){fundo[p]=1;fila[ff++]=p}
+  const vai=(q,p)=>{if(!fundo[q]&&op(q)&&perto(q)&&dif(p,q)<Math.min(12,tol/2+2)){fundo[q]=1;fila[ff++]=q}};
   while(fi<ff){const p=fila[fi++],px=p%W;if(px>0)vai(p-1,p);if(px<W-1)vai(p+1,p);if(p>=W)vai(p-W,p);if(p<W*(H-1))vai(p+W,p)}
+  if(ff<borda.length)return false;
   for(let p=0;p<W*H;p++)if(fundo[p])a[p*4+3]=0;
-  // sobra: pontinhos soltos do fundo e borda suave
-  x.putImageData(im,0,0);return c}
-function separarFoto(c){c=tirarFundo(c);const W=c.width,H=c.height,d=c.getContext('2d').getImageData(0,0,W,H).data,op=(i,j)=>d[(j*W+i)*4+3]>30;
+  // borda suave: pixel claro encostado no fundo fica meio transparente
+  for(let p=W;p<W*(H-1);p++)if(!fundo[p]&&op(p)&&(fundo[p-1]||fundo[p+1]||fundo[p-W]||fundo[p+W])&&dif(p,p)===0&&Math.abs(a[p*4]-ref[0])+Math.abs(a[p*4+1]-ref[1])+Math.abs(a[p*4+2]-ref[2])<90)a[p*4+3]=128;
+  x.putImageData(im,0,0);return true}
+function separarFoto(c){tirarFundo(c);const W=c.width,H=c.height,d=c.getContext('2d').getImageData(0,0,W,H).data,op=(i,j)=>d[(j*W+i)*4+3]>30;
   if(W<H*1.4)return {frente:c};let melhor=-1,menor=1e9;
   for(let i=Math.round(W*.35);i<Math.round(W*.65);i++){let n=0;for(let j=0;j<H;j+=2)if(op(i,j))n++;if(n<menor||(n===menor&&Math.abs(i-W/2)<Math.abs(melhor-W/2))){menor=n;melhor=i}}
   return {frente:cortar(c,0,melhor),costas:cortar(c,melhor,W)}}
@@ -1319,11 +1327,12 @@ $('#dlg-art').addEventListener('close',()=>{const k=artAberto,v=$('#dlg-art').re
   if(artImgs.costas){const g=medirPNG(artImgs.costas,peito);if(!x.esc)x.esc=g.esc;x.geoCo={cx:g.cx,gola:g.gola};x.idb.costas=1;delete x.img.costas;IDB.put('imgs',{id:`${k}-costas-peca`,src:artImgs.costas.toDataURL('image/png')});if(artImgs.costasCab){x.idb.costasCab=1;IDB.put('imgs',{id:`${k}-costas-cabide`,src:artImgs.costasCab.toDataURL('image/png')})}else delete x.idb.costasCab}
   if(!salvarArtx())return;
   aplicarArtx();for(const l of['frente','costas'])if(artImgs[l]){const im=artImgs[l];im.fk=claridade(im);IMG[`${k}-${l}-peca`]=im;IMG[`${k}-${l}-cabide`]=artImgs[l+'Cab']||null}
-  let falta=false;if(novo&&!MEDX[k]){const nn=semAcento(x.nome).replace(/[^a-z0-9 ]/g,'');const achado=MED0.find(m=>semAcento(m.nome).replace(/[^a-z0-9 ]/g,'').split(' ').filter(w=>w.length>2).every(w=>nn.includes(w)));
+  const comMed=$('#da-med').checked;if(comMed)delete x.semMed;else{x.semMed=1;if(MEDX[k]){delete MEDX[k];gravar('medidas',MEDX)}}salvarArtx();
+  let falta=false;if(comMed&&!MEDX[k]){const nn=semAcento(x.nome).replace(/[^a-z0-9 ]/g,'');const achado=MED0.find(m=>semAcento(m.nome).replace(/[^a-z0-9 ]/g,'').split(' ').filter(w=>w.length>2).every(w=>nn.includes(w)));
     MEDX[k]=achado?{...JSON.parse(JSON.stringify(MEDX[achado.id]||achado)),id:k,g:achado.g}:{...medDe(k),nome:x.nome};MEDX[k].nome=x.nome;gravar('medidas',MEDX);aplicarMed();if(achado)toast('Mockup guardado — usei as medidas de '+achado.nome);else falta=true}
   if(MEDX[k]&&MEDX[k].nome!==x.nome){MEDX[k].nome=x.nome;gravar('medidas',MEDX)}
   listarMockups();atualizarTudo();if(!novo)toast('Mockup guardado');
-  if(falta){alert('Este artigo ainda não tem as alturas das estampas na ficha de localização. Vou abrir Medidas para você preencher agora (frontal, mini, nuca, carimbo).');ir('medidas');$('#md-busca').value=x.nome;listarMedidas()}});
+  if(falta)toast('Mockup guardado. As medidas ficaram no padrão; se quiser, ajuste em Biblioteca → Medidas')});
 
 // ---------- cores ----------
 const FAMS=[['AM','AMARELO'],['AZ','AZUL'],['BG','BEGE'],['BO','BORDÔ'],['CH','CHUMBO'],['CL','CORAL'],['CQ','CAQUI'],['CZ','CINZA'],['LJ','LARANJA'],['LS','LILÁS'],['MR','MARROM'],['RS','ROSA'],['RX','ROXO'],['VD','VERDE'],['VM','VERMELHO']];
