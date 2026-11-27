@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="40";</script>
+<script>var VERSAO="41";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -277,7 +277,7 @@ dialog::backdrop{background:#0006}
       <div class="pest" data-p="fr">
        <div class="linha">
         <label>Estampa da frente<select id="f-fr-est" class="selest"></select></label>
-        <label>Ou escreva (só nesta peça)<input type="text" id="f-fr-txt" placeholder="EX.: ITAPUÁ"></label>
+        <label>Ou escreva (só nesta peça)<input type="text" id="f-fr-txt" placeholder="EX.: ITAPOÁ"></label>
         <label>Onde<select id="f-fr-pos"><option value="frontal">Frontal (peito)</option><option value="mini">Mini (lado do peito)</option></select></label>
         <label id="l-fr-dist" style="display:none">Distância da gola (cm)<input type="number" step="0.5" id="f-fr-dist"></label>
         <label>Tamanho no desenho<input type="number" step="0.1" min="0.1" id="f-fr-larg"></label>
@@ -321,9 +321,7 @@ dialog::backdrop{background:#0006}
       <h4 class="sub">Cor das estampas — muda todas juntas</h4>
       <div class="linha">
         <label>Cor<select id="f-cor-todas" class="selpant"></select></label>
-        <label style="flex-direction:row;align-items:center;gap:8px;display:flex;align-self:end;padding-bottom:12px"><input type="checkbox" id="f-cor-modo" style="width:22px;height:22px;flex:none"> Degradê</label>
-        <label id="l-cor2">Segunda cor do degradê<select id="f-cor2" class="selpant"></select></label>
-        <label id="l-cor-dir">Direção do degradê<select id="f-cor-dir"><option value="v">De cima para baixo</option><option value="h">Da esquerda para a direita</option></select></label>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute)">Degradê<div id="dg-w" style="position:relative;color:var(--ink)"><button type="button" class="cbx-b" id="dg-b"></button><div class="cbx-p" id="dg-p" hidden style="left:auto;right:0;width:min(360px,calc(100vw - 32px))"></div></div></div>
       </div>
     </div>
     <details class="bloco" style="display:none">
@@ -655,13 +653,16 @@ const desf=[];let ultimoP=null,ultimoT=0;
 function marcarDesfazer(){const j=JSON.stringify(P);if(ultimoP&&ultimoP!==j&&Date.now()-ultimoT>900){desf.push(ultimoP);if(desf.length>40)desf.shift();ultimoT=Date.now()}if(ultimoP!==j)ultimoP=j;const b=document.getElementById('b-desfazer');if(b)b.hidden=!desf.length}
 function guardarP(){marcarDesfazer();gravar('atual',P);const i=pecas.findIndex(p=>p.id===P.id),c=JSON.parse(JSON.stringify(P));const salva=i>=0&&!pecas[i].rascunho;if(i>=0&&!salva){pecas[i]=c;gravar('pecas',pecas)}const t=document.getElementById('pc-nome');if(t)t.textContent=(P.ref||P.nome||'Peça sem referência')+(salva?(JSON.stringify(pecas[i])===JSON.stringify(c)?' ✓':' — mudanças ainda não salvas'):' — ainda não salva')}
 const hexDe0=(tipo,n)=>(cores[tipo].find(c=>c.n===n)||cores[tipo].find(c=>c.n.toUpperCase()===String(n).toUpperCase())||{h:'#cccccc'}).h;
-const hexDe=(tipo,n)=>hexDe0(tipo,n);
+const hexDe=(tipo,n)=>n==='SEM COR'?(tipo==='ting'?'#ffffff':'#cccccc'):hexDe0(tipo,n);
 
 // ---------- desenhar a peça ----------
+const degCores=p=>{const d=p.deg||{};return d.cores&&d.cores.length?d.cores:[p.corTodas||'BRANCO',d.c2||'BRANCO']};
+const degEstilo=p=>{const d=p.deg||{};return d.estilo||d.dir||'v'};
 function tingir(img,hex,w,h,hex2,dir){
   const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
   x.drawImage(img,0,0,w,h);x.globalCompositeOperation='source-in';
-  if(hex2){const g=dir==='h'?x.createLinearGradient(0,0,w,0):x.createLinearGradient(0,0,0,h);g.addColorStop(0,hex);g.addColorStop(1,hex2);x.fillStyle=g}else x.fillStyle=hex;
+  if(hex2){const L=Array.isArray(hex2)?hex2:[hex,hex2];const g=dir==='h'?x.createLinearGradient(0,0,w,0):dir==='d'?x.createLinearGradient(0,0,w,h):dir==='d2'?x.createLinearGradient(w,0,0,h):dir==='r'?x.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*.6):x.createLinearGradient(0,0,0,h);
+    L.forEach((c,i)=>g.addColorStop(L.length>1?i/(L.length-1):0,c));x.fillStyle=g}else x.fillStyle=hex;
   x.fillRect(0,0,w,h);return c;
 }
 // ---------- alfabeto Santacosta: escrever estampas ----------
@@ -711,13 +712,13 @@ function desenhar(p,lado,k=1){
   const c=document.createElement('canvas'); if(!base)return c;
   const W=Math.round(base.width*k),H=Math.round(base.height*k);c.width=W;c.height=H;const x=c.getContext('2d');
   x.imageSmoothingQuality='high';
-  x.filter=`brightness(${base.fk||1})`;x.drawImage(base,0,0,W,H);x.filter='none';x.globalCompositeOperation='multiply';x.fillStyle=hexDe('ting',p.ting);x.fillRect(0,0,W,H);
+  x.filter=`brightness(${base.fk||1})`;x.drawImage(base,0,0,W,H);x.filter='none';x.globalCompositeOperation='multiply';x.fillStyle=p.ting==='SEM COR'?'#ffffff':hexDe('ting',p.ting);x.fillRect(0,0,W,H);
   x.globalCompositeOperation='destination-in';x.drawImage(base,0,0,W,H);x.globalCompositeOperation='source-over';
   const L=document.createElement('canvas');L.width=W;L.height=H;const y=L.getContext('2d');
   for(const e of posicoes(p,lado)){const im=IMG['e-'+e.chave];if(!im)continue;
     const w=Math.max(1,Math.round(e.w*k)),h=Math.max(1,Math.round(e.h*k));
     const dg=p.deg&&p.deg.on?p.deg:null;if(e.clip){y.save();y.beginPath();y.rect(0,0,W,e.clip*k);y.clip()}
-    y.drawImage(/ILUSTRAD|ORIGINAL/.test(String(e.cor).toUpperCase())?im:tingir(daTinta(e.chave,im),hexDe('pant',e.cor),w,h,dg?hexDe('pant',dg.c2):null,dg&&dg.dir),e.x*k,e.y*k,w,h);if(e.clip)y.restore()}
+    y.drawImage(/ILUSTRAD|ORIGINAL/.test(String(e.cor).toUpperCase())||(String(e.cor)==='SEM COR'&&!dg)?im:tingir(daTinta(e.chave,im),hexDe('pant',e.cor),w,h,dg?degCores(p).map(c=>hexDe('pant',c)):null,dg&&degEstilo(p)),e.x*k,e.y*k,w,h);if(e.clip)y.restore()}
   const T=document.createElement('canvas');T.width=W;T.height=H;const t=T.getContext('2d');
   t.drawImage(L,0,0);t.globalCompositeOperation='multiply';t.filter='brightness(1.1)';t.drawImage(base,0,0,W,H);t.filter='none';
   t.globalCompositeOperation='destination-in';t.drawImage(L,0,0);
@@ -737,11 +738,11 @@ function listaEst(car){ // [valor, nome] para as caixas de estampa
   const l=car?Object.entries(EST).filter(([k,e])=>vivo(k)&&(e.car||e.up||(INFO[k]||{}).loc==='CARIMBO INTERNO')).map(([k,e])=>[k,rotuloEst(k)])
     :[...txts.map(k=>[k,rotuloEst(k)]),...Object.entries(EST).filter(([k,e])=>vivo(k)&&!e.car&&!k.startsWith('txt:')).map(([k,e])=>[k,rotuloEst(k)])];
   return [['__up','+ SUBIR ARQUIVO…'],...l]}
-const listaCor=t=>[['__nova','+ NOVA COR…'],...cores[t].map(c=>[c.n,c.n])];
+const listaCor=t=>[['__nova','+ NOVA COR…'],['SEM COR','SEM COR'],...cores[t].filter(c=>c.n!=='SEM COR').map(c=>[c.n,c.n])];
 function garantirOpcao(sel,v){if(v&&![...sel.options].some(o=>o.value===v)){garantirTexto(v);sel.add(new Option(v.startsWith('txt:')?v.slice(4).toUpperCase()+' (ALFABETO)':v,v),sel.options[1]||null)}}
 function montarForm(){
   opcoes($('#f-artigo'),Object.entries(ART).map(([k,a])=>[k,a.nome]).sort((a,b)=>a[1].localeCompare(b[1],'pt')));
-  opcoes($('#f-fr-est'),listaEst(),'SEM ESTAMPA');opcoes($('#f-co-est'),listaEst(),'SEM ESTAMPA');opcoes($('#f-barra'),listaEst(),'NADA NA BARRA');opcoes($('#f-carimbo'),listaEst(1),'SEM CARIMBO');
+  opcoes($('#f-fr-est'),listaEst(),'SEM ESTAMPA');opcoes($('#f-co-est'),listaEst(),'SEM ESTAMPA');opcoes($('#f-barra'),listaEst(),'SEM ESTAMPA');opcoes($('#f-carimbo'),listaEst(1),'SEM CARIMBO');
   $$('#t-peca .selpant').forEach(s=>opcoes(s,listaCor('pant')));opcoes($('#f-ting'),listaCor('ting'));
   $('#f-grade').innerHTML=`<table class="grade"><tr><th></th>${GRADE.map(g=>`<th>${g}</th>`).join('')}<th>TOTAL</th></tr>${[...LOJAS,'PROJETO'].map(l=>`<tr><th>${l}</th>${GRADE.map(g=>`<td><input inputmode="numeric" data-g="${l}|${g}"></td>`).join('')}<td class="tot" data-tl="${l}"></td></tr>`).join('')}<tr><th>GRADE TOTAL</th>${GRADE.map(g=>`<td class="tot" data-tg="${g}"></td>`).join('')}<td class="tot" data-tt></td></tr></table>`;
 }
@@ -759,8 +760,7 @@ function preencher(){
   $('#f-modelo').placeholder=ART[P.artigo].nome;$('#f-tingTexto').placeholder=P.ting.toUpperCase();
   $('#b-volta-pedido').hidden=!(pedido&&pedido.ids&&pedido.ids.includes(P.id));
   $$('.cbx').forEach(c=>c.sync());syncFaixas();
-  $('#f-cor-todas').value=P.corTodas||P.fr.cor||'BRANCO';const dg=P.deg||{};$('#f-cor-modo').checked=!!dg.on;garantirOpcao($('#f-cor2'),dg.c2||'BRANCO');$('#f-cor2').value=dg.c2||'BRANCO';$('#f-cor-dir').value=dg.dir||'v';
-  $('#l-cor2').hidden=$('#l-cor-dir').hidden=!dg.on;
+  $('#f-cor-todas').value=P.corTodas||P.fr.cor||'BRANCO';dgBotao();
   if(!ART[P.artigo][painelSel==='co'?'co':'fr']&&(painelSel==='fr'||painelSel==='barra'||painelSel==='co'))painelSel=ART[P.artigo].fr?'fr':'co';
   if(painelSel[0]==='x'&&!(P.extras||[])[+painelSel.slice(1)])painelSel='fr';
   $('#f-car-dist').value=CAR.dist??2;$('#f-car-larg').value=CAR.larg||'';$('#f-car-larg').placeholder=P.carimbo&&EST[P.carimbo]?String(Math.round(EST[P.carimbo].w*10)/10).replace('.',','):'';syncFaixas();
@@ -796,9 +796,9 @@ function ler_form(e){
 }
 $('#t-peca').addEventListener('change',e=>{if(e.target.closest('.grade'))return;
   if(e.target.id==='f-car-dist'||e.target.id==='f-car-larg'){CAR={dist:$('#f-car-dist').value,larg:$('#f-car-larg').value};gravar('carPadrao',CAR);pintarEditor();return}
-  if(['f-cor-todas','f-cor-modo','f-cor2','f-cor-dir'].includes(e.target.id)){if(e.target.type!=='checkbox'&&e.target.value&&e.target.value.startsWith('__'))return;const c=$('#f-cor-todas').value;
+  if(e.target.id==='f-cor-todas'||e.target.closest('#dg-w')){if(e.target.closest('#dg-w'))return;if(e.target.value&&e.target.value.startsWith('__'))return;const c=$('#f-cor-todas').value;
     if(e.target.id==='f-cor-todas'){P.corTodas=c;const pt=(o,k)=>{if(!/ORIGINAL/.test(o[k]||''))o[k]=c};pt(P.fr,'cor');pt(P.co,'cor');pt(P,'barraCor');pt(P,'carimboCor');(P.extras||[]).forEach(x=>pt(x,'cor'));P.ov=P.ov||{};for(const k in P.ov)if(k.endsWith('.cor'))delete P.ov[k]}
-    P.deg={on:$('#f-cor-modo').checked,c2:$('#f-cor2').value,dir:$('#f-cor-dir').value};guardarP();desenharExtras();preencher();pintarEditor();return}if(mudouExtra(e)){if(['txt','est'].includes(e.target.dataset.k))novaEstampaTalvez(P.extras[+e.target.dataset.x].est);return}ler_form(e);{const m=(e.target.id||'').match(/^f-(fr|co)-(txt|est)$/);if(m)setTimeout(()=>novaEstampaTalvez(P[m[1]].est),50);if(e.target.id==='f-barra')setTimeout(()=>novaEstampaTalvez(P.barra),50)}preencher();if(e.target.id==='f-artigo'){(P.extras||[]).forEach(x=>{const L=ART[P.artigo].lugares[x.lado]||{};if(!L[x.onde])x.onde=Object.keys(L)[0]});desenharExtras()}pintarEditor()});
+    guardarP();desenharExtras();preencher();pintarEditor();return}if(mudouExtra(e)){if(['txt','est'].includes(e.target.dataset.k))novaEstampaTalvez(P.extras[+e.target.dataset.x].est);return}ler_form(e);{const m=(e.target.id||'').match(/^f-(fr|co)-(txt|est)$/);if(m)setTimeout(()=>novaEstampaTalvez(P[m[1]].est),50);if(e.target.id==='f-barra')setTimeout(()=>novaEstampaTalvez(P.barra),50)}preencher();if(e.target.id==='f-artigo'){(P.extras||[]).forEach(x=>{const L=ART[P.artigo].lugares[x.lado]||{};if(!L[x.onde])x.onde=Object.keys(L)[0]});desenharExtras()}pintarEditor()});
 $('#t-peca').addEventListener('input',e=>{if(e.target.dataset.x!=null){mudouExtra(e);return}if(e.target.matches('#f-grade input')){ler_form(e);somar()}else if(e.target.matches('input[type=text],textarea')&&!/-txt$/.test(e.target.id))ler_form(e)});
 
 // ---------- textos da ficha ----------
@@ -872,7 +872,7 @@ function fichaHTML(p){
     const tt=String(O(it.id,'tam','')),nt=tt.includes('\n')?tt.split('\n').length:1;
     const hh=(it.titulo?30:0)+ih+(2+nt)*14+14+(lt?linhasDe(lt,cpl)*13+8:12);
     const html=ab(x,top,w,null,'cx',`${it.titulo?`<div class="vm" style="padding:3px 2px 0">${esc(it.titulo)}</div>`:''}<div class="im" style="height:${ih}px"><img src="${pretoURL(it.chave)}" alt=""></div>
-      <div class="dd"><div>COR: ${ed(`b:${it.id}.cor`,O(it.id,'cor',p.deg&&p.deg.on?`DEGRADÊ ${String(it.cor).toUpperCase()} > ${String(p.deg.c2).toUpperCase()}`:String(it.cor).toUpperCase()))}</div><div>TIPO: ${ed(`b:${it.id}.tipo`,it.tipo||'ESTAMPA')}</div><div>TAMANHO: ${ed(`b:${it.id}.tam`,O(it.id,'tam',it.tam||(it.cm?fmtCm(it.cm):tamTxt(it.chave))))}</div></div><div class="vm lc ed" contenteditable="true" data-c="b:${it.id}.loc">${esc(O(it.id,'loc',it.loc||''))}</div>`);
+      <div class="dd"><div>COR: ${ed(`b:${it.id}.cor`,O(it.id,'cor',p.deg&&p.deg.on?`DEGRADÊ ${degCores(p).map(c=>String(c).toUpperCase()).join(' > ')}`:String(it.cor).toUpperCase()))}</div><div>TIPO: ${ed(`b:${it.id}.tipo`,it.tipo||'ESTAMPA')}</div><div>TAMANHO: ${ed(`b:${it.id}.tam`,O(it.id,'tam',it.tam||(it.cm?fmtCm(it.cm):tamTxt(it.chave))))}</div></div><div class="vm lc ed" contenteditable="true" data-c="b:${it.id}.loc">${esc(O(it.id,'loc',it.loc||''))}</div>`);
     return {html,hh};
   };
   const coluna=(x,w,itens,lado,limite=772)=>{let fim=205,ih=58;const total=k=>itens.reduce((a,it)=>a+caixa(x,0,w,it,k).hh+10,0);
@@ -1213,7 +1213,7 @@ function diagrama(id,tipo,m){const A=ART[id],lado=tipo==='nuca'?'costas':'frente
   const marca=(xx,yy)=>{x.save();x.strokeStyle=V;x.lineWidth=2;x.setLineDash([6,6]);x.beginPath();x.moveTo(xx-60,yy);x.lineTo(xx+60,yy);x.stroke();x.restore()};
   const cm=v=>String(v).replace('.',',')+'CM';
   // mesmas posições que o site usa para desenhar as peças
-  const q={...novaPeca(),artigo:id,ting:'BRANCO',fr:{est:'txt:itapuá',pos:tipo==='fr'?'frontal':'mini',cor:'BRANCO',larg:tipo==='fr'?'':tipo==='ass'?5:8,dist:tipo==='fr'?(+m.fr||A.frontal):+((tipo==='ass'?m.ass:m.mini)[0]||[0,A.mini[0]])[1]},
+  const q={...novaPeca(),artigo:id,ting:'BRANCO',fr:{est:'txt:itapoá',pos:tipo==='fr'?'frontal':'mini',cor:'BRANCO',larg:tipo==='fr'?'':tipo==='ass'?5:8,dist:tipo==='fr'?(+m.fr||A.frontal):+((tipo==='ass'?m.ass:m.mini)[0]||[0,A.mini[0]])[1]},
     co:{est:'sereia-santacosta',pos:'nuca',cor:'BRANCO',dist:+m.nuca},barra:'sereia',carimbo:'',extras:[]};
   const pos=papel=>posicoes(q,lado).find(z=>z.papel===papel);
   if(tipo==='fr'){const z=pos('frente');if(z){caixa(z.x,z.y,z.w,z.h);marca(G.cx,G.gola);const sx=Math.min(W-30,z.x+z.w+28);seta(sx,G.gola,sx,z.y+z.h,cm(m.fr),Math.max(10,sx-190),(G.gola+z.y+z.h)/2)}}
@@ -1705,13 +1705,43 @@ $('#lote').addEventListener('click',e=>{const b=e.target.closest('[data-pngl]');
 $('#b-lote-mapa').onclick=()=>{lote.forEach(id=>{if(!mapa.itens.includes(id))mapa.itens.push(id)});gravar('mapa',mapa);toast('Peças no mapa')};
 
 // ---------- barrinha de tamanho (no lugar de digitar) ----------
-var FAIXAS=[['f-fr-larg',40],['f-co-larg',40],['f-barra-larg',8],['f-car-larg',10]];
-FAIXAS.forEach(([id,max])=>{const i=$('#'+id);i.style.display='none';const r=document.createElement('input');r.type='range';r.min='0.2';r.max=max;r.step='0.1';r.id=id+'-r';r.style.width='100%';
+var FAIXAS=[['f-fr-larg',40,'frente','frente'],['f-co-larg',40,'costas','costas'],['f-barra-larg',8,'barra','frente'],['f-car-larg',10,'carimbo','frente']];
+const faixaE=(papel,lado)=>posicoes(P,lado).find(e=>e.papel===papel);
+FAIXAS.forEach(([id,max,papel,lado])=>{const i=$('#'+id);i.style.display='none';const r=document.createElement('input');r.type='range';r.min='0.2';r.max=max;r.step='0.1';r.id=id+'-r';r.style.width='100%';
   const t=document.createElement('span');t.id=id+'-t';t.style.cssText='font-weight:600;font-size:14px';i.after(r,t);
-  r.addEventListener('input',e=>{e.stopPropagation();i.value=r.value;t.textContent=String(r.value).replace('.',',')+' cm';i.dispatchEvent(new Event('change',{bubbles:true}))});
+  r.addEventListener('input',e=>{e.stopPropagation();const el=faixaE(papel,lado);if(!el)return;const A=ART[P.artigo],agora=el.w/A.esc,v=+r.value,f=v/agora;if(!(f>0)||!isFinite(f))return;
+    if(papel==='frente')P.fr.vz=Math.round((+P.fr.vz||1)*f*1000)/1000;else if(papel==='costas')P.co.vz=Math.round((+P.co.vz||1)*f*1000)/1000;else if(papel==='barra')P.barraVz=Math.round((+P.barraVz||1)*f*1000)/1000;
+    else{CAR.larg=Math.round((+String(CAR.larg||'').replace(',','.')||el.wd)*f*100)/100;gravar('carPadrao',CAR)}
+    t.textContent=String(v).replace('.',',')+' cm';guardarP();pintarEditor()});
   r.addEventListener('change',e=>e.stopPropagation())});
-function syncFaixas(){if(!FAIXAS)return;FAIXAS.forEach(([id,max])=>{const i=$('#'+id),r=$('#'+id+'-r'),t=$('#'+id+'-t');if(!r)return;const v=+(String(i.value||i.placeholder||'').replace(',','.'))||1;
-  if(document.activeElement!==r)r.value=Math.min(max,v);t.textContent=String(Math.round(v*10)/10).replace('.',',')+' cm'})}
+function syncFaixas(){if(!FAIXAS||!P||!ART[P.artigo])return;FAIXAS.forEach(([id,max,papel,lado])=>{const r=$('#'+id+'-r'),t=$('#'+id+'-t');if(!r)return;const el=faixaE(papel,lado);const v=el?Math.round(el.w/ART[P.artigo].esc*10)/10:0;
+  if(document.activeElement!==r)r.value=Math.min(max,v||1);t.textContent=v?String(v).replace('.',',')+' cm':''})}
+// ---------- degradê (igual ao do Canva: cores + estilo) ----------
+let dgAtivo=0;
+var DG_EST=[['v','De cima para baixo','to bottom'],['h','Da esquerda para a direita','to right'],['d','Na diagonal','to bottom right'],['r','Do centro para fora','radial'],['d2','Na diagonal (outro lado)','to bottom left']];
+const dgCss=(cs,e)=>{const L=cs.map(c=>hexDe('pant',c)).join(',');return e==='r'?`radial-gradient(circle,${L})`:`linear-gradient(${(DG_EST.find(x=>x[0]===e)||DG_EST[0])[2]},${L})`};
+function dgBotao(){const d=P.deg||{},b=$('#dg-b');if(!b)return;b.innerHTML=d.on?`<i class="mini" style="border-radius:6px;background:${dgCss(degCores(P),degEstilo(P))}"></i><span>${degCores(P).length} CORES</span>`:'<i class="mini"></i><span>SEM DEGRADÊ</span>'}
+function dgMudou(){guardarP();pintarEditor();dgBotao();dgPainel()}
+function dgPainel(){const d=P.deg||{},cs=degCores(P),pn=$('#dg-p'),q=(pn.querySelector('input')||{}).value||'';
+  const bola=(c,i)=>`<button type="button" data-dgi="${i}" title="${esc(c)}" style="width:44px;height:44px;border-radius:50%;border:${i===dgAtivo?'3px solid #6a4cff':'1px solid var(--line)'};background:${hexDe('pant',c)};position:relative;flex:none">${cs.length>2?`<b data-dgx="${i}" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#111;color:#fff;font-size:12px;line-height:20px">×</b>`:''}</button>`;
+  pn.innerHTML=`<div style="display:flex;border-bottom:1px solid var(--line);margin-bottom:10px">${[['','Cor sólida'],['on','Degradê']].map(([v,n])=>`<button type="button" data-dgon="${v}" style="flex:1;padding:10px;border:0;background:none;font-size:15px;${(!!d.on)===(!!v)?'border-bottom:3px solid #6a4cff;font-weight:600':''}">${n}</button>`).join('')}</div>`+
+   (d.on?`<div style="font-weight:600;margin:4px 0 8px">Cores em degradê <small style="font-weight:400;color:#777">(toque numa bolinha e escolha a cor embaixo)</small></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;padding:6px 4px">${cs.map(bola).join('')}${cs.length<5?`<button type="button" data-dgmais="1" style="width:44px;height:44px;border-radius:50%;border:1px dashed #888;background:#fff;font-size:22px;flex:none">+</button>`:''}</div>
+    <div style="font-weight:600;margin:10px 0 8px">Estilo</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${DG_EST.map(([e,n])=>`<button type="button" data-dge="${e}" title="${n}" style="width:56px;height:40px;border-radius:8px;border:${degEstilo(P)===e?'3px solid #6a4cff':'1px solid var(--line)'};background:${dgCss(cs,e)}"></button>`).join('')}</div>
+    <input type="search" placeholder="Pesquisar cor…" autocomplete="off" style="margin-top:12px" value="${esc(q)}"><ul style="max-height:220px;overflow:auto"></ul>`:'<p class="aviso" style="margin:4px">As estampas ficam numa cor só (a de "Cor", ao lado).</p>');
+  dgLista()}
+function dgLista(){const pn=$('#dg-p'),ul=pn.querySelector('ul'),q=pn.querySelector('input');if(!ul)return;const t=semAcento(q.value);
+  ul.innerHTML=cores.pant.filter(c=>!/ORIGINAL|SEM COR/.test(c.n)&&semAcento(c.n).includes(t)).map(c=>`<li data-dgc="${esc(c.n)}">${miniDe('pant',c.n)}${esc(c.n)}</li>`).join('')||'<li style="color:#888">Nada encontrado</li>'}
+$('#dg-b').onclick=e=>{e.stopPropagation();const pn=$('#dg-p'),abrir=pn.hidden;$$('.cbx-p').forEach(x=>x.hidden=true);if(abrir){pn.hidden=false;dgPainel()}};
+$('#dg-p').addEventListener('input',e=>{if(e.target.matches('input[type=search]'))dgLista()});
+$('#dg-p').addEventListener('click',e=>{e.stopPropagation();const d=P.deg=P.deg||{};const t=e.target;let b;
+  if(b=t.closest('[data-dgon]')){d.on=!!b.dataset.dgon;if(d.on&&!(d.cores&&d.cores.length))d.cores=degCores(P).slice();dgAtivo=0;dgMudou();return}
+  if(b=t.closest('[data-dgx]')){d.cores=degCores(P).slice();d.cores.splice(+b.dataset.dgx,1);dgAtivo=0;dgMudou();return}
+  if(b=t.closest('[data-dgi]')){dgAtivo=+b.dataset.dgi;dgPainel();return}
+  if(t.closest('[data-dgmais]')){d.cores=degCores(P).slice();d.cores.push(d.cores[d.cores.length-1]);dgAtivo=d.cores.length-1;dgMudou();return}
+  if(b=t.closest('[data-dge]')){d.estilo=b.dataset.dge;dgMudou();return}
+  if(b=t.closest('[data-dgc]')){d.cores=degCores(P).slice();d.cores[dgAtivo]=b.dataset.dgc;dgMudou();return}});
 // ---------- caixa de escolha com busca ----------
 const semAcento=t=>String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 function miniDe(tipo,v){if(tipo==='art')return '';if(!v)return '<i class="mini"></i>';
