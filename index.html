@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="43";</script>
+<script>var VERSAO="44";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -635,7 +635,9 @@ async function preparar(){
   for(const k in ARTX)for(const l of['frente','costas']){const src=(ARTX[k].img||{})[l];if(src){lista.push([`${k}-${l}-peca`,src]);if(ARTX[k].semCabide||ART[k]&&ART[k].novo)IMG[`${k}-${l}-cabide`]=null}}
   await Promise.all(lista.map(async([k,src])=>IMG[k]=await carregar(src.startsWith('data:')?src:src+'?v='+VERSAO)));
   for(const k in ARTX)if((ARTX[k].img||{}).frente||(ARTX[k].img||{}).costas)for(const l of['frente','costas'])if((ARTX[k].img||{})[l])IMG[`${k}-${l}-cabide`]=null;
-  for(const k in ARTX){const z=ARTX[k].idb||{};for(const l of['frente','costas'])if(z[l]){try{const p=await IDB.get('imgs',`${k}-${l}-peca`);const c=z[l+'Cab']?await IDB.get('imgs',`${k}-${l}-cabide`):null;IMG[`${k}-${l}-cabide`]=c?await carregar(c.src):null;if(p){let im=await carregar(p.src);const cv=consertarFundo(im,IMG[`${k}-${l}-cabide`],k,l);if(cv){cv.c.fk=claridade(cv.c);im=cv.c;if(cv.cb)IMG[`${k}-${l}-cabide`]=cv.cb}IMG[`${k}-${l}-peca`]=im}}catch(e){}}}
+  for(const k in ARTX){const z=ARTX[k].idb||{};for(const l of['frente','costas'])if(z[l]){try{const p=await IDB.get('imgs',`${k}-${l}-peca`);if(p&&!ARTX[k].geoV2){try{const im0=await carregar(p.src),c0=document.createElement('canvas');c0.width=im0.naturalWidth||im0.width;c0.height=im0.naturalHeight||im0.height;c0.getContext('2d').drawImage(im0,0,0);const g=medirPNG(c0,50),X=ARTX[k];
+      if(l==='frente'&&X.geoFr&&Math.abs(g.gola-X.geoFr.gola)>c0.height*.08){X.geoFr={cx:g.cx,gola:g.gola,ombro:g.ombro,lado:g.lado,barra:g.barra};X.esc=g.esc}
+      if(l==='costas'&&X.geoCo&&Math.abs(g.gola-X.geoCo.gola)>c0.height*.08)X.geoCo={cx:g.cx,gola:g.gola};if(l==='costas'||!z.costas){X.geoV2=1;salvarArtx();try{aplicarArtx()}catch(e){}}}catch(e){}}const c=z[l+'Cab']?await IDB.get('imgs',`${k}-${l}-cabide`):null;IMG[`${k}-${l}-cabide`]=c?await carregar(c.src):null;if(p){let im=await carregar(p.src);const cv=consertarFundo(im,IMG[`${k}-${l}-cabide`],k,l);if(cv){cv.c.fk=claridade(cv.c);im=cv.c;if(cv.cb)IMG[`${k}-${l}-cabide`]=cv.cb}IMG[`${k}-${l}-peca`]=im}}catch(e){}}}
   try{ALF=await (await fetch('arquivos/alfabeto.json?v='+VERSAO)).json();ALF.img=await carregar('arquivos/alfabeto.png?v='+VERSAO)}catch(e){ALF=null}
   for(const k in IMG)if(k.endsWith('-peca')&&IMG[k])IMG[k].fk=claridade(IMG[k]);
 }
@@ -1271,6 +1273,9 @@ function medirPNG(c,peitoCm){ // acha gola, ombro, lados e barra numa foto de pe
   const x=c.getContext('2d'),W=c.width,H=c.height,d=x.getImageData(0,0,W,H).data,op=(i,j)=>d[(j*W+i)*4+3]>40;
   let x0=W,x1=0,y0=H,y1=0;for(let j=0;j<H;j+=2)for(let i=0;i<W;i+=2)if(op(i,j)){if(i<x0)x0=i;if(i>x1)x1=i;if(j<y0)y0=j;if(j>y1)y1=j}
   const cx=Math.round((x0+x1)/2);let gola=y0;for(let j=y0;j<y1;j++)if(op(cx,j)){gola=j;break}
+  { // bolsa/ecobag (alças no alto): o começo da peça é a primeira linha larga do corpo, não a ponta da alça
+    let maxW=0;const lw=[];for(let j=y0;j<=y1;j+=2){let a=-1,b=-1;for(let i=x0;i<=x1;i+=2)if(op(i,j)){if(a<0)a=i;b=i}lw.push([j,a<0?0:b-a]);if(b-a>maxW)maxW=b-a}
+    const corpo=(lw.find(([j,w])=>w>=maxW*.6)||[gola])[0];if(corpo-gola>(y1-y0)*.25){gola=corpo}}
   const yp=Math.round(gola+(y1-gola)*.3);let lado=cx;while(lado<W-1&&op(lado+1,yp))lado++;
   return {cx,gola,ombro:y0,lado,barra:y1,esc:2*(lado-cx)/(peitoCm||50)}}
 function lerFoto(f,max=1000){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);r(c)};im.src=fr.result};fr.readAsDataURL(f)})}
