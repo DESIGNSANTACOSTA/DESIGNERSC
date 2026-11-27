@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="202611271100";</script>
+<script>var VERSAO="202611271215";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -509,15 +509,10 @@ dialog::backdrop{background:#0006}
   <form method="dialog">
     <h3 style="margin-top:0" id="da-tit">Mockup</h3>
     <label>Nome (PEÇA + MODELAGEM/DETALHE)<input type="text" id="da-nome" placeholder="EX.: CROPPED REGATA A FIO"></label>
-    <div class="linha" style="margin-top:10px">
-      <label class="btn claro" style="flex-direction:row;justify-content:center;color:var(--ink)">Foto da frente<input type="file" id="da-fr" accept="image/png" hidden></label>
-      <label class="btn claro" style="flex-direction:row;justify-content:center;color:var(--ink)">Foto das costas<input type="file" id="da-co" accept="image/png" hidden></label>
-    </div>
+    <label class="btn claro" style="flex-direction:row;justify-content:center;color:var(--ink);margin-top:10px">Foto da peça (frente e costas lado a lado)<input type="file" id="da-foto" accept="image/png,image/*" hidden></label>
+    <p class="aviso" style="margin:4px 0 0">O site separa sozinho a frente (esquerda) e as costas (direita) e tira o cabide para não tingir junto.</p>
     <div id="da-prev" style="display:flex;gap:8px;justify-content:center;margin:10px 0;min-height:90px;background:#faf8f5;border-radius:10px;padding:6px"></div>
-    <div class="linha">
-      <label>Largura do peito (cm)<input type="number" step="0.5" id="da-peito"></label>
-      <input type="hidden" id="da-frontal"><input type="hidden" id="da-nuca"><input type="hidden" id="da-larg">
-    </div>
+    <input type="hidden" id="da-peito"><input type="hidden" id="da-frontal"><input type="hidden" id="da-nuca"><input type="hidden" id="da-larg">
     <p class="aviso" style="margin:6px 0 0">As alturas das estampas ficam em Biblioteca → Medidas.</p>
     <label style="margin-top:10px">Notas de costura padrão (uma por linha)<textarea id="da-cost"></textarea></label>
     <div class="botoes" style="margin-top:12px"><button class="btn" value="ok">Guardar</button><button class="btn claro" value="cancel" formnovalidate>Cancelar</button><button class="btn perigo" value="del" id="da-del" formnovalidate>Excluir</button></div>
@@ -638,6 +633,7 @@ async function preparar(){
   for(const k in ARTX)for(const l of['frente','costas']){const src=(ARTX[k].img||{})[l];if(src){lista.push([`${k}-${l}-peca`,src]);if(ARTX[k].semCabide||ART[k]&&ART[k].novo)IMG[`${k}-${l}-cabide`]=null}}
   await Promise.all(lista.map(async([k,src])=>IMG[k]=await carregar(src.startsWith('data:')?src:src+'?v='+VERSAO)));
   for(const k in ARTX)if((ARTX[k].img||{}).frente||(ARTX[k].img||{}).costas)for(const l of['frente','costas'])if((ARTX[k].img||{})[l])IMG[`${k}-${l}-cabide`]=null;
+  for(const k in ARTX){const z=ARTX[k].idb||{};for(const l of['frente','costas'])if(z[l]){try{const p=await IDB.get('imgs',`${k}-${l}-peca`);if(p)IMG[`${k}-${l}-peca`]=await carregar(p.src);const c=z[l+'Cab']?await IDB.get('imgs',`${k}-${l}-cabide`):null;IMG[`${k}-${l}-cabide`]=c?await carregar(c.src):null}catch(e){}}}
   try{ALF=await (await fetch('arquivos/alfabeto.json?v='+VERSAO)).json();ALF.img=await carregar('arquivos/alfabeto.png?v='+VERSAO)}catch(e){ALF=null}
   for(const k in IMG)if(k.endsWith('-peca')&&IMG[k])IMG[k].fk=claridade(IMG[k]);
 }
@@ -967,9 +963,9 @@ async function salvarFichaPNG(raiz,destino){if(!raiz)return;if(pecaDe(raiz)===P)
 
 
 // ---------- biblioteca de fichas e mapas (guardadas no aparelho, com espaço grande) ----------
-const IDB={p:null,abrir(){return this.p||(this.p=new Promise((ok,er)=>{const r=indexedDB.open('estudio-santacosta',1);r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('fichas',{keyPath:'id'});d.createObjectStore('mapas',{keyPath:'id'})};r.onsuccess=()=>ok(r.result);r.onerror=()=>er(r.error)}))},
+const IDB={p:null,abrir(){return this.p||(this.p=new Promise((ok,er)=>{const r=indexedDB.open('estudio-santacosta',2);r.onupgradeneeded=()=>{const d=r.result;for(const n of['fichas','mapas','imgs'])if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})};r.onsuccess=()=>ok(r.result);r.onerror=()=>er(r.error)}))},
   async op(st,modo,fn){const d=await this.abrir();return new Promise((ok,er)=>{const t=d.transaction(st,modo),r=fn(t.objectStore(st));t.oncomplete=()=>ok(r&&r.result);t.onerror=()=>er(t.error)})},
-  put(st,v){return this.op(st,'readwrite',s=>s.put(v))},del(st,id){return this.op(st,'readwrite',s=>s.delete(id))},todos(st){return this.op(st,'readonly',s=>s.getAll())}};
+  put(st,v){return this.op(st,'readwrite',s=>s.put(v))},get(st,id){return this.op(st,'readonly',s=>s.get(id))},del(st,id){return this.op(st,'readwrite',s=>s.delete(id))},todos(st){return this.op(st,'readonly',s=>s.getAll())}};
 const dataBR=t=>new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
 async function guardarFicha(raiz){const q=pecaDe(raiz)||P;if(!q)return;try{const clone=raiz.cloneNode(true);clone.querySelectorAll('[contenteditable]').forEach(e=>e.removeAttribute('contenteditable'));
   await IDB.put('fichas',{id:'f'+q.id,pid:q.id,ref:q.ref||'',nome:descricaoPeca(q),artigo:ART[q.artigo]?ART[q.artigo].nome:'',data:Date.now(),html:clone.outerHTML,thumb:fichaPNG(raiz,.4).toDataURL('image/jpeg',.75)})}catch(e){toast('Não consegui guardar a ficha na biblioteca')}}
@@ -1270,29 +1266,45 @@ function medirPNG(c,peitoCm){ // acha gola, ombro, lados e barra numa foto de pe
   const cx=Math.round((x0+x1)/2);let gola=y0;for(let j=y0;j<y1;j++)if(op(cx,j)){gola=j;break}
   const yp=Math.round(gola+(y1-gola)*.3);let lado=cx;while(lado<W-1&&op(lado+1,yp))lado++;
   return {cx,gola,ombro:y0,lado,barra:y1,esc:2*(lado-cx)/(peitoCm||50)}}
-function lerFoto(f){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);r(c)};im.src=fr.result};fr.readAsDataURL(f)})}
-function prevArt(){const k=artAberto,v=l=>artImgs[l]?artImgs[l].toDataURL():(IMG[`${k}-${l}-peca`]?IMG[`${k}-${l}-peca`].src:'');
+function lerFoto(f,max=1000){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);r(c)};im.src=fr.result};fr.readAsDataURL(f)})}
+function prevArt(){const k=artAberto,v=l=>artImgs[l]?(()=>{const c=document.createElement('canvas');c.width=artImgs[l].width;c.height=artImgs[l].height;const x=c.getContext('2d');x.drawImage(artImgs[l],0,0);if(artImgs[l+'Cab'])x.drawImage(artImgs[l+'Cab'],0,0);return c.toDataURL()})():(IMG[`${k}-${l}-peca`]?IMG[`${k}-${l}-peca`].src:'');
   $('#da-prev').innerHTML=['frente','costas'].map(l=>v(l)?`<figure style="margin:0;text-align:center;font-size:11px"><img src="${v(l)}" style="height:90px;background:#ccc;border-radius:6px" alt=""><br>${l.toUpperCase()}</figure>`:'').join('')||'<span class="aviso">Sem foto ainda</span>'}
 function abrirArt(k){const novo=!k;if(novo)k='art'+Date.now();artAberto=k;artImgs={};const a=ART[k]||{nome:'',frontal:9,nuca:2,costura:''};
   $('#da-tit').textContent=novo?'Novo mockup':'Mockup';$('#da-nome').value=a.nome||'';$('#da-frontal').value=a.frontal??'';$('#da-nuca').value=a.nuca??'';$('#da-larg').value=a.largMax||'';$('#da-cost').value=a.costura||'';
   $('#da-peito').value=a.fr&&a.esc?Math.round(2*(a.fr.lado-a.fr.cx)/a.esc*2)/2:50;$('#da-del').style.display=novo?'none':'';$('#dlg-art').dataset.novo=novo?1:'';prevArt();$('#dlg-art').showModal()}
 $('#mk-lista').addEventListener('click',e=>{const b=e.target.closest('[data-art]');if(b)abrirArt(b.dataset.art)});
 $('#mk-novo').onclick=()=>abrirArt(null);
-for(const[l,id]of[['frente','#da-fr'],['costas','#da-co']])$(id).onchange=async e=>{const f=e.target.files[0];if(!f)return;artImgs[l]=await lerFoto(f);e.target.value='';prevArt()};
+// separa a foto: frente (esquerda) e costas (direita); e tira o cabide (madeira/gancho) para uma camada própria
+function cortar(c,x0,x1){const k=document.createElement('canvas');k.width=x1-x0;k.height=c.height;k.getContext('2d').drawImage(c,x0,0,x1-x0,c.height,0,0,x1-x0,c.height);return k}
+function separarFoto(c){const W=c.width,H=c.height,d=c.getContext('2d').getImageData(0,0,W,H).data,op=(i,j)=>d[(j*W+i)*4+3]>30;
+  if(W<H*1.4)return {frente:c};let melhor=-1,menor=1e9;
+  for(let i=Math.round(W*.35);i<Math.round(W*.65);i++){let n=0;for(let j=0;j<H;j+=2)if(op(i,j))n++;if(n<menor||(n===menor&&Math.abs(i-W/2)<Math.abs(melhor-W/2))){menor=n;melhor=i}}
+  return {frente:cortar(c,0,melhor),costas:cortar(c,melhor,W)}}
+function tirarCabide(c){const W=c.width,H=c.height,x=c.getContext('2d'),im=x.getImageData(0,0,W,H),a=im.data;
+  const cab=document.createElement('canvas');cab.width=W;cab.height=H;const cx=cab.getContext('2d'),ci=cx.createImageData(W,H),b=ci.data;
+  const sat=i=>{const mx=Math.max(a[i],a[i+1],a[i+2]),mn=Math.min(a[i],a[i+1],a[i+2]);return mx?(mx-mn)/mx:0};
+  const fino=new Uint8Array(H);for(let j=0;j<H;j++){let n=0;for(let i=0;i<W;i++){const p=(j*W+i)*4;if(a[p+3]>30&&sat(p)<.18)n++}fino[j]=n>0&&n<W*.06?1:0} // linhas só com o gancho
+  let tem=false;for(let p=0,q=0;p<a.length;p+=4,q++){if(a[p+3]<30)continue;const j=(q/W)|0;
+    if(sat(p)>.22||fino[j]){b[p]=a[p];b[p+1]=a[p+1];b[p+2]=a[p+2];b[p+3]=a[p+3];a[p+3]=0;tem=true}}
+  x.putImageData(im,0,0);cx.putImageData(ci,0,0);return tem?cab:null}
+$('#da-foto').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;$('#da-prev').innerHTML='<span class="aviso">Separando frente e costas…</span>';
+  const c=await lerFoto(f,2400),p=separarFoto(c);artImgs={};for(const l of['frente','costas'])if(p[l]){const s=Math.min(1,1000/Math.max(p[l].width,p[l].height)),k=document.createElement('canvas');k.width=Math.round(p[l].width*s);k.height=Math.round(p[l].height*s);k.getContext('2d').drawImage(p[l],0,0,k.width,k.height);
+    artImgs[l+'Cab']=tirarCabide(k);artImgs[l]=k}prevArt()};
 $('#dlg-art').addEventListener('close',()=>{const k=artAberto,v=$('#dlg-art').returnValue;artAberto=null;if(!k)return;
   if(v==='del'){if(P.artigo===k||pecas.some(p=>p.artigo===k)){toast('Tem peça salva usando este mockup. Troque o artigo dessas peças antes.');return}if(!confirm('Excluir este mockup?'))return;ARTX[k]={apagado:1};salvarArtx();delete ART[k];listarMockups();atualizarTudo();return}
   if(v!=='ok')return;const novo=$('#dlg-art').dataset.novo;if(novo&&!artImgs.frente&&!artImgs.costas){toast('Escolha pelo menos uma foto');return}
   const x=ARTX[k]=ARTX[k]||{};const num=id=>{const t=$(id).value.replace(',','.');return t===''?null:+t};
   x.nome=$('#da-nome').value.trim().toUpperCase()||'PEÇA NOVA';x.costura=$('#da-cost').value.toUpperCase();
-  const peito=num('#da-peito')||50;x.img=x.img||{};
-  if(artImgs.frente){const g=medirPNG(artImgs.frente,peito);x.esc=g.esc;x.geoFr={cx:g.cx,gola:g.gola,ombro:g.ombro,lado:g.lado,barra:g.barra};x.img.frente=artImgs.frente.toDataURL('image/png')}
-  if(artImgs.costas){const g=medirPNG(artImgs.costas,peito);if(!x.esc)x.esc=g.esc;x.geoCo={cx:g.cx,gola:g.gola};x.img.costas=artImgs.costas.toDataURL('image/png')}
+  const peito=50;x.img=x.img||{};x.idb=x.idb||{};
+  if(artImgs.frente){const g=medirPNG(artImgs.frente,peito);x.esc=g.esc;x.geoFr={cx:g.cx,gola:g.gola,ombro:g.ombro,lado:g.lado,barra:g.barra};x.idb.frente=1;delete x.img.frente;IDB.put('imgs',{id:`${k}-frente-peca`,src:artImgs.frente.toDataURL('image/png')});if(artImgs.frenteCab){x.idb.frenteCab=1;IDB.put('imgs',{id:`${k}-frente-cabide`,src:artImgs.frenteCab.toDataURL('image/png')})}else delete x.idb.frenteCab}
+  if(artImgs.costas){const g=medirPNG(artImgs.costas,peito);if(!x.esc)x.esc=g.esc;x.geoCo={cx:g.cx,gola:g.gola};x.idb.costas=1;delete x.img.costas;IDB.put('imgs',{id:`${k}-costas-peca`,src:artImgs.costas.toDataURL('image/png')});if(artImgs.costasCab){x.idb.costasCab=1;IDB.put('imgs',{id:`${k}-costas-cabide`,src:artImgs.costasCab.toDataURL('image/png')})}else delete x.idb.costasCab}
   if(!salvarArtx())return;
-  aplicarArtx();for(const l of['frente','costas'])if(artImgs[l]){const im=new Image();im.src=x.img[l];IMG[`${k}-${l}-peca`]=im;IMG[`${k}-${l}-cabide`]=null;im.onload=()=>{im.fk=claridade(im);listarMockups();pintarEditor()}}
-  if(novo&&!MEDX[k]){const nn=semAcento(x.nome).replace(/[^a-z0-9 ]/g,'');const achado=MED0.find(m=>!ART[m.id]||m.id===k?semAcento(m.nome).replace(/[^a-z0-9 ]/g,'').split(' ').filter(w=>w.length>2).every(w=>nn.includes(w)):false);
-    MEDX[k]=achado?{...JSON.parse(JSON.stringify(achado)),id:k}:{...medDe(k),nome:x.nome};MEDX[k].nome=x.nome;gravar('medidas',MEDX);aplicarMed();if(achado)toast('Mockup guardado — usei as medidas de '+achado.nome)}
+  aplicarArtx();for(const l of['frente','costas'])if(artImgs[l]){const im=artImgs[l];im.fk=claridade(im);IMG[`${k}-${l}-peca`]=im;IMG[`${k}-${l}-cabide`]=artImgs[l+'Cab']||null}
+  let falta=false;if(novo&&!MEDX[k]){const nn=semAcento(x.nome).replace(/[^a-z0-9 ]/g,'');const achado=MED0.find(m=>semAcento(m.nome).replace(/[^a-z0-9 ]/g,'').split(' ').filter(w=>w.length>2).every(w=>nn.includes(w)));
+    MEDX[k]=achado?{...JSON.parse(JSON.stringify(MEDX[achado.id]||achado)),id:k,g:achado.g}:{...medDe(k),nome:x.nome};MEDX[k].nome=x.nome;gravar('medidas',MEDX);aplicarMed();if(achado)toast('Mockup guardado — usei as medidas de '+achado.nome);else falta=true}
   if(MEDX[k]&&MEDX[k].nome!==x.nome){MEDX[k].nome=x.nome;gravar('medidas',MEDX)}
-  listarMockups();atualizarTudo();if(!novo)toast('Mockup guardado')});
+  listarMockups();atualizarTudo();if(!novo)toast('Mockup guardado');
+  if(falta){alert('Este artigo ainda não tem as alturas das estampas na ficha de localização. Vou abrir Medidas para você preencher agora (frontal, mini, nuca, carimbo).');ir('medidas');$('#md-busca').value=x.nome;listarMedidas()}});
 
 // ---------- cores ----------
 const FAMS=[['AM','AMARELO'],['AZ','AZUL'],['BG','BEGE'],['BO','BORDÔ'],['CH','CHUMBO'],['CL','CORAL'],['CQ','CAQUI'],['CZ','CINZA'],['LJ','LARANJA'],['LS','LILÁS'],['MR','MARROM'],['RS','ROSA'],['RX','ROXO'],['VD','VERDE'],['VM','VERMELHO']];
