@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="45";</script>
+<script>var VERSAO="46";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -282,29 +282,29 @@ dialog::backdrop{background:#0006}
         <label>Ou escreva (só nesta peça)<input type="text" id="f-fr-txt" placeholder="EX.: ITAPOÁ"></label>
         <label>Onde<select id="f-fr-pos"><option value="frontal">Frontal (peito)</option><option value="mini">Mini — lado esquerdo de quem veste</option><option value="mini-d">Mini — lado direito de quem veste</option></select></label>
         <label id="l-fr-dist" style="display:none">Distância da gola (cm)<input type="number" step="0.5" id="f-fr-dist"></label>
-        <label>Tamanho no desenho<input type="number" step="0.1" min="0.1" id="f-fr-larg"></label>
         <label>Tipo<select id="f-fr-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
         <label>Cor só desta estampa<select id="f-fr-cor" class="selpant"></select></label>
        </div>
+       <h4 class="sub">Tamanho no desenho</h4><label class="faixa-l"><input type="number" step="0.1" min="0.1" id="f-fr-larg"></label>
       </div>
       <div class="pest" data-p="barra">
        <div class="linha">
         <label>Na barra<select id="f-barra" class="selest"></select></label>
-        <label>Tamanho no desenho<input type="number" step="0.1" min="0.1" id="f-barra-larg"></label>
         <label>Tipo<select id="f-barra-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
         <label>Cor só desta estampa<select id="f-barra-cor" class="selpant"></select></label>
        </div>
+       <h4 class="sub">Tamanho no desenho</h4><label class="faixa-l"><input type="number" step="0.1" min="0.1" id="f-barra-larg"></label>
       </div>
       <div class="pest" data-p="co">
        <div class="linha">
         <label>Estampa das costas<select id="f-co-est" class="selest"></select></label>
-        <label>Ou escreva (só nesta peça)<input type="text" id="f-co-txt" placeholder="EX.: GAROPABA"></label>
+        <label style="display:none">Ou escreva (só nesta peça)<input type="text" id="f-co-txt" placeholder="EX.: GAROPABA"></label>
         <label>Onde<select id="f-co-pos"><option value="nuca">Nuca</option><option value="costas">Costas (grande)</option></select></label>
         <label style="display:none">Distância da gola (cm)<input type="number" step="0.5" id="f-co-dist"></label>
-        <label>Tamanho no desenho<input type="number" step="0.1" min="0.1" id="f-co-larg"></label>
         <label>Tipo<select id="f-co-tipo"><option value="ESTAMPA">Estampa</option><option value="BORDADO">Bordado</option></select></label>
         <label>Cor só desta estampa<select id="f-co-cor" class="selpant"></select></label>
        </div>
+       <h4 class="sub">Tamanho no desenho</h4><label class="faixa-l"><input type="number" step="0.1" min="0.1" id="f-co-larg"></label>
       </div>
       <div class="pest" data-p="car">
        <div class="linha">
@@ -315,7 +315,7 @@ dialog::backdrop{background:#0006}
        <h4 class="sub">Tamanho no desenho (vale para todas as peças)</h4>
        <div class="linha">
         <label style="display:none">Distância da costura da gola (cm)<input type="number" step="0.5" min="0" id="f-car-dist"></label>
-        <label>Tamanho no desenho<input type="number" step="0.1" min="0.1" id="f-car-larg"></label>
+        <label class="faixa-l" style="flex:1 1 100%"><input type="number" step="0.1" min="0.1" id="f-car-larg"></label>
        </div>
        <p class="aviso" style="margin:6px 0 0">O carimbo aparece por dentro da nuca, no desenho da frente; a gola da frente corta um pedaço, como na peça de verdade. Na ficha continua a medida real.</p>
       </div>
@@ -708,7 +708,7 @@ function posicoes(p,lado){ // onde cada estampa cai, em pixels da foto da peça
       else por(f.est,f.cor,A.fr.cx,A.fr.gola+(+f.dist||0)*A.esc+aj,'topo','frente',1,f.larg,f.vz)}
     const bar=p.barra===undefined?(p.sereia===false?'':'sereia'):p.barra;
     if(bar)por(bar,p.barraCor||p.sereiaCor||'BRANCO',A.fr.lado-3.5*A.esc,A.fr.barra-3.5*A.esc+(+p.barraDy||0)*A.esc,'barra','barra',0,p.barraLarg,p.barraVz);
-    if(p.carimbo&&EST[p.carimbo]){const g=A.fr.gola-A.fr.ombro,costura=A.fr.ombro+g*.35,topo=costura+(CAR.dist===''||CAR.dist==null?2:+CAR.dist)*A.esc;por(p.carimbo,p.carimboCor||'BRANCO',A.fr.cx,topo,'topo','carimbo',0,CAR.larg);const e=out[out.length-1];if(e&&e.papel==='carimbo')e.clip=A.fr.gola-1*A.esc}
+    if(p.carimbo&&EST[p.carimbo]){const g=A.fr.gola-A.fr.ombro,costura=A.fr.ombro+g*.35,topo=costura+(CAR.dist===''||CAR.dist==null?2:+CAR.dist)*A.esc;por(p.carimbo,p.carimboCor||'BRANCO',A.fr.cx,topo,'topo','carimbo',0,CAR.larg);const e=out[out.length-1];if(e&&e.papel==='carimbo'){e.clip=A.fr.gola-1*A.esc;e.gola={cx:A.fr.cx,cy:A.fr.ombro+g*.15,rx:Math.max(6*A.esc,Math.min(9*A.esc,(A.fr.lado-A.fr.cx)*.34)),ry:(A.fr.gola-.6*A.esc)-(A.fr.ombro+g*.15)}}}
   }else{const f=p.co;if(f.est)por(f.est,f.cor,A.co.cx,A.co.gola+(+f.dist||0)*A.esc,'topo','costas',1,f.larg,f.vz)}
   (p.extras||[]).forEach((x,i)=>{if(x.lado!==lado||!x.est)return;const pt=(A.lugares[lado]||{})[x.onde]||Object.values(A.lugares[lado])[0];if(!pt)return;
     por(x.est,x.cor,pt[0]+(+x.dx||0)*A.esc,pt[1]+(+x.dy||0)*A.esc,'centro','extra'+i,8,x.larg,x.vz)});
@@ -724,7 +724,7 @@ function desenhar(p,lado,k=1){
   const L=document.createElement('canvas');L.width=W;L.height=H;const y=L.getContext('2d');
   for(const e of posicoes(p,lado)){const im=IMG['e-'+e.chave];if(!im)continue;
     const w=Math.max(1,Math.round(e.w*k)),h=Math.max(1,Math.round(e.h*k));
-    const dg=p.deg&&p.deg.on?p.deg:null;if(e.clip){y.save();y.beginPath();y.rect(0,0,W,e.clip*k);y.clip()}
+    const dg=p.deg&&p.deg.on?p.deg:null;if(e.gola){const G=e.gola;y.save();y.beginPath();y.ellipse(G.cx*k,G.cy*k,G.rx*k,Math.max(1,G.ry)*k,0,0,Math.PI);y.lineTo((G.cx-G.rx)*k,0);y.lineTo((G.cx+G.rx)*k,0);y.closePath();y.clip()}else if(e.clip){y.save();y.beginPath();y.rect(0,0,W,e.clip*k);y.clip()}
     y.drawImage(/ILUSTRAD|ORIGINAL/.test(String(e.cor).toUpperCase())||(String(e.cor)==='SEM COR'&&!dg)?im:(tingir.pos=dg?degPos(p):null,tingir(daTinta(e.chave,im),hexDe('pant',e.cor),w,h,dg?degCores(p).map(c=>hexDe('pant',c)):null,dg&&degEstilo(p))),e.x*k,e.y*k,w,h);if(e.clip)y.restore()}
   const T=document.createElement('canvas');T.width=W;T.height=H;const t=T.getContext('2d');
   t.drawImage(L,0,0);t.globalCompositeOperation='multiply';t.filter='brightness(1.1)';t.drawImage(base,0,0,W,H);t.filter='none';
@@ -1464,13 +1464,13 @@ function desenharExtras(){
       <label>Lado<select data-x="${i}" data-k="lado">${op([['frente','Frente'],['costas','Costas']],x.lado)}</select></label>
       <label>Onde<select data-x="${i}" data-k="onde">${op(lug,x.onde)}</select></label>
       <label>Estampa<select data-x="${i}" data-k="est" class="selest">${op(listaEst(),x.est)}</select></label>
-      <label>Ou escreva (só nesta peça)<input type="text" data-x="${i}" data-k="txt" value="${esc(x.est&&x.est.startsWith('txt:')&&!txtSalvo(x.est)?x.est.slice(4).toUpperCase():'')}"></label>
+      <label style="display:none">Ou escreva (só nesta peça)<input type="text" data-x="${i}" data-k="txt" value="${esc(x.est&&x.est.startsWith('txt:')&&!txtSalvo(x.est)?x.est.slice(4).toUpperCase():'')}"></label>
       <label>Cor só desta estampa<select data-x="${i}" data-k="cor" class="selpant">${op(listaCor('pant'),x.cor)}</select></label>
       <label>Tipo<select data-x="${i}" data-k="tipo">${op([['ESTAMPA','Estampa'],['BORDADO','Bordado']],x.tipo)}</select></label>
       <label>Quadro na ficha<select data-x="${i}" data-k="ordem">${op([['antes','Em cima das outras'],['depois','Embaixo das outras']],x.ordem)}</select></label>
      </div>
      <label style="margin-top:10px">Localização (texto vermelho da ficha)<input type="text" data-x="${i}" data-k="loc" value="${esc(x.loc||'')}" placeholder="EX.: 5CM ABAIXO DA COSTURA DO OMBRO, CENTRALIZADA NA MANGA"></label>
-     <label style="margin-top:10px">Tamanho no desenho<input type="range" min="0.2" max="40" step="0.1" data-xr="${i}" value="${(()=>{const el=posicoes(P,x.lado).find(e=>e.papel==='extra'+i);return el?Math.round(el.w/ART[P.artigo].esc*10)/10:5})()}" style="width:100%"><b data-xt="${i}" style="font-size:14px">${(()=>{const el=posicoes(P,x.lado).find(e=>e.papel==='extra'+i);return el?String(Math.round(el.w/ART[P.artigo].esc*10)/10).replace('.',',')+' cm':''})()}</b></label>
+     <label style="margin-top:10px">Tamanho no desenho<input type="range" min="0.2" max="80" step="0.1" data-xr="${i}" value="${(()=>{const el=posicoes(P,x.lado).find(e=>e.papel==='extra'+i);return el?Math.round(el.w/ART[P.artigo].esc*10)/10:5})()}" style="width:100%"><b data-xt="${i}" style="font-size:14px">${(()=>{const el=posicoes(P,x.lado).find(e=>e.papel==='extra'+i);return el?String(Math.round(el.w/ART[P.artigo].esc*10)/10).replace('.',',')+' cm':''})()}</b></label>
      </div>`})()).join('')}
   ligarBuscas();tilesEst();
 }
@@ -1716,7 +1716,7 @@ $('#lote').addEventListener('click',e=>{const b=e.target.closest('[data-pngl]');
 $('#b-lote-mapa').onclick=()=>{lote.forEach(id=>{if(!mapa.itens.includes(id))mapa.itens.push(id)});gravar('mapa',mapa);toast('Peças no mapa')};
 
 // ---------- barrinha de tamanho (no lugar de digitar) ----------
-var FAIXAS=[['f-fr-larg',40,'frente','frente'],['f-co-larg',40,'costas','costas'],['f-barra-larg',8,'barra','frente'],['f-car-larg',10,'carimbo','frente']];
+var FAIXAS=[['f-fr-larg',80,'frente','frente'],['f-co-larg',80,'costas','costas'],['f-barra-larg',80,'barra','frente'],['f-car-larg',80,'carimbo','frente']];
 const faixaE=(papel,lado)=>posicoes(P,lado).find(e=>e.papel===papel);
 FAIXAS.forEach(([id,max,papel,lado])=>{const i=$('#'+id);i.style.display='none';const r=document.createElement('input');r.type='range';r.min='0.2';r.max=max;r.step='0.1';r.id=id+'-r';r.style.width='100%';
   const t=document.createElement('span');t.id=id+'-t';t.style.cssText='font-weight:600;font-size:14px';i.after(r,t);
