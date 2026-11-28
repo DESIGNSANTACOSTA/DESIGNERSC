@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="49";</script>
+<script>var VERSAO="50";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -834,7 +834,8 @@ function vazarBranco(im){if(im._vaz)return im._vaz;const c=document.createElemen
 const daTinta=(chave,im)=>EST[chave]&&EST[chave].knock?tinta(im):vazarBranco(im);
 function pretoURL(chave){garantirTexto(chave);if(cacheURL[chave])return cacheURL[chave];const im=IMG['e-'+chave];if(!im)return '';const s=Math.min(1,1400/im.width);
   return cacheURL[chave]=tingir(daTinta(chave,im),'#111111',Math.round(im.width*s),Math.round(im.height*s)).toDataURL()} // na ficha a arte vai em preto, como nas fichas da Santacosta
-function fichaHTML(p){
+function fichaHTML(p){try{return fichaHTML0(p)}catch(err){console.error(err);return `<div class="vazio" style="padding:30px;text-align:center">Não consegui montar esta ficha (erro: ${esc(String(err&&err.message||err))}).<br>As suas fichas guardadas continuam em Biblioteca → Fichas. Mande um print desta mensagem.</div>`}}
+function fichaHTML0(p){
   const A=ART[p.artigo],n=k=>+p.grade[k]||0, num=v=>String(v).replace('.',',');
   const ed=(c,v)=>`<span class="ed" contenteditable="true" data-c="${c}">${esc(v==null?'':String(v))}</span>`;
   const O=(id,c,v)=>{const o=(p.ov||{})[id+'.'+c];return o!=null?o:v};
