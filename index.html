@@ -821,7 +821,7 @@ $('#t-peca').addEventListener('input',e=>{if(e.target.dataset.xr!=null){const i=
 // ---------- textos da ficha ----------
 function textoFrente(p){
   const A=ART[p.artigo],f=p.fr;
-  if(String(f.pos).startsWith('mini')){const d=0; // a ficha segue as Medidas da Biblioteca, não o lugar arrastado no desenhoconst m=A.mini.map(v=>String(v+d).replace('.',','));
+  if(String(f.pos).startsWith('mini')){const d=0; /* a ficha segue as Medidas da Biblioteca */const m=A.mini.map(v=>String(v+d).replace('.',','));
     const G=(A.miniG&&A.miniG.length?A.miniG.map(r=>r[0]):['PP - P - M','G - 2G','3G - 4G']);
     return G.map((g,i)=>`${g}: ${m[Math.min(i,m.length-1)]}cm`).join('\n')+`\nABAIXO DO PONTO MAIS ALTO DO OMBRO MEDINDO PELO CENTRO DO DESENHO, AO LADO ${f.pos==='mini-d'?'DIREITO':'ESQUERDO'} DE QUEM VESTE`}
   return `${String(A.frontal).replace('.',',')}cm ABAIXO DA COSTURA DA GOLA MEDINDO PELA PARTE BAIXA DA ESTAMPA`;
