@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Estúdio Santacosta</title>
-<script>var VERSAO="45";</script>
+<script>var VERSAO="49";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Archivo+Narrow:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -763,7 +763,7 @@ function preencher(){
   $('#l-fr-dist').firstChild.textContent=String(P.fr.pos).startsWith('mini')?'Distância do ombro, tam. M (cm)':'Distância da gola (cm)';
   garantirOpcao($('#f-barra'),P.barra);$('#f-barra').value=P.barra;garantirOpcao($('#f-barra-cor'),P.barraCor);$('#f-barra-cor').value=P.barraCor;$('#f-barra-tipo').value=P.barraTipo||'ESTAMPA';$('#f-barra-larg').value=P.barraLarg||'';{const e=posicoes(P,'frente').find(e=>e.papel==='barra');$('#f-barra-larg').placeholder=e?String(Math.round(e.wd*10)/10).replace('.',','):''}
   garantirOpcao($('#f-carimbo'),P.carimbo);$('#f-carimbo').value=P.carimbo||'';garantirOpcao($('#f-carimbo-cor'),P.carimboCor);$('#f-carimbo-cor').value=P.carimboCor;$('#f-carimbo-tipo').value=P.carimboTipo||'ESTAMPA';
-  for(const k of['ref','pedido','colecao','nome','modelo','tingTexto','obs','costura'])$('#f-'+k).value=P[k]||'';
+  for(const k of['ref','pedido','colecao','nome','modelo','tingTexto','obs','costura'])$('#f-'+k).value=P[k]||'';$('#f-costura').value=P.costura||'';
   $('#f-modelo').placeholder=ART[P.artigo].nome;$('#f-tingTexto').placeholder=P.ting.toUpperCase();
   $('#b-volta-pedido').hidden=!(pedido&&pedido.ids&&pedido.ids.includes(P.id));
   $$('.cbx').forEach(c=>c.sync());syncFaixas();
@@ -792,13 +792,15 @@ function ler_form(e){
   if(id==='f-fr-pos'||id==='f-artigo'){P.fr.dx=0;P.fr.vz=1;P.fr.dist=String(P.fr.pos).startsWith('mini')?A.mini[0]:A.frontal;if(String(P.fr.pos).startsWith('mini'))usarMiniPadrao()}
   if(id==='f-co-pos'||id==='f-artigo'){P.co.dx=0}
   if(id==='f-co-pos'||id==='f-artigo')P.co.dist=P.co.pos==='nuca'?A.nuca:A.costas;
-  if(id==='f-artigo'&&artigoAntes!==P.artigo&&(!P.costura||P.costura===ART[artigoAntes].costura))P.costura=A.costura;
   P.barra=$('#f-barra').value;P.barraCor=$('#f-barra-cor').value;P.barraTipo=$('#f-barra-tipo').value;{const lg=$('#f-barra-larg').value;P.barraLarg=lg}
   P.carimbo=$('#f-carimbo').value;P.carimboCor=$('#f-carimbo-cor').value;P.carimboTipo=$('#f-carimbo-tipo').value;
+  if(P.barra!==estAntes.barra&&INFO[P.barra]){const I=INFO[P.barra];if(I.cor)P.barraCor=I.cor;if(I.tipo)P.barraTipo=I.tipo}
+  if(P.carimbo!==estAntes.car&&INFO[P.carimbo]){const I=INFO[P.carimbo];if(I.cor)P.carimboCor=I.cor;if(I.tipo)P.carimboTipo=I.tipo}
   P.ov=P.ov||{};for(const k of['fr','co'])if(P[k].est!==estAntes[k])for(const c of['tam','cor','loc','tipo'])delete P.ov[k+'.'+c];
   if(P.barra!==estAntes.barra)for(const c of['tam','cor'])delete P.ov['barra.'+c];if(P.carimbo!==estAntes.car)for(const c of['tam','cor'])delete P.ov['car.'+c];
   if(id==='f-artigo'&&artigoAntes!==P.artigo)for(const k in P.ov)if(k.endsWith('.loc'))delete P.ov[k];
-  for(const k of['ref','pedido','colecao','nome','modelo','tingTexto','obs','costura'])P[k]=$('#f-'+k).value.toUpperCase();
+  for(const k of['ref','pedido','colecao','nome','modelo','tingTexto','obs'])P[k]=$('#f-'+k).value.toUpperCase();
+  if(id==='f-artigo'&&artigoAntes!==P.artigo){P.costura=A.costura||'';P.ov=P.ov||{};for(const c of Object.keys(P.ov))if(c.startsWith('cost:'))delete P.ov[c]}
   $$('#f-grade input').forEach(i=>{const v=i.value.replace(/\D/g,'');if(v)P.grade[i.dataset.g]=v;else delete P.grade[i.dataset.g]});
   guardarP();
 }
@@ -1497,7 +1499,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-tile]');if
 function mudouExtra(e){const t=e.target;if(t.dataset.x==null||!t.closest('#t-peca'))return false;if(t.value&&t.value.startsWith('__'))return true;const x=P.extras[+t.dataset.x];
   if(['est','txt'].includes(t.dataset.k)&&P.ov){const i=t.dataset.x;for(const c of['tam','cor','loc'])delete P.ov['x'+i+'.'+c]}
   if(t.dataset.k==='txt'){if(e.type!=='change')return true;const v=t.value.trim();x.est=v?'txt:'+v.toLowerCase():'';}
-  else{x[t.dataset.k]=['loc','tam'].includes(t.dataset.k)?t.value.toUpperCase():t.value;if(t.dataset.k==='larg')x.tam='';
+  else{x[t.dataset.k]=['loc','tam'].includes(t.dataset.k)?t.value.toUpperCase():t.value;if(t.dataset.k==='larg')x.tam='';if(t.dataset.k==='est'&&INFO[x.est]){const I=INFO[x.est];if(I.cor)x.cor=I.cor;if(I.tipo)x.tipo=I.tipo;if(I.loc&&!x.loc)x.loc=String(I.loc).toUpperCase()}
     if(t.dataset.k==='lado'){const L=(ART[P.artigo].lugares||{})[x.lado]||{};x.onde=Object.keys(L).find(k=>/manga/i.test(k))||Object.keys(L)[0]||'';x.dx=x.dy=0;if(e.type==='change'){guardarP();desenharExtras();pintarEditor()}return true}}
   guardarP();if(e.type==='change'&&['est','txt','cor'].includes(t.dataset.k))desenharExtras();if(e.type==='change'||t.dataset.k==='larg')pintarEditor();return true}
 
@@ -1853,7 +1855,7 @@ if(!localStorage.getItem('sc_corMig1')){ // cores de tingimento: só COR + CÓDI
 for(const q of[...pecas,P])if(q&&q.pts&&Object.keys(q.pts).length){LIN[q.artigo]=Object.assign(LIN[q.artigo]||{},q.pts);delete q.pts}
 gravar('linhas',LIN);gravar('atual',P);gravar('pecas',pecas);
 montarForm();desenharExtras();preencher();
-preparar().then(()=>{if(!ler('miniPadrao',null))guardarMiniPadrao();preencher();pintarEditor();ir(location.hash.slice(1)||'peca')});
+preparar().then(()=>{try{const U=ART['camiseta-unissex'].costura;const fix=q=>{if(q&&q.artigo&&q.artigo!=='camiseta-unissex'&&ART[q.artigo]&&q.costura===U&&ART[q.artigo].costura!==U){q.costura=ART[q.artigo].costura||'';return 1}};let n=0;pecas.forEach(q=>{n+=fix(q)||0});if(n)gravar('pecas',pecas);if(fix(P))gravar('atual',P)}catch(e){}if(!ler('miniPadrao',null))guardarMiniPadrao();preencher();pintarEditor();ir(location.hash.slice(1)||'peca')});
 }
 </script>
 </body>
